@@ -81,7 +81,7 @@
     }
 
     .crest {
-      width: 42px;
+      width: 44px;
       height: 42px;
       flex: 0 0 auto;
       display: grid;
@@ -90,6 +90,7 @@
       border-radius: 8px;
       background: #24210f;
       color: var(--gold);
+      font-size: 12px;
       font-weight: 800;
     }
 
@@ -294,6 +295,20 @@
     .app.sidebar-collapsed .remove-button {
       opacity: 0;
       pointer-events: none;
+    }
+
+    .app.sidebar-collapsed .brand-copy {
+      display: none;
+    }
+
+    .app.sidebar-collapsed .brand-row {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    .app.sidebar-collapsed .sidebar-toggle {
+      margin-left: 0;
     }
 
     .app.sidebar-collapsed .sidebar {
@@ -515,7 +530,7 @@
       }
 
       .app.sidebar-collapsed .sidebar {
-        height: 82px;
+        height: 126px;
       }
 
       .character-list {
@@ -548,10 +563,10 @@
   <div class="app" id="app">
     <aside class="sidebar" aria-label="Personagens">
       <div class="brand-row">
-        <div class="crest" aria-hidden="true">OP</div>
+        <div class="crest" aria-hidden="true">OPxG</div>
         <div class="brand-copy">
-          <strong>Personagens</strong>
-          <span>Organizador de campanha</span>
+          <strong>Organização PxG</strong>
+          <span>Organizador de personagens</span>
         </div>
         <button class="icon-button sidebar-toggle" id="toggleSidebar" type="button" aria-label="Recolher menu" title="Recolher menu">
           <span class="collapse-icon" aria-hidden="true">‹</span>
