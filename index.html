@@ -184,7 +184,7 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 24px 24px 24px;
+      grid-template-columns: minmax(0, 1fr) 24px 24px;
       align-items: center;
       gap: 8px;
       min-height: 64px;
@@ -243,12 +243,6 @@
       gap: 4px;
     }
 
-    .order-controls {
-      display: grid;
-      gap: 4px;
-    }
-
-    .order-button,
     .level-button {
       width: 24px;
       height: 24px;
@@ -261,18 +255,6 @@
       font-size: 15px;
       font-weight: 900;
       line-height: 1;
-    }
-
-    .order-button {
-      border-color: rgba(232, 193, 92, .38);
-      background: rgba(232, 193, 92, .1);
-      color: var(--gold);
-      font-size: 13px;
-    }
-
-    .order-button:hover {
-      border-color: rgba(232, 193, 92, .72);
-      background: rgba(232, 193, 92, .18);
     }
 
     .level-button:hover {
@@ -294,7 +276,6 @@
     .app.sidebar-collapsed .brand-copy,
     .app.sidebar-collapsed .nav-text,
     .app.sidebar-collapsed .sidebar-actions,
-    .app.sidebar-collapsed .order-controls,
     .app.sidebar-collapsed .level-controls {
       opacity: 0;
       pointer-events: none;
@@ -431,9 +412,19 @@
       transform: translateY(-2px);
     }
 
+    .character-card.dragging {
+      opacity: .42;
+      transform: scale(.985);
+    }
+
+    .character-card.drop-target {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(232, 193, 92, .12), var(--shadow);
+    }
+
     .card-header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 24px 42px;
+      grid-template-columns: minmax(0, 1fr) 42px 42px;
       gap: 12px;
       align-items: center;
       padding: 18px;
@@ -467,6 +458,28 @@
       background: rgba(232, 193, 92, .1);
       color: var(--gold);
       font-size: 18px;
+    }
+
+    .drag-button {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(232, 193, 92, .38);
+      border-radius: 8px;
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 18px;
+      cursor: grab;
+    }
+
+    .drag-button:active {
+      cursor: grabbing;
+    }
+
+    .drag-button:hover {
+      border-color: rgba(232, 193, 92, .72);
+      background: rgba(232, 193, 92, .16);
     }
 
     .edit-button:hover {
@@ -1036,13 +1049,15 @@
       render();
     }
 
-    function moveCharacter(id, direction) {
+    function reorderCharacter(draggedId, targetId) {
+      if (!draggedId || !targetId || draggedId === targetId) return;
       const ordered = getOrderedCharacters();
-      const currentIndex = ordered.findIndex((character) => character.id === id);
-      const targetIndex = currentIndex + direction;
-      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
+      const draggedIndex = ordered.findIndex((character) => character.id === draggedId);
+      const targetIndex = ordered.findIndex((character) => character.id === targetId);
+      if (draggedIndex < 0 || targetIndex < 0) return;
 
-      [ordered[currentIndex], ordered[targetIndex]] = [ordered[targetIndex], ordered[currentIndex]];
+      const [dragged] = ordered.splice(draggedIndex, 1);
+      ordered.splice(targetIndex, 0, dragged);
       const orderById = new Map(ordered.map((character, index) => [character.id, index]));
       state.characters = state.characters.map((character) => ({
         ...character,
@@ -1088,17 +1103,6 @@
         text.querySelector("strong").textContent = character.name;
         text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
 
-        const orderControls = document.createElement("div");
-        orderControls.className = "order-controls";
-        orderControls.setAttribute("aria-label", `Alterar ordem de ${character.name}`);
-        orderControls.innerHTML = `
-          <button class="order-button" type="button" aria-label="Mover personagem para cima">↑</button>
-          <button class="order-button" type="button" aria-label="Mover personagem para baixo">↓</button>
-        `;
-        const [moveUp, moveDown] = orderControls.querySelectorAll("button");
-        moveUp.addEventListener("click", () => moveCharacter(character.id, -1));
-        moveDown.addEventListener("click", () => moveCharacter(character.id, 1));
-
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
         characterControls.setAttribute("aria-label", `Alterar nível de ${character.name}`);
@@ -1122,7 +1126,7 @@
         decreaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", -1));
 
         select.append(text);
-        item.append(select, orderControls, characterControls, nwControls);
+        item.append(select, characterControls, nwControls);
         list.appendChild(item);
       });
     }
@@ -1141,6 +1145,7 @@
         const card = document.createElement("article");
         card.className = "character-card";
         card.dataset.cardId = character.id;
+        card.draggable = false;
 
         const professionDisplay = character.profession
           ? `${character.profession}${hasValue(character.professionLevel) ? ` (${character.professionLevel})` : ""}`
@@ -1158,10 +1163,7 @@
             <div class="card-title">
               <strong></strong>
             </div>
-            <div class="order-controls" aria-label="Alterar ordem do card">
-              <button class="order-button" type="button" aria-label="Mover card para cima">↑</button>
-              <button class="order-button" type="button" aria-label="Mover card para baixo">↓</button>
-            </div>
+            <button class="drag-button" type="button" aria-label="Mover card livremente" title="Mover card livremente">✥</button>
             <button class="edit-button" type="button" aria-label="Editar personagem" title="Editar personagem">✎</button>
           </div>
           <div class="card-facts"></div>
@@ -1178,9 +1180,37 @@
           factsContainer.appendChild(row);
         });
 
-        const [moveCardUp, moveCardDown] = card.querySelectorAll(".order-button");
-        moveCardUp.addEventListener("click", () => moveCharacter(character.id, -1));
-        moveCardDown.addEventListener("click", () => moveCharacter(character.id, 1));
+        const dragButton = card.querySelector(".drag-button");
+        dragButton.addEventListener("pointerdown", () => {
+          card.draggable = true;
+        });
+        dragButton.addEventListener("pointerup", () => {
+          card.draggable = false;
+        });
+        card.addEventListener("dragstart", (event) => {
+          event.dataTransfer.setData("text/plain", character.id);
+          event.dataTransfer.effectAllowed = "move";
+          card.classList.add("dragging");
+        });
+        card.addEventListener("dragend", () => {
+          card.draggable = false;
+          card.classList.remove("dragging");
+          document.querySelectorAll(".drop-target").forEach((target) => target.classList.remove("drop-target"));
+        });
+        card.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          if (!card.classList.contains("dragging")) {
+            card.classList.add("drop-target");
+          }
+        });
+        card.addEventListener("dragleave", () => {
+          card.classList.remove("drop-target");
+        });
+        card.addEventListener("drop", (event) => {
+          event.preventDefault();
+          card.classList.remove("drop-target");
+          reorderCharacter(event.dataTransfer.getData("text/plain"), character.id);
+        });
         card.querySelector(".edit-button").addEventListener("click", () => {
           state.selectedId = character.id;
           saveState();
