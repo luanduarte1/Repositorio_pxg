@@ -21,6 +21,11 @@
       --input: #11161c;
       --shadow: 0 22px 70px rgba(0, 0, 0, .34);
       --sidebar-width: 292px;
+      --tier-red: #ff9a9a;
+      --tier-yellow: #ffe28a;
+      --tier-purple: #d8b4ff;
+      --tier-green: #9dedb1;
+      --tier-dark-green: #1f8f58;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -189,7 +194,7 @@
       gap: 8px;
       min-height: 64px;
       width: 100%;
-      border: 1px solid transparent;
+      border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 72%, transparent);
       border-radius: 8px;
       background: transparent;
       color: var(--text);
@@ -211,7 +216,7 @@
 
     .nav-card:hover,
     .nav-card.active {
-      border-color: var(--line);
+      border-color: var(--level-color, var(--line));
       background: var(--panel-2);
     }
 
@@ -379,6 +384,41 @@
       line-height: 1.55;
     }
 
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .tab-button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(31, 38, 48, .72);
+      color: var(--muted);
+      padding: 0 14px;
+      font-weight: 800;
+      transition: border-color .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .tab-button:hover,
+    .tab-button.active {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .1);
+      color: var(--text);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
     .primary-button,
     .secondary-button {
       min-height: 44px;
@@ -428,16 +468,16 @@
     }
 
     .character-card {
-      border: 1px solid var(--line);
+      border: 1px solid var(--level-color, var(--line));
       border-radius: 8px;
       background: rgba(23, 28, 34, .92);
-      box-shadow: var(--shadow);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-color, transparent) 16%, transparent), var(--shadow);
       overflow: hidden;
       transition: border-color .16s ease, transform .16s ease;
     }
 
     .character-card:hover {
-      border-color: rgba(89, 195, 166, .42);
+      border-color: var(--level-color, rgba(89, 195, 166, .42));
       transform: translateY(-2px);
     }
 
@@ -582,6 +622,25 @@
       background: rgba(23, 28, 34, .58);
       text-align: center;
       padding: 36px 20px;
+    }
+
+    .placeholder-panel {
+      display: grid;
+      place-items: center;
+      min-height: 42vh;
+      border: 1px dashed #34414f;
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .58);
+      color: var(--muted);
+      text-align: center;
+      padding: 34px 20px;
+    }
+
+    .placeholder-panel strong {
+      display: block;
+      color: var(--text);
+      font-size: 19px;
+      margin-bottom: 6px;
     }
 
     .empty-state strong {
@@ -828,7 +887,33 @@
         </div>
       </section>
 
-      <section class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></section>
+      <nav class="tabs" aria-label="Seções do painel">
+        <button class="tab-button active" type="button" data-tab="characters">Personagens</button>
+        <button class="tab-button" type="button" data-tab="routine">Rotina</button>
+        <button class="tab-button" type="button" data-tab="quests">Quests</button>
+      </nav>
+
+      <section class="tab-panel active" id="charactersPanel" data-panel="characters" aria-label="Personagens">
+        <div class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></div>
+      </section>
+
+      <section class="tab-panel" data-panel="routine" aria-label="Rotina">
+        <div class="placeholder-panel">
+          <div>
+            <strong>Rotina</strong>
+            <span>Espaço reservado para organizar atividades recorrentes.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="quests" aria-label="Quests">
+        <div class="placeholder-panel">
+          <div>
+            <strong>Quests</strong>
+            <span>Espaço reservado para acompanhar objetivos e missões.</span>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -904,6 +989,8 @@
     const app = document.querySelector("#app");
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabPanels = document.querySelectorAll(".tab-panel");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -940,6 +1027,13 @@
       Orebound: "assets/clans/orebound.png",
       Seavell: "assets/clans/seavell.png"
     };
+    const levelTiers = [
+      { min: 0, max: 150, color: "var(--tier-red)" },
+      { min: 150, max: 300, color: "var(--tier-yellow)" },
+      { min: 300, max: 525, color: "var(--tier-purple)" },
+      { min: 525, max: 600, color: "var(--tier-green)" },
+      { min: 600, max: 625, color: "var(--tier-dark-green)" }
+    ];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -989,6 +1083,19 @@
     function getNextOrder() {
       if (!state.characters.length) return 0;
       return Math.min(...state.characters.map((character) => character.order ?? 0)) - 1;
+    }
+
+    function getLevelColor(level) {
+      const numericLevel = Number(level) || 0;
+      const tier = levelTiers.find((item, index) => {
+        const isLast = index === levelTiers.length - 1;
+        return numericLevel >= item.min && (isLast ? numericLevel <= item.max : numericLevel < item.max);
+      });
+      return tier?.color || "var(--line)";
+    }
+
+    function applyLevelBorder(element, level) {
+      element.style.setProperty("--level-color", getLevelColor(level));
     }
 
     function buildClanInline(clan) {
@@ -1177,6 +1284,7 @@
         const item = document.createElement("div");
         item.className = `nav-card${character.id === state.selectedId ? " active" : ""}`;
         item.title = character.name;
+        applyLevelBorder(item, character.characterLevel);
 
         const select = document.createElement("button");
         select.className = "nav-card-main";
@@ -1235,6 +1343,7 @@
         card.className = "character-card";
         card.dataset.cardId = character.id;
         card.draggable = false;
+        applyLevelBorder(card, character.characterLevel);
 
         const professionDisplay = character.profession
           ? `${character.profession}${hasValue(character.professionLevel) ? ` (${character.professionLevel})` : ""}`
@@ -1329,6 +1438,15 @@
       renderStats();
     }
 
+    function switchTab(tabName) {
+      tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === tabName);
+      });
+    }
+
     function exportJson() {
       const payload = {
         exportedAt: new Date().toISOString(),
@@ -1416,6 +1534,9 @@
     exportJsonButton.addEventListener("click", exportJson);
     importJsonButton.addEventListener("click", () => importJsonInput.click());
     importJsonInput.addEventListener("change", () => importJson(importJsonInput.files[0]));
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchTab(button.dataset.tab));
+    });
 
     profession.addEventListener("change", () => refreshSpecializations());
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
