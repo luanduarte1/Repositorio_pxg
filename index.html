@@ -239,15 +239,7 @@
     }
 
     .nav-text strong {
-      display: flex;
-      align-items: center;
-      gap: 6px;
       font-size: 13px;
-    }
-
-    .nav-text strong .clan-icon {
-      width: 17px;
-      height: 17px;
     }
 
     .nav-text span {
@@ -1313,11 +1305,10 @@
         const text = document.createElement("span");
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
-        const navName = text.querySelector("strong");
-        navName.appendChild(buildClanInline(character.clan));
-        navName.append(character.name);
+        text.querySelector("strong").textContent = character.name;
         const navDetail = text.querySelector("span");
-        navDetail.textContent = `Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+        navDetail.appendChild(buildClanInline(character.clan));
+        navDetail.append(` · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`);
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
