@@ -184,7 +184,7 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 24px 24px;
+      grid-template-columns: minmax(0, 1fr) 24px 24px 24px;
       align-items: center;
       gap: 8px;
       min-height: 64px;
@@ -243,6 +243,12 @@
       gap: 4px;
     }
 
+    .order-controls {
+      display: grid;
+      gap: 4px;
+    }
+
+    .order-button,
     .level-button {
       width: 24px;
       height: 24px;
@@ -255,6 +261,18 @@
       font-size: 15px;
       font-weight: 900;
       line-height: 1;
+    }
+
+    .order-button {
+      border-color: rgba(232, 193, 92, .38);
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 13px;
+    }
+
+    .order-button:hover {
+      border-color: rgba(232, 193, 92, .72);
+      background: rgba(232, 193, 92, .18);
     }
 
     .level-button:hover {
@@ -276,6 +294,7 @@
     .app.sidebar-collapsed .brand-copy,
     .app.sidebar-collapsed .nav-text,
     .app.sidebar-collapsed .sidebar-actions,
+    .app.sidebar-collapsed .order-controls,
     .app.sidebar-collapsed .level-controls {
       opacity: 0;
       pointer-events: none;
@@ -414,7 +433,7 @@
 
     .card-header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 42px;
+      grid-template-columns: minmax(0, 1fr) 24px 42px;
       gap: 12px;
       align-items: center;
       padding: 18px;
@@ -436,13 +455,6 @@
       font-weight: 850;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .card-title span {
-      display: block;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
     }
 
     .edit-button {
@@ -882,6 +894,29 @@
       return value !== "" && value !== null && value !== undefined;
     }
 
+    function normalizeCharacters(characters) {
+      const normalized = characters.map(normalizeCharacter);
+      if (normalized.every((character) => character.order !== null)) {
+        return normalized;
+      }
+
+      return [...normalized]
+        .sort((a, b) => b.characterLevel - a.characterLevel)
+        .map((character, index) => ({ ...character, order: index }));
+    }
+
+    function getOrderedCharacters() {
+      return [...state.characters].sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return b.characterLevel - a.characterLevel;
+      });
+    }
+
+    function getNextOrder() {
+      if (!state.characters.length) return 0;
+      return Math.min(...state.characters.map((character) => character.order ?? 0)) - 1;
+    }
+
     function normalizeCharacter(character) {
       const professionName = professionOptions.includes(character.profession) ? character.profession : "";
       const availableSpecs = professionName ? specializationOptions[professionName] : [];
@@ -896,6 +931,7 @@
         profession: professionName,
         specialization: spec,
         professionLevel: clampNumber(character.professionLevel, 1, 120),
+        order: Number.isFinite(Number(character.order)) ? Number(character.order) : null,
         createdAt: character.createdAt || Date.now()
       };
     }
@@ -910,7 +946,7 @@
           collapsed: Boolean(parsed.collapsed),
           sidebarWidth: clampNumber(parsed.sidebarWidth || 292, 236, 460) || 292,
           selectedId: parsed.selectedId || null,
-          characters: Array.isArray(parsed.characters) ? parsed.characters.map(normalizeCharacter) : []
+          characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : []
         };
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -931,6 +967,7 @@
         profession: profession.value,
         specialization: specialization.value,
         professionLevel: professionLevel.value,
+        order: state.characters.find((character) => character.id === id)?.order ?? getNextOrder(),
         createdAt: state.characters.find((character) => character.id === id)?.createdAt || Date.now()
       });
     }
@@ -999,6 +1036,22 @@
       render();
     }
 
+    function moveCharacter(id, direction) {
+      const ordered = getOrderedCharacters();
+      const currentIndex = ordered.findIndex((character) => character.id === id);
+      const targetIndex = currentIndex + direction;
+      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
+
+      [ordered[currentIndex], ordered[targetIndex]] = [ordered[targetIndex], ordered[currentIndex]];
+      const orderById = new Map(ordered.map((character, index) => [character.id, index]));
+      state.characters = state.characters.map((character) => ({
+        ...character,
+        order: orderById.get(character.id)
+      }));
+      saveState();
+      render();
+    }
+
     function adjustCharacterLevel(id, field, delta) {
       const character = state.characters.find((item) => item.id === id);
       if (!character) return;
@@ -1016,9 +1069,9 @@
     function renderList() {
       list.innerHTML = "";
 
-      const sortedCharacters = [...state.characters].sort((a, b) => b.characterLevel - a.characterLevel);
+      const orderedCharacters = getOrderedCharacters();
 
-      sortedCharacters.forEach((character) => {
+      orderedCharacters.forEach((character) => {
         const item = document.createElement("div");
         item.className = `nav-card${character.id === state.selectedId ? " active" : ""}`;
         item.title = character.name;
@@ -1034,6 +1087,17 @@
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").textContent = character.name;
         text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+
+        const orderControls = document.createElement("div");
+        orderControls.className = "order-controls";
+        orderControls.setAttribute("aria-label", `Alterar ordem de ${character.name}`);
+        orderControls.innerHTML = `
+          <button class="order-button" type="button" aria-label="Mover personagem para cima">↑</button>
+          <button class="order-button" type="button" aria-label="Mover personagem para baixo">↓</button>
+        `;
+        const [moveUp, moveDown] = orderControls.querySelectorAll("button");
+        moveUp.addEventListener("click", () => moveCharacter(character.id, -1));
+        moveDown.addEventListener("click", () => moveCharacter(character.id, 1));
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
@@ -1058,7 +1122,7 @@
         decreaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", -1));
 
         select.append(text);
-        item.append(select, characterControls, nwControls);
+        item.append(select, orderControls, characterControls, nwControls);
         list.appendChild(item);
       });
     }
@@ -1071,9 +1135,9 @@
         return;
       }
 
-      const sortedCharacters = [...state.characters].sort((a, b) => b.characterLevel - a.characterLevel);
+      const orderedCharacters = getOrderedCharacters();
 
-      sortedCharacters.forEach((character) => {
+      orderedCharacters.forEach((character) => {
         const card = document.createElement("article");
         card.className = "character-card";
         card.dataset.cardId = character.id;
@@ -1093,7 +1157,10 @@
           <div class="card-header">
             <div class="card-title">
               <strong></strong>
-              <span></span>
+            </div>
+            <div class="order-controls" aria-label="Alterar ordem do card">
+              <button class="order-button" type="button" aria-label="Mover card para cima">↑</button>
+              <button class="order-button" type="button" aria-label="Mover card para baixo">↓</button>
             </div>
             <button class="edit-button" type="button" aria-label="Editar personagem" title="Editar personagem">✎</button>
           </div>
@@ -1101,7 +1168,6 @@
         `;
 
         card.querySelector(".card-title strong").textContent = character.name;
-        card.querySelector(".card-title span").textContent = "Ficha PxG";
         const factsContainer = card.querySelector(".card-facts");
         facts.forEach((fact) => {
           const row = document.createElement("div");
@@ -1111,6 +1177,10 @@
           row.querySelector("strong").textContent = fact.value;
           factsContainer.appendChild(row);
         });
+
+        const [moveCardUp, moveCardDown] = card.querySelectorAll(".order-button");
+        moveCardUp.addEventListener("click", () => moveCharacter(character.id, -1));
+        moveCardDown.addEventListener("click", () => moveCharacter(character.id, 1));
         card.querySelector(".edit-button").addEventListener("click", () => {
           state.selectedId = character.id;
           saveState();
@@ -1169,7 +1239,7 @@
             collapsed: Boolean(incoming.collapsed),
             sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
             selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
-            characters: incoming.characters.map(normalizeCharacter)
+            characters: normalizeCharacters(incoming.characters)
           };
           saveState();
           render();
