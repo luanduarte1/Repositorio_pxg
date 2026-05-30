@@ -656,7 +656,7 @@
     .routine-toolbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 14px;
       margin-bottom: 16px;
       border: 1px solid var(--line);
@@ -703,23 +703,6 @@
       font-size: 12px;
     }
 
-    .routine-add-form {
-      display: grid;
-      grid-template-columns: minmax(160px, 1fr) 110px 96px 42px;
-      gap: 8px;
-    }
-
-    .routine-add-form input,
-    .routine-add-form select {
-      min-width: 0;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--input);
-      color: var(--text);
-      outline: none;
-      padding: 10px;
-    }
-
     .routine-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -753,11 +736,46 @@
       font-size: 15px;
     }
 
-    .task-card header span {
+    .task-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .task-heading h3,
+    .task-heading span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-heading h3 {
+      flex: 0 1 auto;
+    }
+
+    .task-heading span {
+      flex: 1 1 auto;
+    }
+
+    .task-heading span,
+    .task-card header > span {
       color: var(--muted);
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
+    }
+
+    .task-edit-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(232, 193, 92, .38);
+      border-radius: 8px;
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 15px;
     }
 
     .task-characters {
@@ -812,6 +830,32 @@
       padding: 4px 8px;
       font-size: 11px;
       font-weight: 850;
+    }
+
+    .routine-badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 10px;
+    }
+
+    .checkbox-grid label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
     }
 
     .empty-state strong {
@@ -1003,7 +1047,6 @@
       .modal-actions,
       .form-grid,
       .form-grid.three,
-      .routine-add-form,
       .sidebar-action-pair,
       .json-actions {
         grid-template-columns: 1fr;
@@ -1071,10 +1114,10 @@
 
       <section class="tab-panel" data-panel="routine" aria-label="Rotina">
         <div class="routine-toolbar">
-          <label class="toggle-line">
-            <input id="showRoutineOnCharacters" type="checkbox">
-            <span>Mostrar tarefas livres na aba Personagens</span>
-          </label>
+          <button class="primary-button" id="addRoutineTaskButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar Tarefa</span>
+          </button>
         </div>
         <div class="routine-sections" id="routineSections"></div>
       </section>
@@ -1155,6 +1198,72 @@
     </div>
   </template>
 
+  <div class="modal-backdrop" id="taskModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <div class="character-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="taskModalTitle">Adicionar Tarefa</strong>
+          <span>Configuração de rotina por personagem</span>
+        </div>
+        <button class="icon-button" id="closeTaskModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="taskForm">
+        <div class="form-grid">
+          <label class="field">
+            <span>Nome da tarefa</span>
+            <input id="taskName" type="text" maxlength="60" required>
+          </label>
+          <label class="field">
+            <span>Tipo</span>
+            <select id="taskKind" required>
+              <option value="custom">Personalizada</option>
+              <option value="daily">Diária</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensal</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nível mínimo</span>
+            <input id="taskMinLevel" type="number" min="1" max="625" step="1" placeholder="1">
+          </label>
+          <label class="field">
+            <span>Exibição</span>
+            <select id="taskShowOnCharacters">
+              <option value="false">Não mostrar na aba Personagens</option>
+              <option value="true">Mostrar quando estiver livre</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-grid" id="taskDurationRow">
+          <label class="field">
+            <span>Dias para reset</span>
+            <input id="taskDurationDays" type="number" min="0" max="365" step="1" placeholder="0">
+          </label>
+          <label class="field">
+            <span>Horas para reset</span>
+            <input id="taskDurationHours" type="number" min="0" max="23" step="1" placeholder="0">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Profissões permitidas</span>
+          <div class="checkbox-grid" id="taskProfessionGrid"></div>
+        </label>
+
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelTaskModalButton" type="button">Cancelar</button>
+          <button class="danger-button" id="deleteTaskButton" type="button">Remover</button>
+          <button class="primary-button" type="submit">Salvar tarefa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "character-organizer:v3";
     const PREVIOUS_STORAGE_KEY = "character-organizer:v2";
@@ -1165,7 +1274,21 @@
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
     const routineSections = document.querySelector("#routineSections");
-    const showRoutineOnCharacters = document.querySelector("#showRoutineOnCharacters");
+    const addRoutineTaskButton = document.querySelector("#addRoutineTaskButton");
+    const taskModalBackdrop = document.querySelector("#taskModalBackdrop");
+    const taskModalTitle = document.querySelector("#taskModalTitle");
+    const closeTaskModalButton = document.querySelector("#closeTaskModalButton");
+    const cancelTaskModalButton = document.querySelector("#cancelTaskModalButton");
+    const deleteTaskButton = document.querySelector("#deleteTaskButton");
+    const taskForm = document.querySelector("#taskForm");
+    const taskName = document.querySelector("#taskName");
+    const taskKind = document.querySelector("#taskKind");
+    const taskMinLevel = document.querySelector("#taskMinLevel");
+    const taskShowOnCharacters = document.querySelector("#taskShowOnCharacters");
+    const taskDurationRow = document.querySelector("#taskDurationRow");
+    const taskDurationDays = document.querySelector("#taskDurationDays");
+    const taskDurationHours = document.querySelector("#taskDurationHours");
+    const taskProfessionGrid = document.querySelector("#taskProfessionGrid");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -1241,6 +1364,7 @@
     };
 
     let editingId = null;
+    let editingTaskId = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -1259,6 +1383,9 @@
         name: task.name || "Nova tarefa",
         kind: routineKinds[task.kind] ? task.kind : "daily",
         durationHours: clampNumber(task.durationHours, 1, 8760),
+        minLevel: clampNumber(task.minLevel, 1, 625) || 1,
+        professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
+        showOnCharacters: Boolean(task.showOnCharacters),
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -1338,6 +1465,12 @@
       return `${taskId}::${characterId}`;
     }
 
+    function isCharacterEligibleForTask(character, task) {
+      if ((Number(character.characterLevel) || 1) < (Number(task.minLevel) || 1)) return false;
+      if (task.professions.length && !task.professions.includes(character.profession)) return false;
+      return true;
+    }
+
     function getCompletion(taskId, characterId) {
       const completion = state.routineCompletions[getCompletionKey(taskId, characterId)];
       if (!completion || Number(completion.unlockAt) <= Date.now()) return null;
@@ -1355,6 +1488,22 @@
       return `${minutes}m`;
     }
 
+    function formatDaysHours(ms) {
+      const totalHours = Math.max(0, Math.ceil(ms / (60 * 60 * 1000)));
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+      if (days && hours) return `${days}d ${hours}h`;
+      if (days) return `${days}d`;
+      return `${hours}h`;
+    }
+
+    function getTaskResetLabel(task) {
+      if (task.kind === "custom") {
+        return `Reset em ${formatDaysHours((Number(task.durationHours) || 24) * 60 * 60 * 1000)} após marcar`;
+      }
+      return `Reset em ${formatDaysHours(getTaskUnlockAt(task) - Date.now())}`;
+    }
+
     function clearExpiredRoutineCompletions() {
       let changed = false;
       Object.entries(state.routineCompletions).forEach(([key, completion]) => {
@@ -1367,7 +1516,16 @@
     }
 
     function getAvailableRoutineCount(characterId) {
-      return state.routineTasks.filter((task) => !getCompletion(task.id, characterId)).length;
+      return state.routineTasks.filter((task) => {
+        const character = state.characters.find((item) => item.id === characterId);
+        return character && task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, characterId);
+      }).length;
+    }
+
+    function getAvailableRoutineNames(character) {
+      return state.routineTasks
+        .filter((task) => task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, character.id))
+        .map((task) => task.name);
     }
 
     function buildClanInline(clan) {
@@ -1643,14 +1801,17 @@
         `;
 
         card.querySelector(".card-title strong").textContent = character.name;
-        if (state.showRoutineOnCharacters) {
-          const count = getAvailableRoutineCount(character.id);
-          if (count) {
+        const availableRoutineNames = getAvailableRoutineNames(character);
+        if (availableRoutineNames.length) {
+          const badgeList = document.createElement("div");
+          badgeList.className = "routine-badge-list";
+          availableRoutineNames.forEach((name) => {
             const badge = document.createElement("span");
             badge.className = "routine-badge";
-            badge.textContent = `${count} rotina${count > 1 ? "s" : ""} livre${count > 1 ? "s" : ""}`;
-            card.querySelector(".card-title").appendChild(badge);
-          }
+            badge.textContent = name;
+            badgeList.appendChild(badge);
+          });
+          card.querySelector(".card-title").appendChild(badgeList);
         }
         const factsContainer = card.querySelector(".card-facts");
         facts.forEach((fact) => {
@@ -1712,10 +1873,69 @@
       editSelectedButton.disabled = !state.selectedId;
     }
 
+    function renderProfessionChoices(selected = []) {
+      taskProfessionGrid.innerHTML = "";
+      professionOptions.forEach((professionName) => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" value=""><span></span>`;
+        const checkbox = label.querySelector("input");
+        checkbox.value = professionName;
+        checkbox.checked = selected.includes(professionName);
+        label.querySelector("span").textContent = professionName;
+        taskProfessionGrid.appendChild(label);
+      });
+    }
+
+    function openTaskModal(task = null) {
+      editingTaskId = task?.id || null;
+      const draft = normalizeRoutineTask(task || { kind: "daily" });
+      taskModalTitle.textContent = editingTaskId ? "Editar Tarefa" : "Adicionar Tarefa";
+      taskName.value = editingTaskId ? draft.name : "";
+      taskKind.value = draft.kind;
+      taskMinLevel.value = draft.minLevel || 1;
+      taskShowOnCharacters.value = draft.showOnCharacters ? "true" : "false";
+      taskDurationDays.value = draft.kind === "custom" ? Math.floor((Number(draft.durationHours) || 24) / 24) : "";
+      taskDurationHours.value = draft.kind === "custom" ? (Number(draft.durationHours) || 24) % 24 : "";
+      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
+      taskName.disabled = Boolean(draft.defaultTask);
+      taskKind.disabled = Boolean(draft.defaultTask);
+      taskDurationDays.disabled = Boolean(draft.defaultTask);
+      taskDurationHours.disabled = Boolean(draft.defaultTask);
+      deleteTaskButton.style.display = editingTaskId && !draft.defaultTask ? "inline-flex" : "none";
+      renderProfessionChoices(draft.professions);
+      taskModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      taskName.focus();
+    }
+
+    function closeTaskModal() {
+      taskModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingTaskId = null;
+      taskForm.reset();
+    }
+
+    function getTaskFromForm() {
+      const existing = state.routineTasks.find((task) => task.id === editingTaskId);
+      const selectedProfessions = [...taskProfessionGrid.querySelectorAll("input:checked")].map((input) => input.value);
+      const kind = existing?.defaultTask ? existing.kind : taskKind.value;
+      const days = Number(taskDurationDays.value) || 0;
+      const hours = Number(taskDurationHours.value) || 0;
+      return normalizeRoutineTask({
+        id: editingTaskId || `task:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: existing?.defaultTask ? existing.name : taskName.value.trim(),
+        kind,
+        durationHours: kind === "custom" ? Math.max(1, days * 24 + hours) : existing?.durationHours,
+        minLevel: taskMinLevel.value,
+        professions: selectedProfessions,
+        showOnCharacters: taskShowOnCharacters.value === "true",
+        defaultTask: Boolean(existing?.defaultTask)
+      });
+    }
+
     function renderRoutineSections() {
       clearExpiredRoutineCompletions();
       routineSections.innerHTML = "";
-      showRoutineOnCharacters.checked = state.showRoutineOnCharacters;
 
       Object.entries(routineKinds).forEach(([kind, config]) => {
         const section = document.createElement("section");
@@ -1727,56 +1947,34 @@
               <span>${config.reset}</span>
             </div>
           </div>
-          <form class="routine-add-form">
-            <input name="taskName" type="text" placeholder="Nova tarefa">
-            ${kind === "custom" ? '<input name="duration" type="number" min="1" max="365" placeholder="Dias">' : '<select name="preset"><option value="">Tarefa própria</option></select>'}
-            <select name="unit" ${kind === "custom" ? "" : "hidden"}><option value="days">dias</option><option value="hours">horas</option></select>
-            <button class="primary-button" type="submit" title="Adicionar tarefa">+</button>
-          </form>
           <div class="routine-grid"></div>
         `;
 
-        const form = section.querySelector("form");
-        form.addEventListener("submit", (event) => {
-          event.preventDefault();
-          const data = new FormData(form);
-          const name = String(data.get("taskName") || "").trim();
-          if (!name) return;
-          const unit = data.get("unit");
-          const durationValue = Number(data.get("duration")) || 1;
-          const durationHours = kind === "custom" ? durationValue * (unit === "hours" ? 1 : 24) : null;
-          state.routineTasks.push(normalizeRoutineTask({
-            id: `custom:${kind}:${Date.now()}:${Math.random().toString(16).slice(2)}`,
-            name,
-            kind,
-            durationHours,
-            defaultTask: false
-          }));
-          saveState();
-          render();
-          form.reset();
-        });
-
         const gridEl = section.querySelector(".routine-grid");
         state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
-          const anyAvailable = state.characters.some((character) => !getCompletion(task.id, character.id));
+          const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+          const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
           const taskCard = document.createElement("article");
           taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
           taskCard.innerHTML = `
             <header>
-              <h3></h3>
-              <span></span>
+              <div class="task-heading">
+                <h3></h3>
+                <span></span>
+              </div>
+              <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
             </header>
             <div class="task-characters"></div>
           `;
           taskCard.querySelector("h3").textContent = task.name;
-          taskCard.querySelector("header span").textContent = task.kind === "custom" ? `${task.durationHours || 24}h` : routineKinds[task.kind].title;
+          taskCard.querySelector(".task-heading span").textContent = getTaskResetLabel(task);
+          taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
 
           const rows = taskCard.querySelector(".task-characters");
-          if (!state.characters.length) {
-            rows.innerHTML = '<div class="task-timer">Cadastre personagens para controlar esta tarefa.</div>';
+          if (!eligibleCharacters.length) {
+            rows.innerHTML = '<div class="task-timer">Nenhum personagem elegível para esta tarefa.</div>';
           }
-          getOrderedCharacters().forEach((character) => {
+          eligibleCharacters.forEach((character) => {
             const completion = getCompletion(task.id, character.id);
             const row = document.createElement("div");
             row.className = "task-character-row";
@@ -1927,30 +2125,48 @@
     tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
-    showRoutineOnCharacters.addEventListener("change", () => {
-      state.showRoutineOnCharacters = showRoutineOnCharacters.checked;
-      saveState();
-      renderCards();
-    });
+    addRoutineTaskButton.addEventListener("click", () => openTaskModal());
 
     profession.addEventListener("change", () => refreshSpecializations());
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
 
     closeModalButton.addEventListener("click", closeModal);
     cancelModalButton.addEventListener("click", closeModal);
+    closeTaskModalButton.addEventListener("click", closeTaskModal);
+    cancelTaskModalButton.addEventListener("click", closeTaskModal);
 
     modalBackdrop.addEventListener("click", (event) => {
       if (event.target === modalBackdrop) closeModal();
+    });
+    taskModalBackdrop.addEventListener("click", (event) => {
+      if (event.target === taskModalBackdrop) closeTaskModal();
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
         closeModal();
       }
+      if (event.key === "Escape" && taskModalBackdrop.classList.contains("open")) {
+        closeTaskModal();
+      }
     });
 
     deleteFromModalButton.addEventListener("click", () => {
       if (editingId) removeCharacter(editingId);
+    });
+    deleteTaskButton.addEventListener("click", () => {
+      const task = state.routineTasks.find((item) => item.id === editingTaskId);
+      if (!task || task.defaultTask || !confirm(`Remover ${task.name}?`)) return;
+      state.routineTasks = state.routineTasks.filter((item) => item.id !== editingTaskId);
+      Object.keys(state.routineCompletions).forEach((key) => {
+        if (key.startsWith(`${editingTaskId}::`)) delete state.routineCompletions[key];
+      });
+      saveState();
+      closeTaskModal();
+      render();
+    });
+    taskKind.addEventListener("change", () => {
+      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
     });
 
     characterForm.addEventListener("submit", (event) => {
@@ -1966,6 +2182,20 @@
       state.selectedId = character.id;
       saveState();
       closeModal();
+      render();
+    });
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const task = getTaskFromForm();
+      if (!task.name) return;
+      if (editingTaskId) {
+        state.routineTasks = state.routineTasks.map((item) => item.id === editingTaskId ? task : item);
+      } else {
+        state.routineTasks.push(task);
+      }
+      saveState();
+      closeTaskModal();
       render();
     });
 
