@@ -20,6 +20,7 @@
       --danger: #ee6f75;
       --input: #11161c;
       --shadow: 0 22px 70px rgba(0, 0, 0, .34);
+      --sidebar-width: 292px;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -50,7 +51,7 @@
 
     .app {
       display: grid;
-      grid-template-columns: 292px minmax(0, 1fr);
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
       min-height: 100vh;
       transition: grid-template-columns .22s ease;
     }
@@ -71,6 +72,35 @@
       background: rgba(17, 22, 28, .96);
       backdrop-filter: blur(18px);
       overflow: hidden;
+    }
+
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: -4px;
+      width: 8px;
+      height: 100%;
+      cursor: ew-resize;
+      z-index: 2;
+    }
+
+    .resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 3px;
+      width: 2px;
+      height: 68px;
+      border-radius: 999px;
+      background: rgba(89, 195, 166, .35);
+      transform: translateY(-50%);
+      opacity: .45;
+      transition: opacity .16s ease, background .16s ease;
+    }
+
+    .resize-handle:hover::after {
+      background: var(--accent);
+      opacity: 1;
     }
 
     .brand-row {
@@ -154,7 +184,7 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 24px 24px 30px;
+      grid-template-columns: minmax(0, 1fr) 24px 24px;
       align-items: center;
       gap: 8px;
       min-height: 64px;
@@ -169,7 +199,7 @@
 
     .nav-card-main {
       display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       align-items: center;
       gap: 10px;
       min-width: 0;
@@ -183,19 +213,6 @@
     .nav-card.active {
       border-color: var(--line);
       background: var(--panel-2);
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, .1);
-      background: #26303a;
-      color: var(--gold);
-      font-size: 18px;
-      font-weight: 850;
     }
 
     .nav-text {
@@ -219,21 +236,6 @@
       margin-top: 2px;
       color: var(--muted);
       font-size: 11px;
-    }
-
-    .remove-button {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      border-radius: 7px;
-      background: transparent;
-      color: var(--muted);
-    }
-
-    .remove-button:hover {
-      background: rgba(238, 111, 117, .12);
-      color: var(--danger);
     }
 
     .level-controls {
@@ -273,8 +275,8 @@
 
     .app.sidebar-collapsed .brand-copy,
     .app.sidebar-collapsed .nav-text,
-    .app.sidebar-collapsed .level-controls,
-    .app.sidebar-collapsed .remove-button {
+    .app.sidebar-collapsed .sidebar-actions,
+    .app.sidebar-collapsed .level-controls {
       opacity: 0;
       pointer-events: none;
     }
@@ -298,13 +300,27 @@
     }
 
     .app.sidebar-collapsed .nav-card {
-      grid-template-columns: 38px;
+      grid-template-columns: 1fr;
       justify-content: center;
       padding: 8px 2px;
     }
 
     .app.sidebar-collapsed .nav-card-main {
-      grid-template-columns: 38px;
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+      transition: opacity .18s ease;
+    }
+
+    .sidebar-action-pair,
+    .json-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     main {
@@ -332,13 +348,6 @@
       margin: 8px 0 0;
       color: var(--muted);
       line-height: 1.55;
-    }
-
-    .action-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(180px, 1fr));
-      gap: 10px;
-      min-width: min(440px, 100%);
     }
 
     .primary-button,
@@ -607,6 +616,10 @@
       gap: 12px;
     }
 
+    .form-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .modal-actions {
       display: grid;
       grid-template-columns: 1fr 1fr 1.55fr;
@@ -663,6 +676,10 @@
         border-bottom: 1px solid var(--line);
       }
 
+      .resize-handle {
+        display: none;
+      }
+
       .app.sidebar-collapsed .sidebar {
         height: 126px;
       }
@@ -681,9 +698,11 @@
     }
 
     @media (max-width: 620px) {
-      .action-row,
       .modal-actions,
-      .form-grid {
+      .form-grid,
+      .form-grid.three,
+      .sidebar-action-pair,
+      .json-actions {
         grid-template-columns: 1fr;
       }
 
@@ -696,6 +715,7 @@
 <body>
   <div class="app" id="app">
     <aside class="sidebar" aria-label="Personagens">
+      <div class="resize-handle" id="resizeHandle" aria-hidden="true"></div>
       <div class="brand-row">
         <div class="crest" aria-hidden="true">OPxG</div>
         <div class="brand-copy">
@@ -708,6 +728,24 @@
       </div>
 
       <nav class="character-list" id="characterList" aria-label="Lista de personagens"></nav>
+
+      <div class="sidebar-actions">
+        <div class="sidebar-action-pair">
+          <button class="primary-button" id="addCharacterButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar</span>
+          </button>
+          <button class="secondary-button" id="editSelectedButton" type="button">
+            <span aria-hidden="true">✎</span>
+            <span>Editar</span>
+          </button>
+        </div>
+        <div class="json-actions">
+          <button class="secondary-button" id="exportJsonButton" type="button">Exportar JSON</button>
+          <button class="secondary-button" id="importJsonButton" type="button">Importar JSON</button>
+        </div>
+        <input id="importJsonInput" type="file" accept="application/json,.json" hidden>
+      </div>
     </aside>
 
     <main>
@@ -715,16 +753,6 @@
         <div>
           <h1>Organizador de Personagens PxG</h1>
           <p>Organize personagens de PokeXGames com clã, níveis, profissão e especialização para consultar tudo rapidamente durante o jogo.</p>
-        </div>
-        <div class="action-row">
-          <button class="primary-button" id="addCharacterButton" type="button">
-            <span aria-hidden="true">+</span>
-            <span>Adicionar novo personagem</span>
-          </button>
-          <button class="secondary-button" id="editSelectedButton" type="button">
-            <span aria-hidden="true">✎</span>
-            <span>Editar personagem existente</span>
-          </button>
         </div>
       </section>
 
@@ -748,7 +776,7 @@
           <input id="characterName" type="text" autocomplete="off" maxlength="40" required>
         </label>
 
-        <div class="form-grid">
+        <div class="form-grid three">
           <label class="field">
             <span>Clã</span>
             <select id="characterClan" required></select>
@@ -757,27 +785,24 @@
             <span>Nível do personagem</span>
             <input id="characterLevel" type="number" min="1" max="625" step="1" required>
           </label>
+          <label class="field">
+            <span>Nível NW</span>
+            <input id="nwLevel" type="number" min="1" max="100" step="1">
+          </label>
         </div>
 
-        <div class="form-grid">
+        <div class="form-grid three">
           <label class="field">
             <span>Profissão</span>
-            <select id="profession" required></select>
+            <select id="profession"></select>
+          </label>
+          <label class="field">
+            <span>Especialização</span>
+            <select id="specialization"></select>
           </label>
           <label class="field">
             <span>Nível de profissão</span>
-            <input id="professionLevel" type="number" min="1" max="120" step="1" required>
-          </label>
-        </div>
-
-        <div class="form-grid">
-          <label class="field">
-            <span>Especialização</span>
-            <select id="specialization" required></select>
-          </label>
-          <label class="field">
-            <span>Nível NW</span>
-            <input id="nwLevel" type="number" min="1" max="100" step="1" required>
+            <input id="professionLevel" type="number" min="1" max="120" step="1">
           </label>
         </div>
 
@@ -807,9 +832,13 @@
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
     const toggleSidebar = document.querySelector("#toggleSidebar");
+    const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
     const addCharacterButton = document.querySelector("#addCharacterButton");
     const editSelectedButton = document.querySelector("#editSelectedButton");
+    const exportJsonButton = document.querySelector("#exportJsonButton");
+    const importJsonButton = document.querySelector("#importJsonButton");
+    const importJsonInput = document.querySelector("#importJsonInput");
     const modalBackdrop = document.querySelector("#characterModalBackdrop");
     const modalTitle = document.querySelector("#modalTitle");
     const closeModalButton = document.querySelector("#closeModalButton");
@@ -835,6 +864,7 @@
 
     let state = {
       collapsed: false,
+      sidebarWidth: 292,
       selectedId: null,
       characters: []
     };
@@ -842,25 +872,30 @@
     let editingId = null;
 
     function clampNumber(value, min, max) {
+      if (value === "" || value === null || value === undefined) return null;
       const number = Number(value);
       if (!Number.isFinite(number)) return min;
       return Math.min(max, Math.max(min, Math.round(number)));
     }
 
+    function hasValue(value) {
+      return value !== "" && value !== null && value !== undefined;
+    }
+
     function normalizeCharacter(character) {
-      const professionName = professionOptions.includes(character.profession) ? character.profession : "Aventureiro";
-      const availableSpecs = specializationOptions[professionName];
-      const spec = availableSpecs.includes(character.specialization) ? character.specialization : "Sem especialização";
+      const professionName = professionOptions.includes(character.profession) ? character.profession : "";
+      const availableSpecs = professionName ? specializationOptions[professionName] : [];
+      const spec = professionName && availableSpecs.includes(character.specialization) ? character.specialization : "";
 
       return {
         id: character.id || String(Date.now()),
         name: character.name || "Sem nome",
         clan: clanOptions.includes(character.clan) ? character.clan : character.className && clanOptions.includes(character.className) ? character.className : "Naturia",
-        characterLevel: clampNumber(character.characterLevel || character.level || 1, 1, 625),
-        nwLevel: clampNumber(character.nwLevel || 1, 1, 100),
+        characterLevel: clampNumber(character.characterLevel || character.level || 1, 1, 625) || 1,
+        nwLevel: clampNumber(character.nwLevel, 1, 100),
         profession: professionName,
         specialization: spec,
-        professionLevel: clampNumber(character.professionLevel || 1, 1, 120),
+        professionLevel: clampNumber(character.professionLevel, 1, 120),
         createdAt: character.createdAt || Date.now()
       };
     }
@@ -873,6 +908,7 @@
         const parsed = JSON.parse(saved);
         state = {
           collapsed: Boolean(parsed.collapsed),
+          sidebarWidth: clampNumber(parsed.sidebarWidth || 292, 236, 460) || 292,
           selectedId: parsed.selectedId || null,
           characters: Array.isArray(parsed.characters) ? parsed.characters.map(normalizeCharacter) : []
         };
@@ -883,16 +919,6 @@
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function getInitials(name) {
-      return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((part) => part[0] || "")
-        .join("")
-        .toUpperCase() || "?";
     }
 
     function createCharacterFromForm(id = String(Date.now())) {
@@ -911,6 +937,7 @@
 
     function setSelectOptions(select, options, selectedValue) {
       select.innerHTML = "";
+      select.add(new Option("Não informado", "", false, !selectedValue));
       options.forEach((option) => {
         select.add(new Option(option, option, false, option === selectedValue));
       });
@@ -918,8 +945,9 @@
 
     function refreshSpecializations(selectedValue) {
       const options = specializationOptions[profession.value] || [];
-      const nextSelected = options.includes(selectedValue) ? selectedValue : "Sem especialização";
+      const nextSelected = options.includes(selectedValue) ? selectedValue : "";
       setSelectOptions(specialization, options, nextSelected);
+      specialization.disabled = !profession.value;
     }
 
     function openModal(character = null) {
@@ -930,8 +958,8 @@
       const draft = normalizeCharacter(character || {});
       characterName.value = editingId ? draft.name : "";
       characterLevel.value = draft.characterLevel;
-      nwLevel.value = draft.nwLevel;
-      professionLevel.value = draft.professionLevel;
+      nwLevel.value = hasValue(draft.nwLevel) ? draft.nwLevel : "";
+      professionLevel.value = hasValue(draft.professionLevel) ? draft.professionLevel : "";
       setSelectOptions(characterClan, clanOptions, draft.clan);
       setSelectOptions(profession, professionOptions, draft.profession);
       refreshSpecializations(draft.specialization);
@@ -999,16 +1027,11 @@
         select.setAttribute("aria-label", `Selecionar ${character.name}`);
         select.addEventListener("click", () => selectCharacter(character.id));
 
-        const avatar = document.createElement("span");
-        avatar.className = "avatar";
-        avatar.setAttribute("aria-hidden", "true");
-        avatar.textContent = getInitials(character.name);
-
         const text = document.createElement("span");
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").textContent = character.name;
-        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel} · NW ${character.nwLevel}`;
+        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
@@ -1032,16 +1055,8 @@
         increaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", 1));
         decreaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", -1));
 
-        const remove = document.createElement("button");
-        remove.className = "remove-button";
-        remove.type = "button";
-        remove.title = "Remover personagem";
-        remove.setAttribute("aria-label", `Remover ${character.name}`);
-        remove.textContent = "×";
-        remove.addEventListener("click", () => removeCharacter(character.id));
-
-        select.append(avatar, text);
-        item.append(select, characterControls, nwControls, remove);
+        select.append(text);
+        item.append(select, characterControls, nwControls);
         list.appendChild(item);
       });
     }
@@ -1054,10 +1069,23 @@
         return;
       }
 
-      state.characters.forEach((character) => {
+      const sortedCharacters = [...state.characters].sort((a, b) => b.characterLevel - a.characterLevel);
+
+      sortedCharacters.forEach((character) => {
         const card = document.createElement("article");
         card.className = "character-card";
         card.dataset.cardId = character.id;
+
+        const professionDisplay = character.profession
+          ? `${character.profession}${hasValue(character.professionLevel) ? ` (${character.professionLevel})` : ""}`
+          : "";
+        const facts = [
+          { label: "Clã", value: character.clan, highlight: true },
+          { label: "Nível personagem", value: character.characterLevel },
+          { label: "Nível NW", value: character.nwLevel },
+          { label: "Profissão", value: professionDisplay },
+          { label: "Especialização", value: character.specialization }
+        ].filter((fact) => hasValue(fact.value));
 
         card.innerHTML = `
           <div class="card-header">
@@ -1067,22 +1095,20 @@
             </div>
             <button class="edit-button" type="button" aria-label="Editar personagem" title="Editar personagem">✎</button>
           </div>
-          <div class="card-facts">
-            <div class="fact highlight"><span>Clã</span><strong data-field="clan"></strong></div>
-            <div class="fact"><span>Nível personagem</span><strong data-field="characterLevel"></strong></div>
-            <div class="fact"><span>Nível NW</span><strong data-field="nwLevel"></strong></div>
-            <div class="fact"><span>Profissão</span><strong data-field="profession"></strong></div>
-            <div class="fact"><span>Especialização</span><strong data-field="specialization"></strong></div>
-          </div>
+          <div class="card-facts"></div>
         `;
 
         card.querySelector(".card-title strong").textContent = character.name;
         card.querySelector(".card-title span").textContent = "Ficha PxG";
-        card.querySelector('[data-field="clan"]').textContent = character.clan;
-        card.querySelector('[data-field="characterLevel"]').textContent = character.characterLevel;
-        card.querySelector('[data-field="nwLevel"]').textContent = character.nwLevel;
-        card.querySelector('[data-field="profession"]').textContent = `${character.profession} (${character.professionLevel})`;
-        card.querySelector('[data-field="specialization"]').textContent = character.specialization;
+        const factsContainer = card.querySelector(".card-facts");
+        facts.forEach((fact) => {
+          const row = document.createElement("div");
+          row.className = `fact${fact.highlight ? " highlight" : ""}`;
+          row.innerHTML = `<span></span><strong></strong>`;
+          row.querySelector("span").textContent = fact.label;
+          row.querySelector("strong").textContent = fact.value;
+          factsContainer.appendChild(row);
+        });
         card.querySelector(".edit-button").addEventListener("click", () => {
           state.selectedId = character.id;
           saveState();
@@ -1099,12 +1125,59 @@
     }
 
     function render() {
+      app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
       toggleSidebar.setAttribute("aria-label", state.collapsed ? "Expandir menu" : "Recolher menu");
       toggleSidebar.title = state.collapsed ? "Expandir menu" : "Recolher menu";
       renderList();
       renderCards();
       renderStats();
+    }
+
+    function exportJson() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: "Organização PxG",
+        version: 3,
+        data: state
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `organizacao-pxg-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || "{}"));
+          const incoming = parsed.data || parsed;
+          if (!Array.isArray(incoming.characters)) {
+            throw new Error("Arquivo sem lista de personagens.");
+          }
+
+          state = {
+            collapsed: Boolean(incoming.collapsed),
+            sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
+            selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
+            characters: incoming.characters.map(normalizeCharacter)
+          };
+          saveState();
+          render();
+        } catch (error) {
+          alert("Não foi possível importar este JSON. Confira se o arquivo foi exportado por este app.");
+        } finally {
+          importJsonInput.value = "";
+        }
+      });
+      reader.readAsText(file);
     }
 
     addCharacterButton.addEventListener("click", () => openModal());
@@ -1119,6 +1192,35 @@
       saveState();
       render();
     });
+
+    resizeHandle.addEventListener("pointerdown", (event) => {
+      if (state.collapsed) return;
+      event.preventDefault();
+      resizeHandle.setPointerCapture(event.pointerId);
+
+      const startX = event.clientX;
+      const startWidth = state.sidebarWidth || 292;
+
+      function onMove(moveEvent) {
+        state.sidebarWidth = clampNumber(startWidth + moveEvent.clientX - startX, 236, 460) || startWidth;
+        app.style.setProperty("--sidebar-width", `${state.sidebarWidth}px`);
+      }
+
+      function onUp() {
+        saveState();
+        resizeHandle.removeEventListener("pointermove", onMove);
+        resizeHandle.removeEventListener("pointerup", onUp);
+        resizeHandle.removeEventListener("pointercancel", onUp);
+      }
+
+      resizeHandle.addEventListener("pointermove", onMove);
+      resizeHandle.addEventListener("pointerup", onUp);
+      resizeHandle.addEventListener("pointercancel", onUp);
+    });
+
+    exportJsonButton.addEventListener("click", exportJson);
+    importJsonButton.addEventListener("click", () => importJsonInput.click());
+    importJsonInput.addEventListener("change", () => importJson(importJsonInput.files[0]));
 
     profession.addEventListener("change", () => refreshSpecializations());
 
