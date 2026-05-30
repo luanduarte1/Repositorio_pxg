@@ -154,10 +154,10 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: 38px minmax(0, 1fr) 30px;
+      grid-template-columns: minmax(0, 1fr) 24px 24px 30px;
       align-items: center;
-      gap: 10px;
-      min-height: 54px;
+      gap: 8px;
+      min-height: 64px;
       width: 100%;
       border: 1px solid transparent;
       border-radius: 8px;
@@ -168,7 +168,13 @@
     }
 
     .nav-card-main {
-      display: contents;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      border: 0;
+      background: transparent;
       color: inherit;
       text-align: inherit;
     }
@@ -230,8 +236,44 @@
       color: var(--danger);
     }
 
+    .level-controls {
+      display: grid;
+      gap: 4px;
+    }
+
+    .level-button {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(89, 195, 166, .35);
+      border-radius: 6px;
+      background: rgba(89, 195, 166, .1);
+      color: var(--accent-strong);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .level-button:hover {
+      border-color: rgba(89, 195, 166, .7);
+      background: rgba(89, 195, 166, .18);
+    }
+
+    .level-controls.nw .level-button {
+      border-color: rgba(178, 116, 255, .4);
+      background: rgba(178, 116, 255, .12);
+      color: #cfadff;
+    }
+
+    .level-controls.nw .level-button:hover {
+      border-color: rgba(178, 116, 255, .78);
+      background: rgba(178, 116, 255, .22);
+    }
+
     .app.sidebar-collapsed .brand-copy,
     .app.sidebar-collapsed .nav-text,
+    .app.sidebar-collapsed .level-controls,
     .app.sidebar-collapsed .remove-button {
       opacity: 0;
       pointer-events: none;
@@ -259,6 +301,10 @@
       grid-template-columns: 38px;
       justify-content: center;
       padding: 8px 2px;
+    }
+
+    .app.sidebar-collapsed .nav-card-main {
+      grid-template-columns: 38px;
     }
 
     main {
@@ -336,35 +382,6 @@
       transform: none;
     }
 
-    .stats-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(110px, 1fr));
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(31, 38, 48, .72);
-      padding: 12px;
-    }
-
-    .stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 750;
-      text-transform: uppercase;
-    }
-
-    .stat strong {
-      display: block;
-      margin-top: 6px;
-      color: var(--text);
-      font-size: 22px;
-    }
-
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -378,6 +395,12 @@
       background: rgba(23, 28, 34, .92);
       box-shadow: var(--shadow);
       overflow: hidden;
+      transition: border-color .16s ease, transform .16s ease;
+    }
+
+    .character-card:hover {
+      border-color: rgba(89, 195, 166, .42);
+      transform: translateY(-2px);
     }
 
     .card-header {
@@ -385,10 +408,10 @@
       grid-template-columns: minmax(0, 1fr) 42px;
       gap: 12px;
       align-items: center;
-      padding: 16px;
+      padding: 18px;
       border-bottom: 1px solid var(--line);
       background:
-        linear-gradient(90deg, rgba(89, 195, 166, .16), transparent 72%),
+        linear-gradient(135deg, rgba(89, 195, 166, .2), rgba(178, 116, 255, .09) 54%, transparent),
         #202832;
     }
 
@@ -432,8 +455,8 @@
 
     .card-facts {
       display: grid;
-      gap: 10px;
-      padding: 15px 16px 16px;
+      gap: 9px;
+      padding: 16px 18px 18px;
     }
 
     .fact {
@@ -441,14 +464,15 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 14px;
-      min-height: 26px;
-      border-bottom: 1px solid rgba(255, 255, 255, .06);
-      padding-bottom: 8px;
+      min-height: 34px;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 8px 10px;
     }
 
     .fact:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
     }
 
     .fact span {
@@ -461,6 +485,11 @@
       color: var(--text);
       font-size: 14px;
       text-align: right;
+    }
+
+    .fact.highlight {
+      border-color: rgba(89, 195, 166, .18);
+      background: rgba(89, 195, 166, .08);
     }
 
     .empty-state {
@@ -539,7 +568,7 @@
     .modal-form {
       display: grid;
       gap: 14px;
-      padding: 16px;
+      padding: 18px;
     }
 
     .field {
@@ -579,15 +608,23 @@
     }
 
     .modal-actions {
-      display: flex;
-      justify-content: flex-end;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.55fr;
       gap: 10px;
       padding-top: 4px;
+    }
+
+    .modal-actions > button {
+      min-height: 44px;
+      width: 100%;
     }
 
     .ghost-button,
     .danger-button {
       min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border-radius: 8px;
       padding: 0 14px;
       font-weight: 780;
@@ -645,7 +682,7 @@
 
     @media (max-width: 620px) {
       .action-row,
-      .stats-strip,
+      .modal-actions,
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -691,21 +728,6 @@
         </div>
       </section>
 
-      <section class="stats-strip" aria-label="Indicadores">
-        <div class="stat">
-          <span>Total</span>
-          <strong id="totalCharacters">0</strong>
-        </div>
-        <div class="stat">
-          <span>Nível médio</span>
-          <strong id="averageLevel">0</strong>
-        </div>
-        <div class="stat">
-          <span>Profissão média</span>
-          <strong id="averageProfessionLevel">0</strong>
-        </div>
-      </section>
-
       <section class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></section>
     </main>
   </div>
@@ -739,8 +761,8 @@
 
         <div class="form-grid">
           <label class="field">
-            <span>Nível Pokémon</span>
-            <input id="pokemonLevel" type="number" min="1" max="100" step="1" required>
+            <span>Profissão</span>
+            <select id="profession" required></select>
           </label>
           <label class="field">
             <span>Nível de profissão</span>
@@ -750,12 +772,12 @@
 
         <div class="form-grid">
           <label class="field">
-            <span>Profissão</span>
-            <select id="profession" required></select>
-          </label>
-          <label class="field">
             <span>Especialização</span>
             <select id="specialization" required></select>
+          </label>
+          <label class="field">
+            <span>Nível NW</span>
+            <input id="nwLevel" type="number" min="1" max="100" step="1" required>
           </label>
         </div>
 
@@ -778,14 +800,12 @@
   </template>
 
   <script>
-    const STORAGE_KEY = "character-organizer:v2";
+    const STORAGE_KEY = "character-organizer:v3";
+    const PREVIOUS_STORAGE_KEY = "character-organizer:v2";
     const LEGACY_STORAGE_KEY = "character-organizer:v1";
     const app = document.querySelector("#app");
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
-    const totalCharacters = document.querySelector("#totalCharacters");
-    const averageLevel = document.querySelector("#averageLevel");
-    const averageProfessionLevel = document.querySelector("#averageProfessionLevel");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const emptyTemplate = document.querySelector("#emptyTemplate");
     const addCharacterButton = document.querySelector("#addCharacterButton");
@@ -799,7 +819,7 @@
     const characterName = document.querySelector("#characterName");
     const characterClan = document.querySelector("#characterClan");
     const characterLevel = document.querySelector("#characterLevel");
-    const pokemonLevel = document.querySelector("#pokemonLevel");
+    const nwLevel = document.querySelector("#nwLevel");
     const profession = document.querySelector("#profession");
     const specialization = document.querySelector("#specialization");
     const professionLevel = document.querySelector("#professionLevel");
@@ -837,7 +857,7 @@
         name: character.name || "Sem nome",
         clan: clanOptions.includes(character.clan) ? character.clan : character.className && clanOptions.includes(character.className) ? character.className : "Naturia",
         characterLevel: clampNumber(character.characterLevel || character.level || 1, 1, 625),
-        pokemonLevel: clampNumber(character.pokemonLevel || 1, 1, 100),
+        nwLevel: clampNumber(character.nwLevel || 1, 1, 100),
         profession: professionName,
         specialization: spec,
         professionLevel: clampNumber(character.professionLevel || 1, 1, 120),
@@ -846,7 +866,7 @@
     }
 
     function loadState() {
-      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(PREVIOUS_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (!saved) return;
 
       try {
@@ -881,7 +901,7 @@
         name: characterName.value.trim() || "Sem nome",
         clan: characterClan.value,
         characterLevel: characterLevel.value,
-        pokemonLevel: pokemonLevel.value,
+        nwLevel: nwLevel.value,
         profession: profession.value,
         specialization: specialization.value,
         professionLevel: professionLevel.value,
@@ -910,7 +930,7 @@
       const draft = normalizeCharacter(character || {});
       characterName.value = editingId ? draft.name : "";
       characterLevel.value = draft.characterLevel;
-      pokemonLevel.value = draft.pokemonLevel;
+      nwLevel.value = draft.nwLevel;
       professionLevel.value = draft.professionLevel;
       setSelectOptions(characterClan, clanOptions, draft.clan);
       setSelectOptions(profession, professionOptions, draft.profession);
@@ -942,6 +962,22 @@
       render();
     }
 
+    function updateCharacter(id, patch) {
+      state.characters = state.characters.map((character) => {
+        if (character.id !== id) return character;
+        return normalizeCharacter({ ...character, ...patch });
+      });
+      saveState();
+      render();
+    }
+
+    function adjustCharacterLevel(id, field, delta) {
+      const character = state.characters.find((item) => item.id === id);
+      if (!character) return;
+      const max = field === "characterLevel" ? 625 : 100;
+      updateCharacter(id, { [field]: clampNumber(Number(character[field]) + delta, 1, max) });
+    }
+
     function selectCharacter(id) {
       state.selectedId = id;
       saveState();
@@ -963,16 +999,38 @@
         select.setAttribute("aria-label", `Selecionar ${character.name}`);
         select.addEventListener("click", () => selectCharacter(character.id));
 
-        const avatar = document.createElement("div");
+        const avatar = document.createElement("span");
         avatar.className = "avatar";
         avatar.setAttribute("aria-hidden", "true");
         avatar.textContent = getInitials(character.name);
 
-        const text = document.createElement("div");
+        const text = document.createElement("span");
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").textContent = character.name;
-        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}`;
+        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel} · NW ${character.nwLevel}`;
+
+        const characterControls = document.createElement("div");
+        characterControls.className = "level-controls";
+        characterControls.setAttribute("aria-label", `Alterar nível de ${character.name}`);
+        characterControls.innerHTML = `
+          <button class="level-button" type="button" aria-label="Aumentar nível do personagem">+</button>
+          <button class="level-button" type="button" aria-label="Diminuir nível do personagem">-</button>
+        `;
+        const [increaseCharacter, decreaseCharacter] = characterControls.querySelectorAll("button");
+        increaseCharacter.addEventListener("click", () => adjustCharacterLevel(character.id, "characterLevel", 1));
+        decreaseCharacter.addEventListener("click", () => adjustCharacterLevel(character.id, "characterLevel", -1));
+
+        const nwControls = document.createElement("div");
+        nwControls.className = "level-controls nw";
+        nwControls.setAttribute("aria-label", `Alterar nível NW de ${character.name}`);
+        nwControls.innerHTML = `
+          <button class="level-button" type="button" aria-label="Aumentar nível NW">+</button>
+          <button class="level-button" type="button" aria-label="Diminuir nível NW">-</button>
+        `;
+        const [increaseNw, decreaseNw] = nwControls.querySelectorAll("button");
+        increaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", 1));
+        decreaseNw.addEventListener("click", () => adjustCharacterLevel(character.id, "nwLevel", -1));
 
         const remove = document.createElement("button");
         remove.className = "remove-button";
@@ -983,7 +1041,7 @@
         remove.addEventListener("click", () => removeCharacter(character.id));
 
         select.append(avatar, text);
-        item.append(select, remove);
+        item.append(select, characterControls, nwControls, remove);
         list.appendChild(item);
       });
     }
@@ -1010,12 +1068,11 @@
             <button class="edit-button" type="button" aria-label="Editar personagem" title="Editar personagem">✎</button>
           </div>
           <div class="card-facts">
-            <div class="fact"><span>Clã</span><strong data-field="clan"></strong></div>
+            <div class="fact highlight"><span>Clã</span><strong data-field="clan"></strong></div>
             <div class="fact"><span>Nível personagem</span><strong data-field="characterLevel"></strong></div>
-            <div class="fact"><span>Nível Pokémon</span><strong data-field="pokemonLevel"></strong></div>
+            <div class="fact"><span>Nível NW</span><strong data-field="nwLevel"></strong></div>
             <div class="fact"><span>Profissão</span><strong data-field="profession"></strong></div>
             <div class="fact"><span>Especialização</span><strong data-field="specialization"></strong></div>
-            <div class="fact"><span>Nível profissão</span><strong data-field="professionLevel"></strong></div>
           </div>
         `;
 
@@ -1023,10 +1080,9 @@
         card.querySelector(".card-title span").textContent = "Ficha PxG";
         card.querySelector('[data-field="clan"]').textContent = character.clan;
         card.querySelector('[data-field="characterLevel"]').textContent = character.characterLevel;
-        card.querySelector('[data-field="pokemonLevel"]').textContent = character.pokemonLevel;
-        card.querySelector('[data-field="profession"]').textContent = character.profession;
+        card.querySelector('[data-field="nwLevel"]').textContent = character.nwLevel;
+        card.querySelector('[data-field="profession"]').textContent = `${character.profession} (${character.professionLevel})`;
         card.querySelector('[data-field="specialization"]').textContent = character.specialization;
-        card.querySelector('[data-field="professionLevel"]').textContent = character.professionLevel;
         card.querySelector(".edit-button").addEventListener("click", () => {
           state.selectedId = character.id;
           saveState();
@@ -1039,15 +1095,6 @@
     }
 
     function renderStats() {
-      const total = state.characters.length;
-      const characterLevels = state.characters.map((character) => Number(character.characterLevel) || 1);
-      const professionLevels = state.characters.map((character) => Number(character.professionLevel) || 1);
-      const levelAverage = characterLevels.length ? Math.round(characterLevels.reduce((sum, level) => sum + level, 0) / characterLevels.length) : 0;
-      const professionAverage = professionLevels.length ? Math.round(professionLevels.reduce((sum, level) => sum + level, 0) / professionLevels.length) : 0;
-
-      totalCharacters.textContent = total;
-      averageLevel.textContent = levelAverage;
-      averageProfessionLevel.textContent = professionAverage;
       editSelectedButton.disabled = !state.selectedId;
     }
 
