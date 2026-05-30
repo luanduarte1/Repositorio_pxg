@@ -653,6 +653,167 @@
       margin-bottom: 6px;
     }
 
+    .routine-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .68);
+      padding: 12px;
+    }
+
+    .toggle-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .routine-sections {
+      display: grid;
+      gap: 18px;
+    }
+
+    .routine-section {
+      display: grid;
+      gap: 12px;
+    }
+
+    .routine-section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    .routine-section-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .routine-section-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .routine-add-form {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) 110px 96px 42px;
+      gap: 8px;
+    }
+
+    .routine-add-form input,
+    .routine-add-form select {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--input);
+      color: var(--text);
+      outline: none;
+      padding: 10px;
+    }
+
+    .routine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 12px;
+    }
+
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .92);
+      overflow: hidden;
+    }
+
+    .task-card.available {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
+    }
+
+    .task-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      background: #202832;
+      padding: 12px;
+    }
+
+    .task-card h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .task-card header span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .task-characters {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .task-character-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      align-items: start;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 9px;
+    }
+
+    .task-character-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .task-character-row label span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-timer {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      margin-left: 26px;
+      text-align: left;
+    }
+
+    .routine-badge {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      margin-top: 8px;
+      border: 1px solid rgba(238, 111, 117, .5);
+      border-radius: 999px;
+      background: rgba(238, 111, 117, .12);
+      color: #ffb0b4;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
     .empty-state strong {
       display: block;
       font-size: 20px;
@@ -842,6 +1003,7 @@
       .modal-actions,
       .form-grid,
       .form-grid.three,
+      .routine-add-form,
       .sidebar-action-pair,
       .json-actions {
         grid-template-columns: 1fr;
@@ -908,12 +1070,13 @@
       </section>
 
       <section class="tab-panel" data-panel="routine" aria-label="Rotina">
-        <div class="placeholder-panel">
-          <div>
-            <strong>Rotina</strong>
-            <span>Espaço reservado para organizar atividades recorrentes.</span>
-          </div>
+        <div class="routine-toolbar">
+          <label class="toggle-line">
+            <input id="showRoutineOnCharacters" type="checkbox">
+            <span>Mostrar tarefas livres na aba Personagens</span>
+          </label>
         </div>
+        <div class="routine-sections" id="routineSections"></div>
       </section>
 
       <section class="tab-panel" data-panel="quests" aria-label="Quests">
@@ -1001,6 +1164,8 @@
     const grid = document.querySelector("#cardsGrid");
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
+    const routineSections = document.querySelector("#routineSections");
+    const showRoutineOnCharacters = document.querySelector("#showRoutineOnCharacters");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -1044,6 +1209,19 @@
       { min: 525, max: 600, color: "var(--tier-green)" },
       { min: 600, max: 625, color: "var(--tier-dark-green)" }
     ];
+    const routineKinds = {
+      custom: { title: "Task Personalizada", reset: "Temporizador após marcação" },
+      daily: { title: "Diárias", reset: "Reset diário às 7:45" },
+      weekly: { title: "Semanal", reset: "Reset semanal na segunda às 7:45" },
+      monthly: { title: "Mensal", reset: "Reset mensal no dia 1 às 7:45" }
+    };
+    const defaultRoutineTasks = [
+      ...["Bruno", "Falkner", "Daily de Pano", "Lance", "Mite"].map((name) => ({ id: `daily:${name}`, name, kind: "daily", defaultTask: true })),
+      ...["Lorelei", "Misty", "Semanal Outland", "Semanal Orre", "Semanal silver", "Terror", "Cão", "Boss Lavender"].map((name) => ({ id: `weekly:${name}`, name, kind: "weekly", defaultTask: true })),
+      ...["Lab", "Red"].map((name) => ({ id: `monthly:${name}`, name, kind: "monthly", defaultTask: true })),
+      { id: "custom:Tentacruel", name: "Tentacruel", kind: "custom", durationHours: 144, defaultTask: true },
+      { id: "custom:Subject", name: "Subject", kind: "custom", durationHours: 120, defaultTask: true }
+    ];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -1056,7 +1234,10 @@
       collapsed: false,
       sidebarWidth: 292,
       selectedId: null,
-      characters: []
+      characters: [],
+      routineTasks: [],
+      routineCompletions: {},
+      showRoutineOnCharacters: false
     };
 
     let editingId = null;
@@ -1070,6 +1251,22 @@
 
     function hasValue(value) {
       return value !== "" && value !== null && value !== undefined;
+    }
+
+    function normalizeRoutineTask(task) {
+      return {
+        id: task.id || `task:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: task.name || "Nova tarefa",
+        kind: routineKinds[task.kind] ? task.kind : "daily",
+        durationHours: clampNumber(task.durationHours, 1, 8760),
+        defaultTask: Boolean(task.defaultTask)
+      };
+    }
+
+    function mergeRoutineTasks(tasks = []) {
+      const byId = new Map(defaultRoutineTasks.map((task) => [task.id, normalizeRoutineTask(task)]));
+      tasks.map(normalizeRoutineTask).forEach((task) => byId.set(task.id, task));
+      return [...byId.values()];
     }
 
     function normalizeCharacters(characters) {
@@ -1106,6 +1303,71 @@
 
     function applyLevelBorder(element, level) {
       element.style.setProperty("--level-color", getLevelColor(level));
+    }
+
+    function nextDailyReset(from = new Date()) {
+      const next = new Date(from);
+      next.setHours(7, 45, 0, 0);
+      if (next <= from) next.setDate(next.getDate() + 1);
+      return next.getTime();
+    }
+
+    function nextWeeklyReset(from = new Date()) {
+      const next = new Date(from);
+      next.setHours(7, 45, 0, 0);
+      const daysUntilMonday = (8 - next.getDay()) % 7;
+      next.setDate(next.getDate() + daysUntilMonday);
+      if (next <= from) next.setDate(next.getDate() + 7);
+      return next.getTime();
+    }
+
+    function nextMonthlyReset(from = new Date()) {
+      const next = new Date(from.getFullYear(), from.getMonth(), 1, 7, 45, 0, 0);
+      if (next <= from) next.setMonth(next.getMonth() + 1);
+      return next.getTime();
+    }
+
+    function getTaskUnlockAt(task, from = new Date()) {
+      if (task.kind === "daily") return nextDailyReset(from);
+      if (task.kind === "weekly") return nextWeeklyReset(from);
+      if (task.kind === "monthly") return nextMonthlyReset(from);
+      return from.getTime() + (Number(task.durationHours) || 24) * 60 * 60 * 1000;
+    }
+
+    function getCompletionKey(taskId, characterId) {
+      return `${taskId}::${characterId}`;
+    }
+
+    function getCompletion(taskId, characterId) {
+      const completion = state.routineCompletions[getCompletionKey(taskId, characterId)];
+      if (!completion || Number(completion.unlockAt) <= Date.now()) return null;
+      return completion;
+    }
+
+    function formatRemaining(unlockAt) {
+      const ms = Math.max(0, Number(unlockAt) - Date.now());
+      const totalMinutes = Math.ceil(ms / 60000);
+      const days = Math.floor(totalMinutes / 1440);
+      const hours = Math.floor((totalMinutes % 1440) / 60);
+      const minutes = totalMinutes % 60;
+      if (days) return `${days}d ${hours}h ${minutes}m`;
+      if (hours) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    }
+
+    function clearExpiredRoutineCompletions() {
+      let changed = false;
+      Object.entries(state.routineCompletions).forEach(([key, completion]) => {
+        if (!completion || Number(completion.unlockAt) <= Date.now()) {
+          delete state.routineCompletions[key];
+          changed = true;
+        }
+      });
+      if (changed) saveState();
+    }
+
+    function getAvailableRoutineCount(characterId) {
+      return state.routineTasks.filter((task) => !getCompletion(task.id, characterId)).length;
     }
 
     function buildClanInline(clan) {
@@ -1162,7 +1424,10 @@
           collapsed: Boolean(parsed.collapsed),
           sidebarWidth: clampNumber(parsed.sidebarWidth || 292, 236, 460) || 292,
           selectedId: parsed.selectedId || null,
-          characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : []
+          characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
+          routineTasks: mergeRoutineTasks(parsed.routineTasks),
+          routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters)
         };
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -1378,6 +1643,15 @@
         `;
 
         card.querySelector(".card-title strong").textContent = character.name;
+        if (state.showRoutineOnCharacters) {
+          const count = getAvailableRoutineCount(character.id);
+          if (count) {
+            const badge = document.createElement("span");
+            badge.className = "routine-badge";
+            badge.textContent = `${count} rotina${count > 1 ? "s" : ""} livre${count > 1 ? "s" : ""}`;
+            card.querySelector(".card-title").appendChild(badge);
+          }
+        }
         const factsContainer = card.querySelector(".card-facts");
         facts.forEach((fact) => {
           const row = document.createElement("div");
@@ -1438,6 +1712,108 @@
       editSelectedButton.disabled = !state.selectedId;
     }
 
+    function renderRoutineSections() {
+      clearExpiredRoutineCompletions();
+      routineSections.innerHTML = "";
+      showRoutineOnCharacters.checked = state.showRoutineOnCharacters;
+
+      Object.entries(routineKinds).forEach(([kind, config]) => {
+        const section = document.createElement("section");
+        section.className = "routine-section";
+        section.innerHTML = `
+          <div class="routine-section-header">
+            <div>
+              <h2>${config.title}</h2>
+              <span>${config.reset}</span>
+            </div>
+          </div>
+          <form class="routine-add-form">
+            <input name="taskName" type="text" placeholder="Nova tarefa">
+            ${kind === "custom" ? '<input name="duration" type="number" min="1" max="365" placeholder="Dias">' : '<select name="preset"><option value="">Tarefa própria</option></select>'}
+            <select name="unit" ${kind === "custom" ? "" : "hidden"}><option value="days">dias</option><option value="hours">horas</option></select>
+            <button class="primary-button" type="submit" title="Adicionar tarefa">+</button>
+          </form>
+          <div class="routine-grid"></div>
+        `;
+
+        const form = section.querySelector("form");
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const data = new FormData(form);
+          const name = String(data.get("taskName") || "").trim();
+          if (!name) return;
+          const unit = data.get("unit");
+          const durationValue = Number(data.get("duration")) || 1;
+          const durationHours = kind === "custom" ? durationValue * (unit === "hours" ? 1 : 24) : null;
+          state.routineTasks.push(normalizeRoutineTask({
+            id: `custom:${kind}:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+            name,
+            kind,
+            durationHours,
+            defaultTask: false
+          }));
+          saveState();
+          render();
+          form.reset();
+        });
+
+        const gridEl = section.querySelector(".routine-grid");
+        state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
+          const anyAvailable = state.characters.some((character) => !getCompletion(task.id, character.id));
+          const taskCard = document.createElement("article");
+          taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
+          taskCard.innerHTML = `
+            <header>
+              <h3></h3>
+              <span></span>
+            </header>
+            <div class="task-characters"></div>
+          `;
+          taskCard.querySelector("h3").textContent = task.name;
+          taskCard.querySelector("header span").textContent = task.kind === "custom" ? `${task.durationHours || 24}h` : routineKinds[task.kind].title;
+
+          const rows = taskCard.querySelector(".task-characters");
+          if (!state.characters.length) {
+            rows.innerHTML = '<div class="task-timer">Cadastre personagens para controlar esta tarefa.</div>';
+          }
+          getOrderedCharacters().forEach((character) => {
+            const completion = getCompletion(task.id, character.id);
+            const row = document.createElement("div");
+            row.className = "task-character-row";
+            row.innerHTML = `
+              <label>
+                <input type="checkbox">
+                <span></span>
+              </label>
+              <div class="task-timer"></div>
+            `;
+            const checkbox = row.querySelector("input");
+            checkbox.checked = Boolean(completion);
+            row.querySelector("label span").textContent = character.name;
+            row.querySelector(".task-timer").textContent = completion ? formatRemaining(completion.unlockAt) : "Liberada";
+            checkbox.addEventListener("change", () => {
+              const key = getCompletionKey(task.id, character.id);
+              if (checkbox.checked) {
+                const now = new Date();
+                state.routineCompletions[key] = {
+                  completedAt: now.getTime(),
+                  unlockAt: getTaskUnlockAt(task, now)
+                };
+              } else {
+                delete state.routineCompletions[key];
+              }
+              saveState();
+              render();
+            });
+            rows.appendChild(row);
+          });
+          gridEl.appendChild(taskCard);
+        });
+
+        routineSections.appendChild(section);
+      });
+    }
+
     function render() {
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
@@ -1445,6 +1821,7 @@
       toggleSidebar.title = state.collapsed ? "Expandir menu" : "Recolher menu";
       renderList();
       renderCards();
+      renderRoutineSections();
       renderStats();
     }
 
@@ -1490,7 +1867,10 @@
             collapsed: Boolean(incoming.collapsed),
             sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
             selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
-            characters: normalizeCharacters(incoming.characters)
+            characters: normalizeCharacters(incoming.characters),
+            routineTasks: mergeRoutineTasks(incoming.routineTasks),
+            routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters)
           };
           saveState();
           render();
@@ -1547,6 +1927,11 @@
     tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
+    showRoutineOnCharacters.addEventListener("change", () => {
+      state.showRoutineOnCharacters = showRoutineOnCharacters.checked;
+      saveState();
+      renderCards();
+    });
 
     profession.addEventListener("change", () => refreshSpecializations());
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
@@ -1585,11 +1970,13 @@
     });
 
     loadState();
+    state.routineTasks = mergeRoutineTasks(state.routineTasks);
     if (!state.selectedId && state.characters.length) {
       state.selectedId = state.characters[0].id;
     }
     saveState();
     render();
+    setInterval(render, 60000);
   </script>
 </body>
 </html>
