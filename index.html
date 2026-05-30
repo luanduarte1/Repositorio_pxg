@@ -274,6 +274,7 @@
     }
 
     .app.sidebar-collapsed .brand-copy,
+    .app.sidebar-collapsed .character-list,
     .app.sidebar-collapsed .nav-text,
     .app.sidebar-collapsed .sidebar-actions,
     .app.sidebar-collapsed .level-controls {
@@ -282,6 +283,12 @@
     }
 
     .app.sidebar-collapsed .brand-copy {
+      display: none;
+    }
+
+    .app.sidebar-collapsed .character-list,
+    .app.sidebar-collapsed .sidebar-actions,
+    .app.sidebar-collapsed .resize-handle {
       display: none;
     }
 
@@ -297,6 +304,7 @@
 
     .app.sidebar-collapsed .sidebar {
       padding-inline: 16px;
+      gap: 0;
     }
 
     .app.sidebar-collapsed .nav-card {
