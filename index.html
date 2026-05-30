@@ -189,16 +189,16 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 26px 26px;
+      grid-template-columns: minmax(0, 1fr) 24px 24px;
       align-items: center;
-      column-gap: 6px;
-      min-height: 64px;
+      column-gap: 7px;
+      min-height: 70px;
       width: 100%;
       border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 72%, transparent);
       border-radius: 8px;
       background: transparent;
       color: var(--text);
-      padding: 8px;
+      padding: 9px 8px 9px 12px;
       text-align: left;
       contain: layout paint;
     }
@@ -239,13 +239,15 @@
     }
 
     .nav-text strong {
-      font-size: 13px;
+      font-size: 14px;
+      line-height: 1.2;
     }
 
     .nav-text span {
-      margin-top: 2px;
+      margin-top: 10px;
       color: var(--muted);
       font-size: 11px;
+      line-height: 1.25;
     }
 
     .clan-inline {
@@ -274,14 +276,14 @@
       align-self: center;
       justify-self: center;
       align-content: center;
-      gap: 4px;
-      width: 26px;
-      min-width: 26px;
+      gap: 5px;
+      width: 24px;
+      min-width: 24px;
     }
 
     .level-button {
-      width: 26px;
-      height: 24px;
+      width: 24px;
+      height: 23px;
       display: grid;
       place-items: center;
       border: 1px solid rgba(89, 195, 166, .35);
