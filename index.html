@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Organizador de Personagens</title>
+  <title>Organização PxG</title>
   <style>
     :root {
       color-scheme: dark;
       --bg: #101317;
       --panel: #171c22;
       --panel-2: #1f2630;
+      --panel-3: #25323a;
       --text: #edf0f2;
       --muted: #9ba7b4;
       --line: #2b3440;
@@ -18,7 +19,7 @@
       --gold: #e8c15c;
       --danger: #ee6f75;
       --input: #11161c;
-      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+      --shadow: 0 22px 70px rgba(0, 0, 0, .34);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -38,7 +39,6 @@
 
     button,
     input,
-    textarea,
     select {
       font: inherit;
     }
@@ -143,65 +143,6 @@
       transition: transform .2s ease;
     }
 
-    .add-character {
-      display: grid;
-      grid-template-columns: 1fr 46px;
-      gap: 8px;
-      transition: opacity .18s ease;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .field span {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .field input,
-    .field textarea,
-    .field select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--input);
-      color: var(--text);
-      outline: none;
-      padding: 11px 12px;
-      transition: border-color .16s ease, box-shadow .16s ease;
-    }
-
-    .field input:focus,
-    .field textarea:focus,
-    .field select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(89, 195, 166, .12);
-    }
-
-    .field textarea {
-      min-height: 84px;
-      resize: vertical;
-      line-height: 1.45;
-    }
-
-    .primary-button {
-      min-height: 44px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #06130f;
-      font-weight: 800;
-      transition: transform .16s ease, background .16s ease;
-    }
-
-    .primary-button:hover {
-      transform: translateY(-1px);
-      background: var(--accent-strong);
-    }
-
     .character-list {
       display: flex;
       flex-direction: column;
@@ -290,7 +231,6 @@
     }
 
     .app.sidebar-collapsed .brand-copy,
-    .app.sidebar-collapsed .add-character,
     .app.sidebar-collapsed .nav-text,
     .app.sidebar-collapsed .remove-button {
       opacity: 0;
@@ -342,17 +282,65 @@
     }
 
     .topbar p {
-      max-width: 680px;
+      max-width: 720px;
       margin: 8px 0 0;
       color: var(--muted);
       line-height: 1.55;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 10px;
+      min-width: min(440px, 100%);
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 800;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .primary-button {
+      background: var(--accent);
+      color: #06130f;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-1px);
+      background: var(--accent-strong);
+    }
+
+    .secondary-button {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+    }
+
+    .secondary-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(89, 195, 166, .55);
+      background: #24313a;
+    }
+
+    .secondary-button:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+      transform: none;
     }
 
     .stats-strip {
       display: grid;
       grid-template-columns: repeat(3, minmax(110px, 1fr));
       gap: 10px;
-      min-width: min(420px, 100%);
+      margin-bottom: 18px;
     }
 
     .stat {
@@ -379,7 +367,7 @@
 
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
       align-items: start;
     }
@@ -392,104 +380,87 @@
       overflow: hidden;
     }
 
-    .card-banner {
+    .card-header {
       display: grid;
-      grid-template-columns: 62px minmax(0, 1fr);
-      gap: 13px;
+      grid-template-columns: minmax(0, 1fr) 42px;
+      gap: 12px;
       align-items: center;
       padding: 16px;
-      background:
-        linear-gradient(90deg, rgba(89, 195, 166, .18), transparent 72%),
-        #202832;
       border-bottom: 1px solid var(--line);
-    }
-
-    .portrait {
-      width: 62px;
-      height: 62px;
-      display: grid;
-      place-items: center;
-      border-radius: 8px;
-      border: 1px solid rgba(232, 193, 92, .5);
       background:
-        linear-gradient(135deg, #222a33 0 48%, #2c3d3f 48% 100%);
-      color: var(--gold);
-      font-size: 26px;
-      font-weight: 900;
+        linear-gradient(90deg, rgba(89, 195, 166, .16), transparent 72%),
+        #202832;
     }
 
-    .title-field {
+    .card-title {
       min-width: 0;
     }
 
-    .title-field input {
-      width: 100%;
-      border: 0;
-      border-bottom: 1px solid rgba(255, 255, 255, .12);
-      background: transparent;
-      color: var(--text);
-      outline: none;
-      padding: 2px 0 7px;
-      font-size: 20px;
-      font-weight: 850;
-    }
-
-    .title-field input:focus {
-      border-color: var(--accent);
-    }
-
-    .title-field span {
+    .card-title strong {
       display: block;
-      margin-top: 7px;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 19px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-title span {
+      display: block;
+      margin-top: 6px;
       color: var(--muted);
       font-size: 12px;
     }
 
-    .card-body {
+    .edit-button {
+      width: 42px;
+      height: 42px;
       display: grid;
-      gap: 13px;
-      padding: 16px;
-    }
-
-    .compact-row {
-      display: grid;
-      grid-template-columns: 1fr 94px;
-      gap: 10px;
-    }
-
-    .actions-row {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding-top: 2px;
-    }
-
-    .ghost-button,
-    .danger-button {
-      min-height: 38px;
+      place-items: center;
+      border: 1px solid rgba(232, 193, 92, .38);
       border-radius: 8px;
-      padding: 0 12px;
-      font-weight: 780;
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 18px;
     }
 
-    .ghost-button {
-      border: 1px solid var(--line);
-      background: transparent;
+    .edit-button:hover {
+      border-color: rgba(232, 193, 92, .72);
+      background: rgba(232, 193, 92, .16);
+    }
+
+    .card-facts {
+      display: grid;
+      gap: 10px;
+      padding: 15px 16px 16px;
+    }
+
+    .fact {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 26px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      padding-bottom: 8px;
+    }
+
+    .fact:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .fact span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .fact strong {
       color: var(--text);
-    }
-
-    .ghost-button:hover {
-      border-color: rgba(89, 195, 166, .55);
-      background: rgba(89, 195, 166, .08);
-    }
-
-    .danger-button {
-      background: rgba(238, 111, 117, .12);
-      color: #ff9ca0;
-    }
-
-    .danger-button:hover {
-      background: rgba(238, 111, 117, .2);
+      font-size: 14px;
+      text-align: right;
     }
 
     .empty-state {
@@ -514,6 +485,132 @@
       margin-top: 8px;
       color: var(--muted);
       line-height: 1.55;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      background: rgba(5, 8, 11, .62);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .character-modal {
+      width: min(620px, 100%);
+      max-height: min(92vh, 820px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(89, 195, 166, .18), transparent 72%),
+        #202832;
+    }
+
+    .modal-header strong {
+      display: block;
+      font-size: 20px;
+    }
+
+    .modal-header span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .modal-form {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field span {
+      color: #c8dcf0;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--input);
+      color: var(--text);
+      outline: none;
+      padding: 12px;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(89, 195, 166, .12);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .ghost-button,
+    .danger-button {
+      min-height: 40px;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 780;
+    }
+
+    .ghost-button {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .ghost-button:hover {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .08);
+    }
+
+    .danger-button {
+      background: rgba(238, 111, 117, .12);
+      color: #ff9ca0;
+    }
+
+    .danger-button:hover {
+      background: rgba(238, 111, 117, .2);
     }
 
     @media (max-width: 860px) {
@@ -546,10 +643,10 @@
       }
     }
 
-    @media (max-width: 560px) {
-      .add-character,
-      .compact-row,
-      .stats-strip {
+    @media (max-width: 620px) {
+      .action-row,
+      .stats-strip,
+      .form-grid {
         grid-template-columns: 1fr;
       }
 
@@ -566,20 +663,12 @@
         <div class="crest" aria-hidden="true">OPxG</div>
         <div class="brand-copy">
           <strong>Organização PxG</strong>
-          <span>Organizador de personagens</span>
+          <span>PokeXGames</span>
         </div>
         <button class="icon-button sidebar-toggle" id="toggleSidebar" type="button" aria-label="Recolher menu" title="Recolher menu">
           <span class="collapse-icon" aria-hidden="true">‹</span>
         </button>
       </div>
-
-      <form class="add-character" id="addCharacterForm">
-        <label class="field">
-          <span>Novo personagem</span>
-          <input id="newCharacterName" type="text" autocomplete="off" placeholder="Nome do personagem" maxlength="40" required>
-        </label>
-        <button class="primary-button" type="submit" aria-label="Adicionar personagem" title="Adicionar personagem">+</button>
-      </form>
 
       <nav class="character-list" id="characterList" aria-label="Lista de personagens"></nav>
     </aside>
@@ -587,22 +676,33 @@
     <main>
       <section class="topbar" aria-label="Resumo">
         <div>
-          <h1>Organizador de Personagens</h1>
-          <p>Crie personagens, organize a lista lateral e edite os cards com classe, nível, origem, status e anotações importantes da mesa.</p>
+          <h1>Organizador de Personagens PxG</h1>
+          <p>Organize personagens de PokeXGames com clã, níveis, profissão e especialização para consultar tudo rapidamente durante o jogo.</p>
         </div>
-        <div class="stats-strip" aria-label="Indicadores">
-          <div class="stat">
-            <span>Total</span>
-            <strong id="totalCharacters">0</strong>
-          </div>
-          <div class="stat">
-            <span>Nível médio</span>
-            <strong id="averageLevel">0</strong>
-          </div>
-          <div class="stat">
-            <span>Ativos</span>
-            <strong id="activeCharacters">0</strong>
-          </div>
+        <div class="action-row">
+          <button class="primary-button" id="addCharacterButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar novo personagem</span>
+          </button>
+          <button class="secondary-button" id="editSelectedButton" type="button">
+            <span aria-hidden="true">✎</span>
+            <span>Editar personagem existente</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="stats-strip" aria-label="Indicadores">
+        <div class="stat">
+          <span>Total</span>
+          <strong id="totalCharacters">0</strong>
+        </div>
+        <div class="stat">
+          <span>Nível médio</span>
+          <strong id="averageLevel">0</strong>
+        </div>
+        <div class="stat">
+          <span>Profissão média</span>
+          <strong id="averageProfessionLevel">0</strong>
         </div>
       </section>
 
@@ -610,30 +710,108 @@
     </main>
   </div>
 
+  <div class="modal-backdrop" id="characterModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="character-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="modalTitle">Adicionar personagem</strong>
+          <span>Ficha crua para consulta no organizador PxG</span>
+        </div>
+        <button class="icon-button" id="closeModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="characterForm">
+        <label class="field">
+          <span>Nome do personagem</span>
+          <input id="characterName" type="text" autocomplete="off" maxlength="40" required>
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Clã</span>
+            <select id="characterClan" required></select>
+          </label>
+          <label class="field">
+            <span>Nível do personagem</span>
+            <input id="characterLevel" type="number" min="1" max="625" step="1" required>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nível Pokémon</span>
+            <input id="pokemonLevel" type="number" min="1" max="100" step="1" required>
+          </label>
+          <label class="field">
+            <span>Nível de profissão</span>
+            <input id="professionLevel" type="number" min="1" max="120" step="1" required>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Profissão</span>
+            <select id="profession" required></select>
+          </label>
+          <label class="field">
+            <span>Especialização</span>
+            <select id="specialization" required></select>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelModalButton" type="button">Cancelar</button>
+          <button class="danger-button" id="deleteFromModalButton" type="button">Remover</button>
+          <button class="primary-button" type="submit">Salvar personagem</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <template id="emptyTemplate">
     <div class="empty-state">
       <div>
         <strong>Nenhum personagem criado ainda</strong>
-        <span>Use o campo no menu lateral para adicionar o primeiro personagem ao seu organizador.</span>
+        <span>Use o botão de adicionar para criar o primeiro personagem do seu organizador PxG.</span>
       </div>
     </div>
   </template>
 
   <script>
-    const STORAGE_KEY = "character-organizer:v1";
+    const STORAGE_KEY = "character-organizer:v2";
+    const LEGACY_STORAGE_KEY = "character-organizer:v1";
     const app = document.querySelector("#app");
-    const form = document.querySelector("#addCharacterForm");
-    const nameInput = document.querySelector("#newCharacterName");
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
     const totalCharacters = document.querySelector("#totalCharacters");
     const averageLevel = document.querySelector("#averageLevel");
-    const activeCharacters = document.querySelector("#activeCharacters");
+    const averageProfessionLevel = document.querySelector("#averageProfessionLevel");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const emptyTemplate = document.querySelector("#emptyTemplate");
+    const addCharacterButton = document.querySelector("#addCharacterButton");
+    const editSelectedButton = document.querySelector("#editSelectedButton");
+    const modalBackdrop = document.querySelector("#characterModalBackdrop");
+    const modalTitle = document.querySelector("#modalTitle");
+    const closeModalButton = document.querySelector("#closeModalButton");
+    const cancelModalButton = document.querySelector("#cancelModalButton");
+    const deleteFromModalButton = document.querySelector("#deleteFromModalButton");
+    const characterForm = document.querySelector("#characterForm");
+    const characterName = document.querySelector("#characterName");
+    const characterClan = document.querySelector("#characterClan");
+    const characterLevel = document.querySelector("#characterLevel");
+    const pokemonLevel = document.querySelector("#pokemonLevel");
+    const profession = document.querySelector("#profession");
+    const specialization = document.querySelector("#specialization");
+    const professionLevel = document.querySelector("#professionLevel");
 
-    const classOptions = ["Guerreiro", "Mago", "Patrulheiro", "Clérigo", "Ladino", "Bardo", "Druida", "Paladino", "Outro"];
-    const statusOptions = ["Ativo", "Reserva", "Ferido", "Afastado"];
+    const clanOptions = ["Volcanic", "Naturia", "Gardestrike", "Malefic", "Iron Hard", "Wingeon", "Raibolt", "Psycraft", "Orebound", "Seavell"];
+    const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
+    const specializationOptions = {
+      Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
+      Professor: ["Alquimista", "Acadêmico", "Sem especialização"],
+      Estilista: ["Decorador", "Designer", "Sem especialização"],
+      Aventureiro: ["Cozinheiro", "Arqueólogo", "Sem especialização"]
+    };
 
     let state = {
       collapsed: false,
@@ -641,8 +819,34 @@
       characters: []
     };
 
+    let editingId = null;
+
+    function clampNumber(value, min, max) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return min;
+      return Math.min(max, Math.max(min, Math.round(number)));
+    }
+
+    function normalizeCharacter(character) {
+      const professionName = professionOptions.includes(character.profession) ? character.profession : "Aventureiro";
+      const availableSpecs = specializationOptions[professionName];
+      const spec = availableSpecs.includes(character.specialization) ? character.specialization : "Sem especialização";
+
+      return {
+        id: character.id || String(Date.now()),
+        name: character.name || "Sem nome",
+        clan: clanOptions.includes(character.clan) ? character.clan : character.className && clanOptions.includes(character.className) ? character.className : "Naturia",
+        characterLevel: clampNumber(character.characterLevel || character.level || 1, 1, 625),
+        pokemonLevel: clampNumber(character.pokemonLevel || 1, 1, 100),
+        profession: professionName,
+        specialization: spec,
+        professionLevel: clampNumber(character.professionLevel || 1, 1, 120),
+        createdAt: character.createdAt || Date.now()
+      };
+    }
+
     function loadState() {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (!saved) return;
 
       try {
@@ -650,7 +854,7 @@
         state = {
           collapsed: Boolean(parsed.collapsed),
           selectedId: parsed.selectedId || null,
-          characters: Array.isArray(parsed.characters) ? parsed.characters : []
+          characters: Array.isArray(parsed.characters) ? parsed.characters.map(normalizeCharacter) : []
         };
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -659,20 +863,6 @@
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function createCharacter(name) {
-      const now = Date.now();
-      return {
-        id: String(now),
-        name,
-        className: "Guerreiro",
-        level: 1,
-        origin: "",
-        status: "Ativo",
-        notes: "",
-        createdAt: now
-      };
     }
 
     function getInitials(name) {
@@ -685,13 +875,57 @@
         .toUpperCase() || "?";
     }
 
-    function updateCharacter(id, patch) {
-      state.characters = state.characters.map((character) => {
-        if (character.id !== id) return character;
-        return { ...character, ...patch };
+    function createCharacterFromForm(id = String(Date.now())) {
+      return normalizeCharacter({
+        id,
+        name: characterName.value.trim() || "Sem nome",
+        clan: characterClan.value,
+        characterLevel: characterLevel.value,
+        pokemonLevel: pokemonLevel.value,
+        profession: profession.value,
+        specialization: specialization.value,
+        professionLevel: professionLevel.value,
+        createdAt: state.characters.find((character) => character.id === id)?.createdAt || Date.now()
       });
-      saveState();
-      render();
+    }
+
+    function setSelectOptions(select, options, selectedValue) {
+      select.innerHTML = "";
+      options.forEach((option) => {
+        select.add(new Option(option, option, false, option === selectedValue));
+      });
+    }
+
+    function refreshSpecializations(selectedValue) {
+      const options = specializationOptions[profession.value] || [];
+      const nextSelected = options.includes(selectedValue) ? selectedValue : "Sem especialização";
+      setSelectOptions(specialization, options, nextSelected);
+    }
+
+    function openModal(character = null) {
+      editingId = character?.id || null;
+      modalTitle.textContent = editingId ? "Editar personagem" : "Adicionar personagem";
+      deleteFromModalButton.style.display = editingId ? "inline-flex" : "none";
+
+      const draft = normalizeCharacter(character || {});
+      characterName.value = editingId ? draft.name : "";
+      characterLevel.value = draft.characterLevel;
+      pokemonLevel.value = draft.pokemonLevel;
+      professionLevel.value = draft.professionLevel;
+      setSelectOptions(characterClan, clanOptions, draft.clan);
+      setSelectOptions(profession, professionOptions, draft.profession);
+      refreshSpecializations(draft.specialization);
+
+      modalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      characterName.focus();
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingId = null;
+      characterForm.reset();
     }
 
     function removeCharacter(id) {
@@ -704,6 +938,7 @@
         state.selectedId = state.characters[0]?.id || null;
       }
       saveState();
+      closeModal();
       render();
     }
 
@@ -737,7 +972,7 @@
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").textContent = character.name;
-        text.querySelector("span").textContent = `${character.className} · Nível ${character.level || 1}`;
+        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}`;
 
         const remove = document.createElement("button");
         remove.className = "remove-button";
@@ -767,69 +1002,37 @@
         card.dataset.cardId = character.id;
 
         card.innerHTML = `
-          <div class="card-banner">
-            <div class="portrait" aria-hidden="true">${getInitials(character.name)}</div>
-            <label class="title-field">
-              <input type="text" value="" maxlength="40" aria-label="Nome do personagem">
-              <span>Criado para a sessão</span>
-            </label>
+          <div class="card-header">
+            <div class="card-title">
+              <strong></strong>
+              <span></span>
+            </div>
+            <button class="edit-button" type="button" aria-label="Editar personagem" title="Editar personagem">✎</button>
           </div>
-          <div class="card-body">
-            <div class="compact-row">
-              <label class="field">
-                <span>Classe</span>
-                <select aria-label="Classe"></select>
-              </label>
-              <label class="field">
-                <span>Nível</span>
-                <input type="number" min="1" max="99" step="1" value="" aria-label="Nível">
-              </label>
-            </div>
-            <label class="field">
-              <span>Origem</span>
-              <input type="text" value="" placeholder="Cidade, clã, reino..." maxlength="60" aria-label="Origem">
-            </label>
-            <label class="field">
-              <span>Status</span>
-              <select aria-label="Status"></select>
-            </label>
-            <label class="field">
-              <span>Anotações</span>
-              <textarea placeholder="Inventário, relações, objetivos, poderes, pendências..." aria-label="Anotações"></textarea>
-            </label>
-            <div class="actions-row">
-              <button class="ghost-button" type="button">Selecionar</button>
-              <button class="danger-button" type="button">Remover</button>
-            </div>
+          <div class="card-facts">
+            <div class="fact"><span>Clã</span><strong data-field="clan"></strong></div>
+            <div class="fact"><span>Nível personagem</span><strong data-field="characterLevel"></strong></div>
+            <div class="fact"><span>Nível Pokémon</span><strong data-field="pokemonLevel"></strong></div>
+            <div class="fact"><span>Profissão</span><strong data-field="profession"></strong></div>
+            <div class="fact"><span>Especialização</span><strong data-field="specialization"></strong></div>
+            <div class="fact"><span>Nível profissão</span><strong data-field="professionLevel"></strong></div>
           </div>
         `;
 
-        const [nameField, levelField, originField] = card.querySelectorAll("input");
-        const [classSelect, statusSelect] = card.querySelectorAll("select");
-        const notesField = card.querySelector("textarea");
-        const [selectButton, removeButton] = card.querySelectorAll(".actions-row button");
-
-        nameField.value = character.name;
-        levelField.value = character.level || 1;
-        originField.value = character.origin || "";
-        notesField.value = character.notes || "";
-
-        classOptions.forEach((option) => {
-          classSelect.add(new Option(option, option, false, option === character.className));
+        card.querySelector(".card-title strong").textContent = character.name;
+        card.querySelector(".card-title span").textContent = "Ficha PxG";
+        card.querySelector('[data-field="clan"]').textContent = character.clan;
+        card.querySelector('[data-field="characterLevel"]').textContent = character.characterLevel;
+        card.querySelector('[data-field="pokemonLevel"]').textContent = character.pokemonLevel;
+        card.querySelector('[data-field="profession"]').textContent = character.profession;
+        card.querySelector('[data-field="specialization"]').textContent = character.specialization;
+        card.querySelector('[data-field="professionLevel"]').textContent = character.professionLevel;
+        card.querySelector(".edit-button").addEventListener("click", () => {
+          state.selectedId = character.id;
+          saveState();
+          render();
+          openModal(character);
         });
-
-        statusOptions.forEach((option) => {
-          statusSelect.add(new Option(option, option, false, option === character.status));
-        });
-
-        nameField.addEventListener("change", () => updateCharacter(character.id, { name: nameField.value.trim() || "Sem nome" }));
-        levelField.addEventListener("change", () => updateCharacter(character.id, { level: Number(levelField.value) || 1 }));
-        originField.addEventListener("change", () => updateCharacter(character.id, { origin: originField.value.trim() }));
-        classSelect.addEventListener("change", () => updateCharacter(character.id, { className: classSelect.value }));
-        statusSelect.addEventListener("change", () => updateCharacter(character.id, { status: statusSelect.value }));
-        notesField.addEventListener("change", () => updateCharacter(character.id, { notes: notesField.value.trim() }));
-        selectButton.addEventListener("click", () => selectCharacter(character.id));
-        removeButton.addEventListener("click", () => removeCharacter(character.id));
 
         grid.appendChild(card);
       });
@@ -837,13 +1040,15 @@
 
     function renderStats() {
       const total = state.characters.length;
-      const active = state.characters.filter((character) => character.status === "Ativo").length;
-      const levels = state.characters.map((character) => Number(character.level) || 1);
-      const average = levels.length ? Math.round(levels.reduce((sum, level) => sum + level, 0) / levels.length) : 0;
+      const characterLevels = state.characters.map((character) => Number(character.characterLevel) || 1);
+      const professionLevels = state.characters.map((character) => Number(character.professionLevel) || 1);
+      const levelAverage = characterLevels.length ? Math.round(characterLevels.reduce((sum, level) => sum + level, 0) / characterLevels.length) : 0;
+      const professionAverage = professionLevels.length ? Math.round(professionLevels.reduce((sum, level) => sum + level, 0) / professionLevels.length) : 0;
 
       totalCharacters.textContent = total;
-      activeCharacters.textContent = active;
-      averageLevel.textContent = average;
+      averageLevel.textContent = levelAverage;
+      averageProfessionLevel.textContent = professionAverage;
+      editSelectedButton.disabled = !state.selectedId;
     }
 
     function render() {
@@ -855,17 +1060,11 @@
       renderStats();
     }
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const name = nameInput.value.trim();
-      if (!name) return;
+    addCharacterButton.addEventListener("click", () => openModal());
 
-      const character = createCharacter(name);
-      state.characters.unshift(character);
-      state.selectedId = character.id;
-      nameInput.value = "";
-      saveState();
-      render();
+    editSelectedButton.addEventListener("click", () => {
+      const character = state.characters.find((item) => item.id === state.selectedId);
+      if (character) openModal(character);
     });
 
     toggleSidebar.addEventListener("click", () => {
@@ -874,10 +1073,46 @@
       render();
     });
 
+    profession.addEventListener("change", () => refreshSpecializations());
+
+    closeModalButton.addEventListener("click", closeModal);
+    cancelModalButton.addEventListener("click", closeModal);
+
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) closeModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
+        closeModal();
+      }
+    });
+
+    deleteFromModalButton.addEventListener("click", () => {
+      if (editingId) removeCharacter(editingId);
+    });
+
+    characterForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const character = createCharacterFromForm(editingId || String(Date.now()));
+
+      if (editingId) {
+        state.characters = state.characters.map((item) => item.id === editingId ? character : item);
+      } else {
+        state.characters.unshift(character);
+      }
+
+      state.selectedId = character.id;
+      saveState();
+      closeModal();
+      render();
+    });
+
     loadState();
     if (!state.selectedId && state.characters.length) {
       state.selectedId = state.characters[0].id;
     }
+    saveState();
     render();
   </script>
 </body>
