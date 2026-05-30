@@ -1016,7 +1016,9 @@
     function renderList() {
       list.innerHTML = "";
 
-      state.characters.forEach((character) => {
+      const sortedCharacters = [...state.characters].sort((a, b) => b.characterLevel - a.characterLevel);
+
+      sortedCharacters.forEach((character) => {
         const item = document.createElement("div");
         item.className = `nav-card${character.id === state.selectedId ? " active" : ""}`;
         item.title = character.name;
