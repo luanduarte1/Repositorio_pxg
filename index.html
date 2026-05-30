@@ -238,6 +238,27 @@
       font-size: 11px;
     }
 
+    .clan-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      vertical-align: middle;
+    }
+
+    .clan-icon {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      object-fit: contain;
+      image-rendering: auto;
+    }
+
+    .nav-text .clan-icon {
+      width: 16px;
+      height: 16px;
+    }
+
     .level-controls {
       display: grid;
       gap: 4px;
@@ -529,6 +550,24 @@
       text-align: right;
     }
 
+    .fact strong .clan-inline {
+      justify-content: flex-end;
+    }
+
+    .clan-preview {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      color: var(--muted);
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
     .fact.highlight {
       border-color: rgba(89, 195, 166, .18);
       background: rgba(89, 195, 166, .08);
@@ -813,6 +852,7 @@
           <label class="field">
             <span>Clã</span>
             <select id="characterClan" required></select>
+            <div class="clan-preview" id="clanPreview"></div>
           </label>
           <label class="field">
             <span>Nível do personagem</span>
@@ -880,6 +920,7 @@
     const characterForm = document.querySelector("#characterForm");
     const characterName = document.querySelector("#characterName");
     const characterClan = document.querySelector("#characterClan");
+    const clanPreview = document.querySelector("#clanPreview");
     const characterLevel = document.querySelector("#characterLevel");
     const nwLevel = document.querySelector("#nwLevel");
     const profession = document.querySelector("#profession");
@@ -887,6 +928,18 @@
     const professionLevel = document.querySelector("#professionLevel");
 
     const clanOptions = ["Volcanic", "Naturia", "Gardestrike", "Malefic", "Iron Hard", "Wingeon", "Raibolt", "Psycraft", "Orebound", "Seavell"];
+    const clanIcons = {
+      Volcanic: "assets/clans/volcanic.png",
+      Naturia: "assets/clans/naturia.png",
+      Gardestrike: "assets/clans/gardestrike.png",
+      Malefic: "assets/clans/malefic.png",
+      "Iron Hard": "assets/clans/iron-hard.png",
+      Wingeon: "assets/clans/wingeon.png",
+      Raibolt: "assets/clans/raibolt.png",
+      Psycraft: "assets/clans/psycraft.png",
+      Orebound: "assets/clans/orebound.png",
+      Seavell: "assets/clans/seavell.png"
+    };
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -936,6 +989,31 @@
     function getNextOrder() {
       if (!state.characters.length) return 0;
       return Math.min(...state.characters.map((character) => character.order ?? 0)) - 1;
+    }
+
+    function buildClanInline(clan) {
+      const wrapper = document.createElement("span");
+      wrapper.className = "clan-inline";
+
+      const icon = document.createElement("img");
+      icon.className = "clan-icon";
+      icon.alt = "";
+      icon.loading = "lazy";
+      if (clanIcons[clan]) {
+        icon.src = clanIcons[clan];
+      }
+
+      const name = document.createElement("span");
+      name.textContent = clan;
+
+      if (clanIcons[clan]) wrapper.appendChild(icon);
+      wrapper.appendChild(name);
+      return wrapper;
+    }
+
+    function renderClanPreview(clan) {
+      clanPreview.innerHTML = "";
+      clanPreview.appendChild(buildClanInline(clan));
     }
 
     function normalizeCharacter(character) {
@@ -1020,6 +1098,7 @@
       professionLevel.value = hasValue(draft.professionLevel) ? draft.professionLevel : "";
       setSelectOptions(characterClan, clanOptions, draft.clan);
       setSelectOptions(profession, professionOptions, draft.profession);
+      renderClanPreview(characterClan.value);
       refreshSpecializations(draft.specialization);
 
       modalBackdrop.classList.add("open");
@@ -1109,7 +1188,9 @@
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").textContent = character.name;
-        text.querySelector("span").textContent = `${character.clan} · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+        const navDetail = text.querySelector("span");
+        navDetail.appendChild(buildClanInline(character.clan));
+        navDetail.append(` · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`);
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
@@ -1184,7 +1265,11 @@
           row.className = `fact${fact.highlight ? " highlight" : ""}`;
           row.innerHTML = `<span></span><strong></strong>`;
           row.querySelector("span").textContent = fact.label;
-          row.querySelector("strong").textContent = fact.value;
+          if (fact.label === "Clã") {
+            row.querySelector("strong").appendChild(buildClanInline(fact.value));
+          } else {
+            row.querySelector("strong").textContent = fact.value;
+          }
           factsContainer.appendChild(row);
         });
 
@@ -1333,6 +1418,7 @@
     importJsonInput.addEventListener("change", () => importJson(importJsonInput.files[0]));
 
     profession.addEventListener("change", () => refreshSpecializations());
+    characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
 
     closeModalButton.addEventListener("click", closeModal);
     cancelModalButton.addEventListener("click", closeModal);
