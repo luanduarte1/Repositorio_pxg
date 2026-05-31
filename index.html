@@ -21,6 +21,11 @@
       --input: #11161c;
       --shadow: 0 22px 70px rgba(0, 0, 0, .34);
       --sidebar-width: 292px;
+      --tier-red: #ff9a9a;
+      --tier-yellow: #ffe28a;
+      --tier-purple: #d8b4ff;
+      --tier-green: #9dedb1;
+      --tier-dark-green: #1f8f58;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -184,12 +189,12 @@
 
     .nav-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 24px 24px;
+      grid-template-columns: minmax(0, 1fr) 26px 26px;
       align-items: center;
-      gap: 8px;
+      column-gap: 6px;
       min-height: 64px;
       width: 100%;
-      border: 1px solid transparent;
+      border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 72%, transparent);
       border-radius: 8px;
       background: transparent;
       color: var(--text);
@@ -204,15 +209,17 @@
       align-items: center;
       gap: 10px;
       min-width: 0;
+      max-width: 100%;
       border: 0;
       background: transparent;
       color: inherit;
       text-align: inherit;
+      overflow: hidden;
     }
 
     .nav-card:hover,
     .nav-card.active {
-      border-color: var(--line);
+      border-color: var(--level-color, var(--line));
       background: var(--panel-2);
     }
 
@@ -276,12 +283,15 @@
 
     .level-controls {
       display: grid;
+      align-self: center;
+      justify-self: center;
+      align-content: center;
       gap: 4px;
       flex: 0 0 auto;
     }
 
     .level-button {
-      width: 24px;
+      width: 26px;
       height: 24px;
       display: grid;
       place-items: center;
@@ -395,6 +405,41 @@
       line-height: 1.55;
     }
 
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .tab-button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(31, 38, 48, .72);
+      color: var(--muted);
+      padding: 0 14px;
+      font-weight: 800;
+      transition: border-color .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .tab-button:hover,
+    .tab-button.active {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .1);
+      color: var(--text);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
     .primary-button,
     .secondary-button {
       min-height: 44px;
@@ -444,16 +489,16 @@
     }
 
     .character-card {
-      border: 1px solid var(--line);
+      border: 1px solid var(--level-color, var(--line));
       border-radius: 8px;
       background: rgba(23, 28, 34, .92);
-      box-shadow: var(--shadow);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-color, transparent) 16%, transparent), var(--shadow);
       overflow: hidden;
       transition: border-color .16s ease, transform .16s ease;
     }
 
     .character-card:hover {
-      border-color: rgba(89, 195, 166, .42);
+      border-color: var(--level-color, rgba(89, 195, 166, .42));
       transform: translateY(-2px);
     }
 
@@ -601,6 +646,592 @@
       padding: 36px 20px;
     }
 
+    .placeholder-panel {
+      display: grid;
+      place-items: center;
+      min-height: 42vh;
+      border: 1px dashed #34414f;
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .58);
+      color: var(--muted);
+      text-align: center;
+      padding: 34px 20px;
+    }
+
+    .placeholder-panel strong {
+      display: block;
+      color: var(--text);
+      font-size: 19px;
+      margin-bottom: 6px;
+    }
+
+    .panel-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .routine-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .quest-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 0;
+      gap: 0;
+      transition: grid-template-columns .28s ease, gap .28s ease;
+    }
+
+    .quest-layout.detail-open {
+      grid-template-columns: minmax(320px, .95fr) minmax(360px, 1.05fr);
+      gap: 14px;
+    }
+
+    .quest-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .quest-card {
+      display: grid;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .9);
+      overflow: hidden;
+      transition: border-color .16s ease, background .16s ease;
+    }
+
+    .quest-card.active,
+    .quest-card:hover {
+      border-color: rgba(89, 195, 166, .48);
+      background: rgba(31, 38, 48, .94);
+    }
+
+    .quest-card-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 38px 38px;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .quest-card-main strong {
+      overflow: hidden;
+      font-size: 15px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quest-card-main span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .quest-toggle,
+    .quest-menu-button,
+    .copy-button {
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .72);
+      color: var(--text);
+      font-weight: 850;
+    }
+
+    .quest-toggle,
+    .quest-menu-button {
+      width: 34px;
+      height: 34px;
+    }
+
+    .quest-toggle:hover,
+    .quest-menu-button:hover,
+    .copy-button:hover {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .08);
+    }
+
+    .quest-roster {
+      display: none;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding: 10px 12px 12px;
+    }
+
+    .quest-card.expanded .quest-roster {
+      display: grid;
+    }
+
+    .quest-completed-panel {
+      display: none;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      background: rgba(12, 16, 20, .28);
+      padding: 10px 12px 12px;
+    }
+
+    .quest-card.show-completed .quest-completed-panel {
+      display: grid;
+    }
+
+    .quest-completed-panel > span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .quest-character {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 70%, transparent);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .48);
+      padding: 9px;
+    }
+
+    .quest-character button {
+      min-height: 32px;
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .quest-character-name {
+      min-width: 0;
+    }
+
+    .quest-character-name > strong,
+    .quest-character-name > span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quest-character-name span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .quest-character-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .quest-detail {
+      min-width: 0;
+      max-height: calc(100vh - 108px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .9);
+      opacity: 0;
+      transform: translateX(14px);
+      pointer-events: none;
+      transition: opacity .24s ease, transform .24s ease;
+    }
+
+    .quest-layout.detail-open .quest-detail {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .quest-detail-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #202832;
+      padding: 14px;
+    }
+
+    .quest-detail-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .quest-detail-header span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .quest-detail-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 8px;
+    }
+
+    .quest-sections {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .quest-section {
+      display: grid;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .5);
+      padding: 12px;
+      transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    .quest-section.completed {
+      border-color: rgba(157, 237, 177, .62);
+      background: rgba(157, 237, 177, .12);
+      box-shadow: 0 0 0 2px rgba(157, 237, 177, .08);
+    }
+
+    .quest-section label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 850;
+    }
+
+    .quest-section p {
+      margin: 0;
+      color: #d4dde7;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .coord-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .coord-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(89, 195, 166, .46);
+      border-radius: 999px;
+      background: rgba(89, 195, 166, .12);
+      color: var(--accent-strong);
+      padding: 4px 5px 4px 9px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .quest-section p .coord-chip {
+      margin: 0 4px;
+      vertical-align: middle;
+    }
+
+    .copy-button {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .quest-section-editor {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 12px;
+    }
+
+    .quest-routine-fields {
+      display: none;
+      gap: 10px;
+      border: 1px solid rgba(89, 195, 166, .2);
+      border-radius: 8px;
+      background: rgba(89, 195, 166, .07);
+      padding: 10px;
+    }
+
+    .quest-section-editor.routine-enabled .quest-routine-fields {
+      display: grid;
+    }
+
+    .coord-editor {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .coord-editor-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .coord-editor-list button {
+      border-radius: 999px;
+      border: 1px solid rgba(89, 195, 166, .35);
+      background: rgba(89, 195, 166, .1);
+      color: var(--accent-strong);
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .character-name-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .character-name-inline > span:last-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .character-clan-icon {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      object-fit: contain;
+    }
+
+    .toggle-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .routine-sections {
+      display: grid;
+      gap: 18px;
+    }
+
+    .routine-section {
+      display: grid;
+      gap: 12px;
+    }
+
+    .routine-section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    .routine-section-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .routine-section-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .routine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 12px;
+    }
+
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .92);
+      overflow: hidden;
+    }
+
+    .task-card.available {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
+    }
+
+    .task-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      background: #202832;
+      padding: 12px;
+    }
+
+    .task-card h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .task-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .task-heading h3,
+    .task-heading span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-heading h3 {
+      flex: 0 1 auto;
+    }
+
+    .task-heading span {
+      flex: 1 1 auto;
+    }
+
+    .task-heading span,
+    .task-card header > span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .task-edit-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(232, 193, 92, .38);
+      border-radius: 8px;
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 15px;
+    }
+
+    .task-characters {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .task-characters > .task-timer {
+      grid-column: 1 / -1;
+      margin-left: 0;
+    }
+
+    .task-character-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      align-items: start;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 9px;
+    }
+
+    .task-character-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .task-character-row label span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-timer {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      margin-left: 26px;
+      text-align: left;
+    }
+
+    .routine-badge {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      margin-top: 8px;
+      border: 1px solid rgba(238, 111, 117, .5);
+      border-radius: 999px;
+      background: rgba(238, 111, 117, .12);
+      color: #ffb0b4;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .routine-badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 10px;
+    }
+
+    .checkbox-grid label {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .checkbox-grid input {
+      justify-self: center;
+      margin: 0;
+    }
+
+    .checkbox-grid span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .empty-state strong {
       display: block;
       font-size: 20px;
@@ -682,7 +1313,8 @@
     }
 
     .field input,
-    .field select {
+    .field select,
+    .field textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -694,9 +1326,16 @@
     }
 
     .field input:focus,
-    .field select:focus {
+    .field select:focus,
+    .field textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(89, 195, 166, .12);
+    }
+
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.5;
     }
 
     .form-grid {
@@ -710,15 +1349,20 @@
     }
 
     .modal-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.55fr;
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding-top: 4px;
     }
 
     .modal-actions > button {
+      flex: 1 1 138px;
       min-height: 44px;
-      width: 100%;
+    }
+
+    #questSectionEditors {
+      display: grid;
+      gap: 12px;
     }
 
     .ghost-button,
@@ -798,6 +1442,25 @@
       .cards-grid {
         grid-template-columns: 1fr;
       }
+
+      .task-characters {
+        grid-template-columns: 1fr;
+      }
+
+      .quest-layout,
+      .quest-layout.detail-open {
+        grid-template-columns: 1fr;
+      }
+
+      .quest-detail {
+        max-height: none;
+      }
+
+      .quest-card-main,
+      .quest-character,
+      .coord-editor {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -838,14 +1501,38 @@
     </aside>
 
     <main>
-      <section class="topbar" aria-label="Resumo">
-        <div>
-          <h1>Organizador de Personagens PxG</h1>
-          <p>Organize personagens de PokeXGames com clã, níveis, profissão e especialização para consultar tudo rapidamente durante o jogo.</p>
-        </div>
+      <nav class="tabs" aria-label="Seções do painel">
+        <button class="tab-button active" type="button" data-tab="characters">Personagens</button>
+        <button class="tab-button" type="button" data-tab="routine">Rotina</button>
+        <button class="tab-button" type="button" data-tab="quests">Quests</button>
+      </nav>
+
+      <section class="tab-panel active" id="charactersPanel" data-panel="characters" aria-label="Personagens">
+        <div class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></div>
       </section>
 
-      <section class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></section>
+      <section class="tab-panel" data-panel="routine" aria-label="Rotina">
+        <div class="routine-toolbar">
+          <button class="primary-button" id="addRoutineTaskButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar Tarefa</span>
+          </button>
+        </div>
+        <div class="routine-sections" id="routineSections"></div>
+      </section>
+
+      <section class="tab-panel" data-panel="quests" aria-label="Quests">
+        <div class="panel-toolbar">
+          <button class="primary-button" id="addQuestButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar Quest</span>
+          </button>
+        </div>
+        <div class="quest-layout" id="questLayout">
+          <div class="quest-list" id="questList" aria-label="Lista de quests"></div>
+          <aside class="quest-detail" id="questDetail" aria-label="Detalhes da quest"></aside>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -914,6 +1601,120 @@
     </div>
   </template>
 
+  <div class="modal-backdrop" id="taskModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <div class="character-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="taskModalTitle">Adicionar Tarefa</strong>
+          <span>Configuração de rotina por personagem</span>
+        </div>
+        <button class="icon-button" id="closeTaskModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="taskForm">
+        <div class="form-grid">
+          <label class="field">
+            <span>Nome da tarefa</span>
+            <input id="taskName" type="text" maxlength="60" required>
+          </label>
+          <label class="field">
+            <span>Tipo</span>
+            <select id="taskKind" required>
+              <option value="custom">Personalizada</option>
+              <option value="daily">Diária</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensal</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-grid three">
+          <label class="field">
+            <span>Nível mínimo</span>
+            <input id="taskMinLevel" type="number" min="1" max="625" step="1" placeholder="1">
+          </label>
+          <label class="field">
+            <span>Nível NW mínimo</span>
+            <input id="taskMinNwLevel" type="number" min="1" max="100" step="1" placeholder="Opcional">
+          </label>
+          <div class="field">
+            <span>Exibição</span>
+            <label class="toggle-line" for="taskShowOnCharacters">
+              <input id="taskShowOnCharacters" type="checkbox">
+              <span>Mostrar quando estiver livre na aba Personagens</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-grid" id="taskDurationRow">
+          <label class="field">
+            <span>Dias para reset</span>
+            <input id="taskDurationDays" type="number" min="0" max="365" step="1" placeholder="0">
+          </label>
+          <label class="field">
+            <span>Horas para reset</span>
+            <input id="taskDurationHours" type="number" min="0" max="23" step="1" placeholder="0">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Habilitar por profissão</span>
+          <div class="checkbox-grid" id="taskProfessionGrid"></div>
+        </label>
+
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelTaskModalButton" type="button">Cancelar</button>
+          <button class="danger-button" id="deleteTaskButton" type="button">Remover</button>
+          <button class="primary-button" type="submit">Salvar tarefa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="questModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="questModalTitle">
+    <div class="character-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="questModalTitle">Adicionar Quest</strong>
+          <span>Spoiler em seções, coordenadas e requisitos</span>
+        </div>
+        <button class="icon-button" id="closeQuestModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="questForm">
+        <label class="field">
+          <span>Nome da quest</span>
+          <input id="questName" type="text" maxlength="80" required>
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nível mínimo</span>
+            <input id="questMinLevel" type="number" min="1" max="625" step="1" placeholder="1">
+          </label>
+          <label class="field">
+            <span>Nível NW mínimo</span>
+            <input id="questMinNwLevel" type="number" min="1" max="100" step="1" placeholder="Opcional">
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Seções do spoiler</span>
+          <div id="questSectionEditors"></div>
+        </div>
+
+        <button class="secondary-button" id="addQuestSectionButton" type="button">Adicionar seção</button>
+
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelQuestModalButton" type="button">Cancelar</button>
+          <button class="danger-button" id="deleteQuestButton" type="button">Remover</button>
+          <button class="secondary-button" id="finishQuestEditButton" type="button">Finalizar quest</button>
+          <button class="primary-button" type="submit">Salvar quest</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "character-organizer:v3";
     const PREVIOUS_STORAGE_KEY = "character-organizer:v2";
@@ -921,6 +1722,41 @@
     const app = document.querySelector("#app");
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    const routineSections = document.querySelector("#routineSections");
+    const addRoutineTaskButton = document.querySelector("#addRoutineTaskButton");
+    const addQuestButton = document.querySelector("#addQuestButton");
+    const questLayout = document.querySelector("#questLayout");
+    const questList = document.querySelector("#questList");
+    const questDetail = document.querySelector("#questDetail");
+    const taskModalBackdrop = document.querySelector("#taskModalBackdrop");
+    const taskModalTitle = document.querySelector("#taskModalTitle");
+    const closeTaskModalButton = document.querySelector("#closeTaskModalButton");
+    const cancelTaskModalButton = document.querySelector("#cancelTaskModalButton");
+    const deleteTaskButton = document.querySelector("#deleteTaskButton");
+    const taskForm = document.querySelector("#taskForm");
+    const taskName = document.querySelector("#taskName");
+    const taskKind = document.querySelector("#taskKind");
+    const taskMinLevel = document.querySelector("#taskMinLevel");
+    const taskMinNwLevel = document.querySelector("#taskMinNwLevel");
+    const taskShowOnCharacters = document.querySelector("#taskShowOnCharacters");
+    const taskDurationRow = document.querySelector("#taskDurationRow");
+    const taskDurationDays = document.querySelector("#taskDurationDays");
+    const taskDurationHours = document.querySelector("#taskDurationHours");
+    const taskProfessionGrid = document.querySelector("#taskProfessionGrid");
+    const questModalBackdrop = document.querySelector("#questModalBackdrop");
+    const questModalTitle = document.querySelector("#questModalTitle");
+    const closeQuestModalButton = document.querySelector("#closeQuestModalButton");
+    const cancelQuestModalButton = document.querySelector("#cancelQuestModalButton");
+    const deleteQuestButton = document.querySelector("#deleteQuestButton");
+    const finishQuestEditButton = document.querySelector("#finishQuestEditButton");
+    const questForm = document.querySelector("#questForm");
+    const questName = document.querySelector("#questName");
+    const questMinLevel = document.querySelector("#questMinLevel");
+    const questMinNwLevel = document.querySelector("#questMinNwLevel");
+    const questSectionEditors = document.querySelector("#questSectionEditors");
+    const addQuestSectionButton = document.querySelector("#addQuestSectionButton");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -957,6 +1793,20 @@
       Orebound: "assets/clans/orebound.png",
       Seavell: "assets/clans/seavell.png"
     };
+    const levelTiers = [
+      { min: 0, max: 150, color: "var(--tier-red)" },
+      { min: 150, max: 300, color: "var(--tier-yellow)" },
+      { min: 300, max: 525, color: "var(--tier-purple)" },
+      { min: 525, max: 600, color: "var(--tier-green)" },
+      { min: 600, max: 625, color: "var(--tier-dark-green)" }
+    ];
+    const routineKinds = {
+      custom: { title: "Task Personalizada", reset: "Temporizador após marcação" },
+      daily: { title: "Diárias", reset: "Reset diário às 7:45" },
+      weekly: { title: "Semanal", reset: "Reset semanal na segunda às 7:45" },
+      monthly: { title: "Mensal", reset: "Reset mensal no dia 1 às 7:45" }
+    };
+    const defaultRoutineTasks = [];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -969,10 +1819,21 @@
       collapsed: false,
       sidebarWidth: 292,
       selectedId: null,
-      characters: []
+      characters: [],
+      routineTasks: [],
+      routineCompletions: {},
+      showRoutineOnCharacters: false,
+      quests: [],
+      questProgress: {},
+      selectedQuestId: null,
+      selectedQuestCharacterId: null
     };
 
     let editingId = null;
+    let editingTaskId = null;
+    let editingQuestId = null;
+    let expandedQuestId = null;
+    let completedQuestMenuId = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -983,6 +1844,62 @@
 
     function hasValue(value) {
       return value !== "" && value !== null && value !== undefined;
+    }
+
+    function normalizeRoutineTask(task) {
+      return {
+        id: task.id || `task:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: task.name || "Nova tarefa",
+        kind: routineKinds[task.kind] ? task.kind : "daily",
+        durationHours: clampNumber(task.durationHours, 1, 8760),
+        minLevel: clampNumber(task.minLevel, 1, 625) || 1,
+        minNwLevel: hasValue(task.minNwLevel) ? clampNumber(task.minNwLevel, 1, 100) : "",
+        professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
+        showOnCharacters: Boolean(task.showOnCharacters),
+        defaultTask: Boolean(task.defaultTask)
+      };
+    }
+
+    function normalizeQuestSection(section = {}) {
+      return {
+        id: section.id || `section:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        title: section.title || "Nova seção",
+        text: section.text || "",
+        coordinates: Array.isArray(section.coordinates) ? section.coordinates.filter(Boolean).map(String) : [],
+        routine: normalizeQuestSectionRoutine(section.routine)
+      };
+    }
+
+    function normalizeQuestSectionRoutine(routine = {}) {
+      const kind = routineKinds[routine.kind] ? routine.kind : "custom";
+      return {
+        enabled: Boolean(routine.enabled),
+        name: routine.name || "",
+        kind,
+        durationHours: kind === "custom" ? clampNumber(routine.durationHours, 1, 8760) || 24 : undefined
+      };
+    }
+
+    function normalizeQuest(quest = {}) {
+      const sections = Array.isArray(quest.sections) ? quest.sections.map(normalizeQuestSection) : [];
+      return {
+        id: quest.id || `quest:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: quest.name || "Nova quest",
+        minLevel: clampNumber(quest.minLevel, 1, 625) || 1,
+        minNwLevel: hasValue(quest.minNwLevel) ? clampNumber(quest.minNwLevel, 1, 100) : "",
+        sections: sections.length ? sections : [normalizeQuestSection({ title: "Início", text: "" })],
+        createdAt: quest.createdAt || Date.now()
+      };
+    }
+
+    function normalizeQuests(quests = []) {
+      return Array.isArray(quests) ? quests.map(normalizeQuest) : [];
+    }
+
+    function mergeRoutineTasks(tasks = []) {
+      const byId = new Map(defaultRoutineTasks.map((task) => [task.id, normalizeRoutineTask(task)]));
+      tasks.map(normalizeRoutineTask).filter((task) => !task.defaultTask).forEach((task) => byId.set(task.id, task));
+      return [...byId.values()];
     }
 
     function normalizeCharacters(characters) {
@@ -1008,6 +1925,146 @@
       return Math.min(...state.characters.map((character) => character.order ?? 0)) - 1;
     }
 
+    function getLevelColor(level) {
+      const numericLevel = Number(level) || 0;
+      const tier = levelTiers.find((item, index) => {
+        const isLast = index === levelTiers.length - 1;
+        return numericLevel >= item.min && (isLast ? numericLevel <= item.max : numericLevel < item.max);
+      });
+      return tier?.color || "var(--line)";
+    }
+
+    function applyLevelBorder(element, level) {
+      element.style.setProperty("--level-color", getLevelColor(level));
+    }
+
+    function nextDailyReset(from = new Date()) {
+      const next = new Date(from);
+      next.setHours(7, 45, 0, 0);
+      if (next <= from) next.setDate(next.getDate() + 1);
+      return next.getTime();
+    }
+
+    function nextWeeklyReset(from = new Date()) {
+      const next = new Date(from);
+      next.setHours(7, 45, 0, 0);
+      const daysUntilMonday = (8 - next.getDay()) % 7;
+      next.setDate(next.getDate() + daysUntilMonday);
+      if (next <= from) next.setDate(next.getDate() + 7);
+      return next.getTime();
+    }
+
+    function nextMonthlyReset(from = new Date()) {
+      const next = new Date(from.getFullYear(), from.getMonth(), 1, 7, 45, 0, 0);
+      if (next <= from) next.setMonth(next.getMonth() + 1);
+      return next.getTime();
+    }
+
+    function getTaskUnlockAt(task, from = new Date()) {
+      if (task.kind === "daily") return nextDailyReset(from);
+      if (task.kind === "weekly") return nextWeeklyReset(from);
+      if (task.kind === "monthly") return nextMonthlyReset(from);
+      return from.getTime() + (Number(task.durationHours) || 24) * 60 * 60 * 1000;
+    }
+
+    function getCompletionKey(taskId, characterId) {
+      return `${taskId}::${characterId}`;
+    }
+
+    function isCharacterEligibleForTask(character, task) {
+      if ((Number(character.characterLevel) || 1) < (Number(task.minLevel) || 1)) return false;
+      if (hasValue(task.minNwLevel) && (Number(character.nwLevel) || 0) < Number(task.minNwLevel)) return false;
+      if (task.professions.length && !task.professions.includes(character.profession)) return false;
+      return true;
+    }
+
+    function isCharacterEligibleForQuest(character, quest) {
+      if ((Number(character.characterLevel) || 1) < (Number(quest.minLevel) || 1)) return false;
+      if (hasValue(quest.minNwLevel) && (Number(character.nwLevel) || 0) < Number(quest.minNwLevel)) return false;
+      return true;
+    }
+
+    function getQuestProgressKey(questId, characterId) {
+      return `${questId}::${characterId}`;
+    }
+
+    function getQuestProgress(questId, characterId) {
+      return state.questProgress[getQuestProgressKey(questId, characterId)] || null;
+    }
+
+    function isQuestCompletedByCharacter(questId, characterId) {
+      return getQuestProgress(questId, characterId)?.status === "completed";
+    }
+
+    function setQuestProgress(questId, characterId, patch) {
+      const key = getQuestProgressKey(questId, characterId);
+      state.questProgress[key] = {
+        status: "started",
+        completedSections: [],
+        startedAt: Date.now(),
+        ...state.questProgress[key],
+        ...patch,
+        updatedAt: Date.now()
+      };
+    }
+
+    function getCompletion(taskId, characterId) {
+      const completion = state.routineCompletions[getCompletionKey(taskId, characterId)];
+      if (!completion || Number(completion.unlockAt) <= Date.now()) return null;
+      return completion;
+    }
+
+    function formatRemaining(unlockAt) {
+      const ms = Math.max(0, Number(unlockAt) - Date.now());
+      const totalMinutes = Math.ceil(ms / 60000);
+      const days = Math.floor(totalMinutes / 1440);
+      const hours = Math.floor((totalMinutes % 1440) / 60);
+      const minutes = totalMinutes % 60;
+      if (days) return `${days}d ${hours}h ${minutes}m`;
+      if (hours) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    }
+
+    function formatDaysHours(ms) {
+      const totalHours = Math.max(0, Math.ceil(ms / (60 * 60 * 1000)));
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+      if (days && hours) return `${days}d ${hours}h`;
+      if (days) return `${days}d`;
+      return `${hours}h`;
+    }
+
+    function getTaskResetLabel(task) {
+      if (task.kind === "custom") {
+        return `Reset em ${formatDaysHours((Number(task.durationHours) || 24) * 60 * 60 * 1000)} após marcar`;
+      }
+      return `Reset em ${formatDaysHours(getTaskUnlockAt(task) - Date.now())}`;
+    }
+
+    function clearExpiredRoutineCompletions() {
+      let changed = false;
+      Object.entries(state.routineCompletions).forEach(([key, completion]) => {
+        if (!completion || Number(completion.unlockAt) <= Date.now()) {
+          delete state.routineCompletions[key];
+          changed = true;
+        }
+      });
+      if (changed) saveState();
+    }
+
+    function getAvailableRoutineCount(characterId) {
+      return state.routineTasks.filter((task) => {
+        const character = state.characters.find((item) => item.id === characterId);
+        return character && task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, characterId);
+      }).length;
+    }
+
+    function getAvailableRoutineNames(character) {
+      return state.routineTasks
+        .filter((task) => task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, character.id))
+        .map((task) => task.name);
+    }
+
     function buildClanInline(clan) {
       const wrapper = document.createElement("span");
       wrapper.className = "clan-inline";
@@ -1024,6 +2081,26 @@
       name.textContent = clan;
 
       if (clanIcons[clan]) wrapper.appendChild(icon);
+      wrapper.appendChild(name);
+      return wrapper;
+    }
+
+    function buildClanIcon(clan) {
+      const icon = document.createElement("img");
+      icon.className = "character-clan-icon";
+      icon.alt = "";
+      icon.loading = "lazy";
+      if (clanIcons[clan]) icon.src = clanIcons[clan];
+      return icon;
+    }
+
+    function buildCharacterNameInline(character) {
+      const wrapper = document.createElement("span");
+      wrapper.className = "character-name-inline";
+      if (clanIcons[character.clan]) wrapper.appendChild(buildClanIcon(character.clan));
+
+      const name = document.createElement("span");
+      name.textContent = character.name;
       wrapper.appendChild(name);
       return wrapper;
     }
@@ -1062,7 +2139,14 @@
           collapsed: Boolean(parsed.collapsed),
           sidebarWidth: clampNumber(parsed.sidebarWidth || 292, 236, 460) || 292,
           selectedId: parsed.selectedId || null,
-          characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : []
+          characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
+          routineTasks: mergeRoutineTasks(parsed.routineTasks),
+          routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
+          quests: normalizeQuests(parsed.quests),
+          questProgress: parsed.questProgress && typeof parsed.questProgress === "object" ? parsed.questProgress : {},
+          selectedQuestId: parsed.selectedQuestId || null,
+          selectedQuestCharacterId: parsed.selectedQuestCharacterId || null
         };
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -1194,6 +2278,7 @@
         const item = document.createElement("div");
         item.className = `nav-card${character.id === state.selectedId ? " active" : ""}`;
         item.title = character.name;
+        applyLevelBorder(item, character.characterLevel);
 
         const select = document.createElement("button");
         select.className = "nav-card-main";
@@ -1204,7 +2289,7 @@
         const text = document.createElement("span");
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
-        text.querySelector("strong").textContent = character.name;
+        text.querySelector("strong").appendChild(buildCharacterNameInline(character));
         const navDetail = text.querySelector("span");
         navDetail.title = `${character.clan} · Nível ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
         navDetail.appendChild(buildClanInline(character.clan));
@@ -1253,6 +2338,7 @@
         card.className = "character-card";
         card.dataset.cardId = character.id;
         card.draggable = false;
+        applyLevelBorder(card, character.characterLevel);
 
         const professionDisplay = character.profession
           ? `${character.profession}${hasValue(character.professionLevel) ? ` (${character.professionLevel})` : ""}`
@@ -1276,7 +2362,19 @@
           <div class="card-facts"></div>
         `;
 
-        card.querySelector(".card-title strong").textContent = character.name;
+        card.querySelector(".card-title strong").appendChild(buildCharacterNameInline(character));
+        const availableRoutineNames = getAvailableRoutineNames(character);
+        if (availableRoutineNames.length) {
+          const badgeList = document.createElement("div");
+          badgeList.className = "routine-badge-list";
+          availableRoutineNames.forEach((name) => {
+            const badge = document.createElement("span");
+            badge.className = "routine-badge";
+            badge.textContent = name;
+            badgeList.appendChild(badge);
+          });
+          card.querySelector(".card-title").appendChild(badgeList);
+        }
         const factsContainer = card.querySelector(".card-facts");
         facts.forEach((fact) => {
           const row = document.createElement("div");
@@ -1338,6 +2436,667 @@
       editSelectedButton.disabled = !state.selectedId;
     }
 
+    function renderProfessionChoices(selected = []) {
+      taskProfessionGrid.innerHTML = "";
+      professionOptions.forEach((professionName) => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" value=""><span></span>`;
+        const checkbox = label.querySelector("input");
+        checkbox.value = professionName;
+        checkbox.checked = selected.includes(professionName);
+        label.querySelector("span").textContent = professionName;
+        taskProfessionGrid.appendChild(label);
+      });
+    }
+
+    function openTaskModal(task = null) {
+      editingTaskId = task?.id || null;
+      const draft = normalizeRoutineTask(task || { kind: "daily" });
+      taskModalTitle.textContent = editingTaskId ? "Editar Tarefa" : "Adicionar Tarefa";
+      taskName.value = editingTaskId ? draft.name : "";
+      taskKind.value = draft.kind;
+      taskMinLevel.value = draft.minLevel || 1;
+      taskMinNwLevel.value = hasValue(draft.minNwLevel) ? draft.minNwLevel : "";
+      taskShowOnCharacters.checked = Boolean(draft.showOnCharacters);
+      taskDurationDays.value = draft.kind === "custom" ? Math.floor((Number(draft.durationHours) || 24) / 24) : "";
+      taskDurationHours.value = draft.kind === "custom" ? (Number(draft.durationHours) || 24) % 24 : "";
+      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
+      taskName.disabled = Boolean(draft.defaultTask);
+      taskKind.disabled = Boolean(draft.defaultTask);
+      taskDurationDays.disabled = Boolean(draft.defaultTask);
+      taskDurationHours.disabled = Boolean(draft.defaultTask);
+      deleteTaskButton.style.display = editingTaskId && !draft.defaultTask ? "inline-flex" : "none";
+      renderProfessionChoices(draft.professions);
+      taskModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      taskName.focus();
+    }
+
+    function closeTaskModal() {
+      taskModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingTaskId = null;
+      taskForm.reset();
+    }
+
+    function getTaskFromForm() {
+      const existing = state.routineTasks.find((task) => task.id === editingTaskId);
+      const selectedProfessions = [...taskProfessionGrid.querySelectorAll("input:checked")].map((input) => input.value);
+      const kind = existing?.defaultTask ? existing.kind : taskKind.value;
+      const days = Number(taskDurationDays.value) || 0;
+      const hours = Number(taskDurationHours.value) || 0;
+      return normalizeRoutineTask({
+        id: editingTaskId || `task:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: existing?.defaultTask ? existing.name : taskName.value.trim(),
+        kind,
+        durationHours: kind === "custom" ? Math.max(1, days * 24 + hours) : existing?.durationHours,
+        minLevel: taskMinLevel.value,
+        minNwLevel: taskMinNwLevel.value,
+        professions: selectedProfessions,
+        showOnCharacters: taskShowOnCharacters.checked,
+        defaultTask: Boolean(existing?.defaultTask)
+      });
+    }
+
+    function renderRoutineSections() {
+      clearExpiredRoutineCompletions();
+      routineSections.innerHTML = "";
+
+      Object.entries(routineKinds).forEach(([kind, config]) => {
+        const section = document.createElement("section");
+        section.className = "routine-section";
+        section.innerHTML = `
+          <div class="routine-section-header">
+            <div>
+              <h2>${config.title}</h2>
+              <span>${config.reset}</span>
+            </div>
+          </div>
+          <div class="routine-grid"></div>
+        `;
+
+        const gridEl = section.querySelector(".routine-grid");
+        state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
+          const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+          const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
+          const taskCard = document.createElement("article");
+          taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
+          taskCard.innerHTML = `
+            <header>
+              <div class="task-heading">
+                <h3></h3>
+                <span></span>
+              </div>
+              <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
+            </header>
+            <div class="task-characters"></div>
+          `;
+          taskCard.querySelector("h3").textContent = task.name;
+          taskCard.querySelector(".task-heading span").textContent = getTaskResetLabel(task);
+          taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
+
+          const rows = taskCard.querySelector(".task-characters");
+          if (!eligibleCharacters.length) {
+            rows.innerHTML = '<div class="task-timer">Nenhum personagem elegível para esta tarefa.</div>';
+          }
+          eligibleCharacters.forEach((character) => {
+            const completion = getCompletion(task.id, character.id);
+            const row = document.createElement("div");
+            row.className = "task-character-row";
+            row.innerHTML = `
+              <label>
+                <input type="checkbox">
+                <span></span>
+              </label>
+              <div class="task-timer"></div>
+            `;
+            const checkbox = row.querySelector("input");
+            checkbox.checked = Boolean(completion);
+            row.querySelector("label span").appendChild(buildCharacterNameInline(character));
+            row.querySelector(".task-timer").textContent = completion ? formatRemaining(completion.unlockAt) : "Liberada";
+            checkbox.addEventListener("change", () => {
+              const key = getCompletionKey(task.id, character.id);
+              if (checkbox.checked) {
+                const now = new Date();
+                state.routineCompletions[key] = {
+                  completedAt: now.getTime(),
+                  unlockAt: getTaskUnlockAt(task, now)
+                };
+              } else {
+                delete state.routineCompletions[key];
+              }
+              saveState();
+              render();
+            });
+            rows.appendChild(row);
+          });
+          gridEl.appendChild(taskCard);
+        });
+
+        routineSections.appendChild(section);
+      });
+    }
+
+    function getSelectedQuest() {
+      return state.quests.find((quest) => quest.id === state.selectedQuestId) || null;
+    }
+
+    function getSelectedQuestCharacter() {
+      return state.characters.find((character) => character.id === state.selectedQuestCharacterId) || null;
+    }
+
+    function copyCoordinate(value, button) {
+      const write = navigator.clipboard?.writeText ? navigator.clipboard.writeText(value) : Promise.reject();
+      write.then(() => {
+        const previous = button.textContent;
+        button.textContent = "✓";
+        window.setTimeout(() => {
+          button.textContent = previous;
+        }, 900);
+      }).catch(() => {
+        const input = document.createElement("input");
+        input.value = value;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      });
+    }
+
+    function createCoordinateChip(value) {
+      const chip = document.createElement("span");
+      chip.className = "coord-chip";
+      chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar coordenada" title="Copiar coordenada">⧉</button>`;
+      chip.querySelector("span").textContent = value;
+      chip.querySelector("button").addEventListener("click", () => copyCoordinate(value, chip.querySelector("button")));
+      return chip;
+    }
+
+    function getCoordinateToken(value) {
+      return `[[coord:${value}]]`;
+    }
+
+    function extractCoordinateTokens(text) {
+      return [...String(text || "").matchAll(/\[\[coord:([^\]]+)\]\]/g)].map((match) => match[1].trim()).filter(Boolean);
+    }
+
+    function insertAtCursor(textarea, value) {
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const prefix = textarea.value.slice(0, start);
+      const suffix = textarea.value.slice(end);
+      const spacerBefore = prefix && !/\s$/.test(prefix) ? " " : "";
+      const spacerAfter = suffix && !/^\s/.test(suffix) ? " " : "";
+      textarea.value = `${prefix}${spacerBefore}${value}${spacerAfter}${suffix}`;
+      const nextCursor = (prefix + spacerBefore + value).length;
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    }
+
+    function renderSpoilerText(container, text, legacyCoordinates = []) {
+      container.innerHTML = "";
+      const source = String(text || "");
+      const pattern = /\[\[coord:([^\]]+)\]\]/g;
+      let lastIndex = 0;
+      let matched = false;
+
+      source.replace(pattern, (match, coordinate, index) => {
+        if (index > lastIndex) container.appendChild(document.createTextNode(source.slice(lastIndex, index)));
+        container.appendChild(createCoordinateChip(coordinate.trim()));
+        lastIndex = index + match.length;
+        matched = true;
+        return match;
+      });
+
+      if (lastIndex < source.length) container.appendChild(document.createTextNode(source.slice(lastIndex)));
+      if (!source.trim()) container.appendChild(document.createTextNode("Sem texto explicativo nesta seção."));
+      if (!matched && legacyCoordinates.length) {
+        legacyCoordinates.forEach((coordinate) => {
+          container.appendChild(document.createTextNode(" "));
+          container.appendChild(createCoordinateChip(coordinate));
+        });
+      }
+    }
+
+    function getQuestRoutineId(questId, sectionId) {
+      return `quest-routine:${questId}:${sectionId}`;
+    }
+
+    function createRoutineFromQuestSection(quest, section) {
+      if (!section.routine?.enabled) return;
+      const routineId = getQuestRoutineId(quest.id, section.id);
+      if (state.routineTasks.some((task) => task.id === routineId)) return;
+
+      state.routineTasks.push(normalizeRoutineTask({
+        id: routineId,
+        name: section.routine.name || `${quest.name} - ${section.title}`,
+        kind: section.routine.kind || "custom",
+        durationHours: section.routine.kind === "custom" ? section.routine.durationHours : undefined,
+        minLevel: quest.minLevel,
+        minNwLevel: quest.minNwLevel,
+        professions: [],
+        showOnCharacters: false,
+        defaultTask: false
+      }));
+    }
+
+    function createLinkedQuestRoutines(quest, sectionIds = []) {
+      const wantedSections = new Set(sectionIds);
+      quest.sections.forEach((section) => {
+        if (!wantedSections.size || wantedSections.has(section.id)) {
+          createRoutineFromQuestSection(quest, section);
+        }
+      });
+    }
+
+    function createLinkedRoutinesForExistingQuestProgress(quest) {
+      Object.entries(state.questProgress).forEach(([key, progress]) => {
+        if (!key.startsWith(`${quest.id}::`)) return;
+        if (progress?.status === "completed") {
+          createLinkedQuestRoutines(quest);
+          return;
+        }
+        if (Array.isArray(progress?.completedSections)) {
+          createLinkedQuestRoutines(quest, progress.completedSections);
+        }
+      });
+    }
+
+    function renderQuestList() {
+      questList.innerHTML = "";
+
+      if (!state.quests.length) {
+        questList.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>Nenhuma quest criada ainda</strong>
+              <span>Use Adicionar Quest para registrar spoilers em seções, coordenadas e progresso por personagem.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      state.quests.forEach((quest) => {
+        const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+        const completedCharacters = eligibleCharacters.filter((character) => isQuestCompletedByCharacter(quest.id, character.id));
+        const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
+        const completedCount = eligibleCharacters.filter((character) => getQuestProgress(quest.id, character.id)?.status === "completed").length;
+        const card = document.createElement("article");
+        card.className = `quest-card${state.selectedQuestId === quest.id ? " active" : ""}${expandedQuestId === quest.id ? " expanded" : ""}${completedQuestMenuId === quest.id ? " show-completed" : ""}`;
+        card.innerHTML = `
+          <div class="quest-card-main">
+            <button class="nav-card-main" type="button">
+              <strong></strong>
+              <span></span>
+            </button>
+            <button class="quest-toggle" type="button" aria-label="Ver personagens" title="Ver personagens">+</button>
+            <button class="quest-menu-button" type="button" aria-label="Opções da quest" title="Opções da quest">...</button>
+          </div>
+          <div class="quest-roster"></div>
+          <div class="quest-completed-panel"></div>
+        `;
+
+        card.querySelector("strong").textContent = quest.name;
+        card.querySelector(".quest-card-main span").textContent = `Nv. ${quest.minLevel}${hasValue(quest.minNwLevel) ? ` · NW ${quest.minNwLevel}` : ""} · ${completedCount}/${eligibleCharacters.length} completos`;
+        card.querySelector(".nav-card-main").addEventListener("click", () => {
+          state.selectedQuestId = quest.id;
+          state.selectedQuestCharacterId = activeCharacters[0]?.id || null;
+          saveState();
+          render();
+        });
+        card.querySelector(".quest-toggle").addEventListener("click", () => {
+          expandedQuestId = expandedQuestId === quest.id ? null : quest.id;
+          render();
+        });
+        card.querySelector(".quest-menu-button").addEventListener("click", () => {
+          completedQuestMenuId = completedQuestMenuId === quest.id ? null : quest.id;
+          render();
+        });
+
+        const roster = card.querySelector(".quest-roster");
+        if (!eligibleCharacters.length) {
+          roster.innerHTML = '<div class="task-timer">Nenhum personagem cumpre os requisitos desta quest.</div>';
+        } else if (!activeCharacters.length) {
+          roster.innerHTML = '<div class="task-timer">Todos os personagens elegíveis já concluíram esta quest.</div>';
+        }
+
+        activeCharacters.forEach((character) => {
+          const progress = getQuestProgress(quest.id, character.id);
+          const row = document.createElement("div");
+          row.className = "quest-character";
+          applyLevelBorder(row, character.characterLevel);
+          row.innerHTML = `
+            <div class="quest-character-name">
+              <strong></strong>
+              <span></span>
+            </div>
+            <div class="quest-character-actions">
+              <button class="ghost-button" type="button" data-action="select">Ver</button>
+              <button class="secondary-button" type="button" data-action="start">Começar</button>
+              <button class="primary-button" type="button" data-action="complete">Marcar completada</button>
+              <button class="quest-menu-button" type="button" data-action="reset" aria-label="Resetar personagem" title="Resetar personagem">...</button>
+            </div>
+          `;
+          row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+          row.querySelector("span").textContent = progress?.status === "completed" ? "Quest completada" : progress ? "Em andamento" : "Não iniciada";
+          row.querySelector('[data-action="select"]').addEventListener("click", () => {
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="start"]').addEventListener("click", () => {
+            setQuestProgress(quest.id, character.id, { status: "started" });
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="complete"]').addEventListener("click", () => {
+            createLinkedQuestRoutines(quest);
+            setQuestProgress(quest.id, character.id, {
+              status: "completed",
+              completedSections: quest.sections.map((section) => section.id),
+              completedAt: Date.now()
+            });
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = activeCharacters.find((item) => item.id !== character.id)?.id || null;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="reset"]').addEventListener("click", () => {
+            const key = getQuestProgressKey(quest.id, character.id);
+            delete state.questProgress[key];
+            if (state.selectedQuestCharacterId === character.id) state.selectedQuestCharacterId = null;
+            saveState();
+            render();
+          });
+          roster.appendChild(row);
+        });
+
+        const completedPanel = card.querySelector(".quest-completed-panel");
+        const editButton = document.createElement("button");
+        editButton.className = "secondary-button";
+        editButton.type = "button";
+        editButton.textContent = "Editar quest";
+        editButton.addEventListener("click", () => openQuestModal(quest));
+        completedPanel.appendChild(editButton);
+
+        if (!completedCharacters.length) {
+          const empty = document.createElement("span");
+          empty.textContent = "Nenhum personagem concluiu esta quest ainda.";
+          completedPanel.appendChild(empty);
+        }
+
+        completedCharacters.forEach((character) => {
+          const row = document.createElement("div");
+          row.className = "quest-character";
+          applyLevelBorder(row, character.characterLevel);
+          row.innerHTML = `
+            <div class="quest-character-name">
+              <strong></strong>
+              <span>Quest concluída</span>
+            </div>
+            <div class="quest-character-actions">
+              <button class="danger-button" type="button">Reverter conclusão</button>
+            </div>
+          `;
+          row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+          row.querySelector("button").addEventListener("click", () => {
+            delete state.questProgress[getQuestProgressKey(quest.id, character.id)];
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            expandedQuestId = quest.id;
+            completedQuestMenuId = null;
+            saveState();
+            render();
+          });
+          completedPanel.appendChild(row);
+        });
+
+        questList.appendChild(card);
+      });
+    }
+
+    function renderQuestDetail() {
+      const quest = getSelectedQuest();
+      questLayout.classList.toggle("detail-open", Boolean(quest));
+      questDetail.innerHTML = "";
+      if (!quest) return;
+
+      const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+      const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
+      if (!activeCharacters.some((character) => character.id === state.selectedQuestCharacterId)) {
+        state.selectedQuestCharacterId = activeCharacters[0]?.id || null;
+      }
+      const character = getSelectedQuestCharacter();
+      const progress = character ? getQuestProgress(quest.id, character.id) : null;
+      const completedSections = new Set(progress?.completedSections || []);
+
+      questDetail.innerHTML = `
+        <div class="quest-detail-header">
+          <div>
+            <h2></h2>
+            <span></span>
+          </div>
+          <div class="quest-detail-actions">
+            <button class="quest-menu-button" type="button" data-action="edit" aria-label="Editar quest" title="Editar quest">...</button>
+            <button class="quest-menu-button" type="button" data-action="close" aria-label="Recolher visualização da quest" title="Recolher visualização">×</button>
+          </div>
+        </div>
+        <div class="quest-sections"></div>
+      `;
+      questDetail.querySelector("h2").textContent = quest.name;
+      const detailMeta = questDetail.querySelector(".quest-detail-header span");
+      if (character) {
+        detailMeta.appendChild(buildCharacterNameInline(character));
+        detailMeta.append(` · ${progress?.status === "completed" ? "completada" : progress ? "em andamento" : "não iniciada"}`);
+      } else {
+        detailMeta.textContent = eligibleCharacters.length
+          ? "Todos os personagens elegíveis já concluíram esta quest."
+          : "Nenhum personagem elegível para os requisitos atuais.";
+      }
+      questDetail.querySelector('[data-action="edit"]').addEventListener("click", () => openQuestModal(quest));
+      questDetail.querySelector('[data-action="close"]').addEventListener("click", () => {
+        state.selectedQuestId = null;
+        state.selectedQuestCharacterId = null;
+        saveState();
+        render();
+      });
+
+      const sections = questDetail.querySelector(".quest-sections");
+      quest.sections.forEach((section) => {
+        const sectionEl = document.createElement("article");
+        sectionEl.className = `quest-section${completedSections.has(section.id) ? " completed" : ""}`;
+        sectionEl.innerHTML = `
+          <label>
+            <input type="checkbox">
+            <span></span>
+          </label>
+          <p></p>
+        `;
+        const checkbox = sectionEl.querySelector("input");
+        checkbox.checked = completedSections.has(section.id);
+        checkbox.disabled = !character;
+        sectionEl.querySelector("label span").textContent = section.title;
+        renderSpoilerText(sectionEl.querySelector("p"), section.text, section.coordinates);
+        checkbox.addEventListener("change", () => {
+          if (!character) return;
+          const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
+          if (checkbox.checked) {
+            nextSections.add(section.id);
+            createLinkedQuestRoutines(quest, [section.id]);
+          } else {
+            nextSections.delete(section.id);
+          }
+          setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections] });
+          saveState();
+          render();
+        });
+
+        sections.appendChild(sectionEl);
+      });
+    }
+
+    function renderQuests() {
+      renderQuestList();
+      renderQuestDetail();
+    }
+
+    function createQuestSectionEditor(section = {}) {
+      const draft = normalizeQuestSection(section);
+      const editor = document.createElement("div");
+      editor.className = "quest-section-editor";
+      editor.classList.toggle("routine-enabled", Boolean(draft.routine.enabled));
+      editor.dataset.sectionId = draft.id;
+      editor.innerHTML = `
+        <label class="field">
+          <span>Título da seção</span>
+          <input class="quest-section-title" type="text" maxlength="70">
+        </label>
+        <label class="field">
+          <span>Texto do spoiler</span>
+          <textarea class="quest-section-text" placeholder="Escreva uma etapa curta da quest."></textarea>
+        </label>
+        <div class="coord-editor">
+          <label class="field">
+            <span>Coordenada</span>
+            <input class="quest-coordinate-input" type="text" maxlength="80" placeholder="Ex: 1234, 5678, 7">
+          </label>
+          <button class="secondary-button add-coordinate-button" type="button">Adicionar coordenada</button>
+        </div>
+        <div class="coord-editor-list"></div>
+        <label class="toggle-line">
+          <input class="quest-routine-enabled" type="checkbox">
+          <span>Criar rotina ao concluir esta seção</span>
+        </label>
+        <div class="quest-routine-fields">
+          <label class="field">
+            <span>Nome da rotina</span>
+            <input class="quest-routine-name" type="text" maxlength="60" placeholder="Usar nome da quest e seção">
+          </label>
+          <div class="form-grid three">
+            <label class="field">
+              <span>Tipo</span>
+              <select class="quest-routine-kind">
+                <option value="custom">Personalizada</option>
+                <option value="daily">Diária</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </label>
+            <label class="field quest-routine-duration">
+              <span>Dias</span>
+              <input class="quest-routine-days" type="number" min="0" max="365" step="1" placeholder="0">
+            </label>
+            <label class="field quest-routine-duration">
+              <span>Horas</span>
+              <input class="quest-routine-hours" type="number" min="0" max="23" step="1" placeholder="0">
+            </label>
+          </div>
+        </div>
+      `;
+      editor.querySelector(".quest-section-title").value = draft.title;
+      const textInput = editor.querySelector(".quest-section-text");
+      const existingTokenCoords = new Set(extractCoordinateTokens(draft.text));
+      const legacyTokens = draft.coordinates
+        .filter((coordinate) => !existingTokenCoords.has(coordinate))
+        .map(getCoordinateToken);
+      textInput.value = [draft.text, ...legacyTokens].filter(Boolean).join(legacyTokens.length && draft.text ? "\n" : "");
+
+      const routineEnabled = editor.querySelector(".quest-routine-enabled");
+      const routineKind = editor.querySelector(".quest-routine-kind");
+      const routineName = editor.querySelector(".quest-routine-name");
+      const routineDays = editor.querySelector(".quest-routine-days");
+      const routineHours = editor.querySelector(".quest-routine-hours");
+
+      routineEnabled.checked = Boolean(draft.routine.enabled);
+      routineName.value = draft.routine.name || "";
+      routineKind.value = draft.routine.kind || "custom";
+      routineDays.value = draft.routine.kind === "custom" ? Math.floor((Number(draft.routine.durationHours) || 24) / 24) : "";
+      routineHours.value = draft.routine.kind === "custom" ? (Number(draft.routine.durationHours) || 24) % 24 : "";
+
+      function refreshRoutineFields() {
+        editor.classList.toggle("routine-enabled", routineEnabled.checked);
+        editor.querySelectorAll(".quest-routine-duration").forEach((field) => {
+          field.style.display = routineKind.value === "custom" ? "flex" : "none";
+        });
+      }
+
+      routineEnabled.addEventListener("change", refreshRoutineFields);
+      routineKind.addEventListener("change", refreshRoutineFields);
+      refreshRoutineFields();
+
+      editor.querySelector(".add-coordinate-button").addEventListener("click", () => {
+        const input = editor.querySelector(".quest-coordinate-input");
+        const value = input.value.trim();
+        if (!value) return;
+        insertAtCursor(textInput, getCoordinateToken(value));
+        input.value = "";
+      });
+
+      return editor;
+    }
+
+    function openQuestModal(quest = null) {
+      editingQuestId = quest?.id || null;
+      const draft = normalizeQuest(quest || {});
+      questModalTitle.textContent = editingQuestId ? "Editar Quest" : "Adicionar Quest";
+      questName.value = editingQuestId ? draft.name : "";
+      questMinLevel.value = draft.minLevel || 1;
+      questMinNwLevel.value = hasValue(draft.minNwLevel) ? draft.minNwLevel : "";
+      questSectionEditors.innerHTML = "";
+      draft.sections.forEach((section) => questSectionEditors.appendChild(createQuestSectionEditor(section)));
+      deleteQuestButton.style.display = editingQuestId ? "inline-flex" : "none";
+      questModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      questName.focus();
+    }
+
+    function closeQuestModal() {
+      questModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingQuestId = null;
+      questForm.reset();
+      questSectionEditors.innerHTML = "";
+    }
+
+    function getQuestFromForm() {
+      const existing = state.quests.find((quest) => quest.id === editingQuestId);
+      const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
+        const text = editor.querySelector(".quest-section-text").value.trim();
+        const coordinates = [...new Set([
+          ...extractCoordinateTokens(text),
+          ...[...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean)
+        ])];
+        const routineKind = editor.querySelector(".quest-routine-kind").value;
+        const routineDays = Number(editor.querySelector(".quest-routine-days").value) || 0;
+        const routineHours = Number(editor.querySelector(".quest-routine-hours").value) || 0;
+        return normalizeQuestSection({
+          id: editor.dataset.sectionId,
+          title: editor.querySelector(".quest-section-title").value.trim() || `Seção ${index + 1}`,
+          text,
+          coordinates,
+          routine: {
+            enabled: editor.querySelector(".quest-routine-enabled").checked,
+            name: editor.querySelector(".quest-routine-name").value.trim(),
+            kind: routineKind,
+            durationHours: routineKind === "custom" ? Math.max(1, routineDays * 24 + routineHours) : undefined
+          }
+        });
+      });
+
+      return normalizeQuest({
+        id: editingQuestId || `quest:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: questName.value.trim(),
+        minLevel: questMinLevel.value,
+        minNwLevel: questMinNwLevel.value,
+        sections,
+        createdAt: existing?.createdAt || Date.now()
+      });
+    }
+
     function render() {
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
@@ -1345,7 +3104,18 @@
       toggleSidebar.title = state.collapsed ? "Expandir menu" : "Recolher menu";
       renderList();
       renderCards();
+      renderRoutineSections();
+      renderQuests();
       renderStats();
+    }
+
+    function switchTab(tabName) {
+      tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === tabName);
+      });
     }
 
     function exportJson() {
@@ -1381,7 +3151,14 @@
             collapsed: Boolean(incoming.collapsed),
             sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
             selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
-            characters: normalizeCharacters(incoming.characters)
+            characters: normalizeCharacters(incoming.characters),
+            routineTasks: mergeRoutineTasks(incoming.routineTasks),
+            routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
+            quests: normalizeQuests(incoming.quests),
+            questProgress: incoming.questProgress && typeof incoming.questProgress === "object" ? incoming.questProgress : {},
+            selectedQuestId: incoming.selectedQuestId || null,
+            selectedQuestCharacterId: incoming.selectedQuestCharacterId || null
           };
           saveState();
           render();
@@ -1435,25 +3212,81 @@
     exportJsonButton.addEventListener("click", exportJson);
     importJsonButton.addEventListener("click", () => importJsonInput.click());
     importJsonInput.addEventListener("change", () => importJson(importJsonInput.files[0]));
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchTab(button.dataset.tab));
+    });
+    addRoutineTaskButton.addEventListener("click", () => openTaskModal());
+    addQuestButton.addEventListener("click", () => openQuestModal());
+    addQuestSectionButton.addEventListener("click", () => {
+      questSectionEditors.appendChild(createQuestSectionEditor({ title: `Seção ${questSectionEditors.children.length + 1}` }));
+    });
 
     profession.addEventListener("change", () => refreshSpecializations());
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
 
     closeModalButton.addEventListener("click", closeModal);
     cancelModalButton.addEventListener("click", closeModal);
+    closeTaskModalButton.addEventListener("click", closeTaskModal);
+    cancelTaskModalButton.addEventListener("click", closeTaskModal);
+    closeQuestModalButton.addEventListener("click", closeQuestModal);
+    cancelQuestModalButton.addEventListener("click", closeQuestModal);
+    finishQuestEditButton.addEventListener("click", () => {
+      questForm.requestSubmit();
+    });
 
     modalBackdrop.addEventListener("click", (event) => {
       if (event.target === modalBackdrop) closeModal();
+    });
+    taskModalBackdrop.addEventListener("click", (event) => {
+      if (event.target === taskModalBackdrop) closeTaskModal();
+    });
+    questModalBackdrop.addEventListener("click", (event) => {
+      if (event.target === questModalBackdrop) closeQuestModal();
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
         closeModal();
       }
+      if (event.key === "Escape" && taskModalBackdrop.classList.contains("open")) {
+        closeTaskModal();
+      }
+      if (event.key === "Escape" && questModalBackdrop.classList.contains("open")) {
+        closeQuestModal();
+      }
     });
 
     deleteFromModalButton.addEventListener("click", () => {
       if (editingId) removeCharacter(editingId);
+    });
+    deleteTaskButton.addEventListener("click", () => {
+      const task = state.routineTasks.find((item) => item.id === editingTaskId);
+      if (!task || task.defaultTask || !confirm(`Remover ${task.name}?`)) return;
+      state.routineTasks = state.routineTasks.filter((item) => item.id !== editingTaskId);
+      Object.keys(state.routineCompletions).forEach((key) => {
+        if (key.startsWith(`${editingTaskId}::`)) delete state.routineCompletions[key];
+      });
+      saveState();
+      closeTaskModal();
+      render();
+    });
+    deleteQuestButton.addEventListener("click", () => {
+      const quest = state.quests.find((item) => item.id === editingQuestId);
+      if (!quest || !confirm(`Remover ${quest.name}?`)) return;
+      state.quests = state.quests.filter((item) => item.id !== editingQuestId);
+      Object.keys(state.questProgress).forEach((key) => {
+        if (key.startsWith(`${editingQuestId}::`)) delete state.questProgress[key];
+      });
+      if (state.selectedQuestId === editingQuestId) {
+        state.selectedQuestId = state.quests[0]?.id || null;
+        state.selectedQuestCharacterId = null;
+      }
+      saveState();
+      closeQuestModal();
+      render();
+    });
+    taskKind.addEventListener("change", () => {
+      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
     });
 
     characterForm.addEventListener("submit", (event) => {
@@ -1472,12 +3305,50 @@
       render();
     });
 
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const task = getTaskFromForm();
+      if (!task.name) return;
+      if (editingTaskId) {
+        state.routineTasks = state.routineTasks.map((item) => item.id === editingTaskId ? task : item);
+      } else {
+        state.routineTasks.push(task);
+      }
+      saveState();
+      closeTaskModal();
+      render();
+    });
+
+    questForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const quest = getQuestFromForm();
+      if (!quest.name) return;
+      if (editingQuestId) {
+        state.quests = state.quests.map((item) => item.id === editingQuestId ? quest : item);
+      } else {
+        state.quests.unshift(quest);
+      }
+      createLinkedRoutinesForExistingQuestProgress(quest);
+      state.selectedQuestId = quest.id;
+      expandedQuestId = quest.id;
+      saveState();
+      closeQuestModal();
+      render();
+    });
+
     loadState();
+    state.routineTasks = mergeRoutineTasks(state.routineTasks);
+    state.quests = normalizeQuests(state.quests);
+    if (state.selectedQuestId && !state.quests.some((quest) => quest.id === state.selectedQuestId)) {
+      state.selectedQuestId = null;
+      state.selectedQuestCharacterId = null;
+    }
     if (!state.selectedId && state.characters.length) {
       state.selectedId = state.characters[0].id;
     }
     saveState();
     render();
+    setInterval(render, 60000);
   </script>
 </body>
 </html>
