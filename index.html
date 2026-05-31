@@ -772,7 +772,7 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(255, 255, 255, .06);
+      border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 70%, transparent);
       border-radius: 8px;
       background: rgba(17, 22, 28, .48);
       padding: 9px;
@@ -790,8 +790,8 @@
       min-width: 0;
     }
 
-    .quest-character-name strong,
-    .quest-character-name span {
+    .quest-character-name > strong,
+    .quest-character-name > span {
       display: block;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -851,6 +851,12 @@
       font-size: 12px;
     }
 
+    .quest-detail-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 8px;
+    }
+
     .quest-sections {
       display: grid;
       gap: 12px;
@@ -899,6 +905,11 @@
       font-weight: 850;
     }
 
+    .quest-section p .coord-chip {
+      margin: 0 4px;
+      vertical-align: middle;
+    }
+
     .copy-button {
       width: 24px;
       height: 24px;
@@ -935,6 +946,28 @@
       padding: 5px 8px;
       font-size: 12px;
       font-weight: 800;
+    }
+
+    .character-name-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .character-name-inline > span:last-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .character-clan-icon {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      object-fit: contain;
     }
 
     .toggle-line {
@@ -1992,6 +2025,26 @@
       return wrapper;
     }
 
+    function buildClanIcon(clan) {
+      const icon = document.createElement("img");
+      icon.className = "character-clan-icon";
+      icon.alt = "";
+      icon.loading = "lazy";
+      if (clanIcons[clan]) icon.src = clanIcons[clan];
+      return icon;
+    }
+
+    function buildCharacterNameInline(character) {
+      const wrapper = document.createElement("span");
+      wrapper.className = "character-name-inline";
+      if (clanIcons[character.clan]) wrapper.appendChild(buildClanIcon(character.clan));
+
+      const name = document.createElement("span");
+      name.textContent = character.name;
+      wrapper.appendChild(name);
+      return wrapper;
+    }
+
     function renderClanPreview(clan) {
       clanPreview.innerHTML = "";
       clanPreview.appendChild(buildClanInline(clan));
@@ -2176,10 +2229,9 @@
         const text = document.createElement("span");
         text.className = "nav-text";
         text.innerHTML = `<strong></strong><span></span>`;
-        text.querySelector("strong").textContent = character.name;
+        text.querySelector("strong").appendChild(buildCharacterNameInline(character));
         const navDetail = text.querySelector("span");
-        navDetail.appendChild(buildClanInline(character.clan));
-        navDetail.append(` · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`);
+        navDetail.textContent = `Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
@@ -2248,7 +2300,7 @@
           <div class="card-facts"></div>
         `;
 
-        card.querySelector(".card-title strong").textContent = character.name;
+        card.querySelector(".card-title strong").appendChild(buildCharacterNameInline(character));
         const availableRoutineNames = getAvailableRoutineNames(character);
         if (availableRoutineNames.length) {
           const badgeList = document.createElement("div");
@@ -2437,7 +2489,7 @@
             `;
             const checkbox = row.querySelector("input");
             checkbox.checked = Boolean(completion);
-            row.querySelector("label span").textContent = character.name;
+            row.querySelector("label span").appendChild(buildCharacterNameInline(character));
             row.querySelector(".task-timer").textContent = completion ? formatRemaining(completion.unlockAt) : "Liberada";
             checkbox.addEventListener("change", () => {
               const key = getCompletionKey(task.id, character.id);
@@ -2471,7 +2523,8 @@
     }
 
     function copyCoordinate(value, button) {
-      navigator.clipboard?.writeText(value).then(() => {
+      const write = navigator.clipboard?.writeText ? navigator.clipboard.writeText(value) : Promise.reject();
+      write.then(() => {
         const previous = button.textContent;
         button.textContent = "✓";
         window.setTimeout(() => {
@@ -2485,6 +2538,61 @@
         document.execCommand("copy");
         input.remove();
       });
+    }
+
+    function createCoordinateChip(value) {
+      const chip = document.createElement("span");
+      chip.className = "coord-chip";
+      chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar coordenada" title="Copiar coordenada">⧉</button>`;
+      chip.querySelector("span").textContent = value;
+      chip.querySelector("button").addEventListener("click", () => copyCoordinate(value, chip.querySelector("button")));
+      return chip;
+    }
+
+    function getCoordinateToken(value) {
+      return `[[coord:${value}]]`;
+    }
+
+    function extractCoordinateTokens(text) {
+      return [...String(text || "").matchAll(/\[\[coord:([^\]]+)\]\]/g)].map((match) => match[1].trim()).filter(Boolean);
+    }
+
+    function insertAtCursor(textarea, value) {
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const prefix = textarea.value.slice(0, start);
+      const suffix = textarea.value.slice(end);
+      const spacerBefore = prefix && !/\s$/.test(prefix) ? " " : "";
+      const spacerAfter = suffix && !/^\s/.test(suffix) ? " " : "";
+      textarea.value = `${prefix}${spacerBefore}${value}${spacerAfter}${suffix}`;
+      const nextCursor = (prefix + spacerBefore + value).length;
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    }
+
+    function renderSpoilerText(container, text, legacyCoordinates = []) {
+      container.innerHTML = "";
+      const source = String(text || "");
+      const pattern = /\[\[coord:([^\]]+)\]\]/g;
+      let lastIndex = 0;
+      let matched = false;
+
+      source.replace(pattern, (match, coordinate, index) => {
+        if (index > lastIndex) container.appendChild(document.createTextNode(source.slice(lastIndex, index)));
+        container.appendChild(createCoordinateChip(coordinate.trim()));
+        lastIndex = index + match.length;
+        matched = true;
+        return match;
+      });
+
+      if (lastIndex < source.length) container.appendChild(document.createTextNode(source.slice(lastIndex)));
+      if (!source.trim()) container.appendChild(document.createTextNode("Sem texto explicativo nesta seção."));
+      if (!matched && legacyCoordinates.length) {
+        legacyCoordinates.forEach((coordinate) => {
+          container.appendChild(document.createTextNode(" "));
+          container.appendChild(createCoordinateChip(coordinate));
+        });
+      }
     }
 
     function renderQuestList() {
@@ -2529,8 +2637,6 @@
         });
         card.querySelector(".quest-toggle").addEventListener("click", () => {
           expandedQuestId = expandedQuestId === quest.id ? null : quest.id;
-          state.selectedQuestId = quest.id;
-          saveState();
           render();
         });
         card.querySelector(".quest-menu-button").addEventListener("click", () => openQuestModal(quest));
@@ -2544,6 +2650,7 @@
           const progress = getQuestProgress(quest.id, character.id);
           const row = document.createElement("div");
           row.className = "quest-character";
+          applyLevelBorder(row, character.characterLevel);
           row.innerHTML = `
             <div class="quest-character-name">
               <strong></strong>
@@ -2556,7 +2663,7 @@
               <button class="quest-menu-button" type="button" data-action="reset" aria-label="Resetar personagem" title="Resetar personagem">...</button>
             </div>
           `;
-          row.querySelector("strong").textContent = character.name;
+          row.querySelector("strong").appendChild(buildCharacterNameInline(character));
           row.querySelector("span").textContent = progress?.status === "completed" ? "Quest completada" : progress ? "Em andamento" : "Não iniciada";
           row.querySelector('[data-action="select"]').addEventListener("click", () => {
             state.selectedQuestId = quest.id;
@@ -2616,15 +2723,28 @@
             <h2></h2>
             <span></span>
           </div>
-          <button class="quest-menu-button" type="button" aria-label="Editar quest" title="Editar quest">...</button>
+          <div class="quest-detail-actions">
+            <button class="quest-menu-button" type="button" data-action="edit" aria-label="Editar quest" title="Editar quest">...</button>
+            <button class="quest-menu-button" type="button" data-action="close" aria-label="Recolher visualização da quest" title="Recolher visualização">×</button>
+          </div>
         </div>
         <div class="quest-sections"></div>
       `;
       questDetail.querySelector("h2").textContent = quest.name;
-      questDetail.querySelector(".quest-detail-header span").textContent = character
-        ? `${character.name} · ${progress?.status === "completed" ? "completada" : progress ? "em andamento" : "não iniciada"}`
-        : "Nenhum personagem elegível para os requisitos atuais.";
-      questDetail.querySelector(".quest-menu-button").addEventListener("click", () => openQuestModal(quest));
+      const detailMeta = questDetail.querySelector(".quest-detail-header span");
+      if (character) {
+        detailMeta.appendChild(buildCharacterNameInline(character));
+        detailMeta.append(` · ${progress?.status === "completed" ? "completada" : progress ? "em andamento" : "não iniciada"}`);
+      } else {
+        detailMeta.textContent = "Nenhum personagem elegível para os requisitos atuais.";
+      }
+      questDetail.querySelector('[data-action="edit"]').addEventListener("click", () => openQuestModal(quest));
+      questDetail.querySelector('[data-action="close"]').addEventListener("click", () => {
+        state.selectedQuestId = null;
+        state.selectedQuestCharacterId = null;
+        saveState();
+        render();
+      });
 
       const sections = questDetail.querySelector(".quest-sections");
       quest.sections.forEach((section) => {
@@ -2636,13 +2756,12 @@
             <span></span>
           </label>
           <p></p>
-          <div class="coord-list"></div>
         `;
         const checkbox = sectionEl.querySelector("input");
         checkbox.checked = completedSections.has(section.id);
         checkbox.disabled = !character;
         sectionEl.querySelector("label span").textContent = section.title;
-        sectionEl.querySelector("p").textContent = section.text || "Sem texto explicativo nesta seção.";
+        renderSpoilerText(sectionEl.querySelector("p"), section.text, section.coordinates);
         checkbox.addEventListener("change", () => {
           if (!character) return;
           const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
@@ -2651,16 +2770,6 @@
           setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections] });
           saveState();
           render();
-        });
-
-        const coordList = sectionEl.querySelector(".coord-list");
-        section.coordinates.forEach((coordinate) => {
-          const chip = document.createElement("span");
-          chip.className = "coord-chip";
-          chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar coordenada" title="Copiar coordenada">⧉</button>`;
-          chip.querySelector("span").textContent = coordinate;
-          chip.querySelector("button").addEventListener("click", () => copyCoordinate(coordinate, chip.querySelector("button")));
-          coordList.appendChild(chip);
         });
 
         sections.appendChild(sectionEl);
@@ -2696,26 +2805,19 @@
         <div class="coord-editor-list"></div>
       `;
       editor.querySelector(".quest-section-title").value = draft.title;
-      editor.querySelector(".quest-section-text").value = draft.text;
+      const textInput = editor.querySelector(".quest-section-text");
+      const existingTokenCoords = new Set(extractCoordinateTokens(draft.text));
+      const legacyTokens = draft.coordinates
+        .filter((coordinate) => !existingTokenCoords.has(coordinate))
+        .map(getCoordinateToken);
+      textInput.value = [draft.text, ...legacyTokens].filter(Boolean).join(legacyTokens.length && draft.text ? "\n" : "");
 
-      const coordList = editor.querySelector(".coord-editor-list");
-      function addCoordButton(value) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.dataset.coordinate = value;
-        button.textContent = `${value} ×`;
-        button.addEventListener("click", () => button.remove());
-        coordList.appendChild(button);
-      }
-
-      draft.coordinates.forEach(addCoordButton);
       editor.querySelector(".add-coordinate-button").addEventListener("click", () => {
         const input = editor.querySelector(".quest-coordinate-input");
         const value = input.value.trim();
         if (!value) return;
-        addCoordButton(value);
+        insertAtCursor(textInput, getCoordinateToken(value));
         input.value = "";
-        input.focus();
       });
 
       return editor;
@@ -2747,11 +2849,15 @@
     function getQuestFromForm() {
       const existing = state.quests.find((quest) => quest.id === editingQuestId);
       const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
-        const coordinates = [...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean);
+        const text = editor.querySelector(".quest-section-text").value.trim();
+        const coordinates = [...new Set([
+          ...extractCoordinateTokens(text),
+          ...[...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean)
+        ])];
         return normalizeQuestSection({
           id: editor.dataset.sectionId,
           title: editor.querySelector(".quest-section-title").value.trim() || `Seção ${index + 1}`,
-          text: editor.querySelector(".quest-section-text").value.trim(),
+          text,
           coordinates
         });
       });
