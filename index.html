@@ -200,7 +200,7 @@
       color: var(--text);
       padding: 8px;
       text-align: left;
-      contain: layout paint;
+      overflow: hidden;
     }
 
     .nav-card-main {
@@ -248,12 +248,24 @@
       font-size: 11px;
     }
 
+    .nav-text span .clan-inline {
+      max-width: 84px;
+    }
+
     .clan-inline {
       display: inline-flex;
       align-items: center;
       gap: 7px;
       min-width: 0;
+      max-width: 100%;
       vertical-align: middle;
+    }
+
+    .clan-inline span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .clan-icon {
@@ -275,8 +287,7 @@
       justify-self: center;
       align-content: center;
       gap: 4px;
-      width: 26px;
-      min-width: 26px;
+      flex: 0 0 auto;
     }
 
     .level-button {
@@ -574,9 +585,8 @@
 
     .fact {
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 14px;
+      align-items: center;
+      justify-content: flex-end;
       min-height: 34px;
       border: 1px solid rgba(255, 255, 255, .06);
       border-radius: 8px;
@@ -589,15 +599,17 @@
     }
 
     .fact span {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 750;
+      display: none;
     }
 
     .fact strong {
       color: var(--text);
       font-size: 14px;
       text-align: right;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .fact strong .clan-inline {
@@ -2279,7 +2291,9 @@
         text.innerHTML = `<strong></strong><span></span>`;
         text.querySelector("strong").appendChild(buildCharacterNameInline(character));
         const navDetail = text.querySelector("span");
-        navDetail.textContent = `Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+        navDetail.title = `${character.clan} · Nível ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+        navDetail.appendChild(buildClanInline(character.clan));
+        navDetail.append(` · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`);
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
@@ -2365,6 +2379,7 @@
         facts.forEach((fact) => {
           const row = document.createElement("div");
           row.className = `fact${fact.highlight ? " highlight" : ""}`;
+          row.title = fact.label;
           row.innerHTML = `<span></span><strong></strong>`;
           row.querySelector("span").textContent = fact.label;
           if (fact.label === "Clã") {
