@@ -653,12 +653,288 @@
       margin-bottom: 6px;
     }
 
+    .panel-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
     .routine-toolbar {
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 14px;
       margin-bottom: 12px;
+    }
+
+    .quest-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 0;
+      gap: 0;
+      transition: grid-template-columns .28s ease, gap .28s ease;
+    }
+
+    .quest-layout.detail-open {
+      grid-template-columns: minmax(320px, .95fr) minmax(360px, 1.05fr);
+      gap: 14px;
+    }
+
+    .quest-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .quest-card {
+      display: grid;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .9);
+      overflow: hidden;
+      transition: border-color .16s ease, background .16s ease;
+    }
+
+    .quest-card.active,
+    .quest-card:hover {
+      border-color: rgba(89, 195, 166, .48);
+      background: rgba(31, 38, 48, .94);
+    }
+
+    .quest-card-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 38px 38px;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .quest-card-main strong {
+      overflow: hidden;
+      font-size: 15px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quest-card-main span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .quest-toggle,
+    .quest-menu-button,
+    .copy-button {
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .72);
+      color: var(--text);
+      font-weight: 850;
+    }
+
+    .quest-toggle,
+    .quest-menu-button {
+      width: 34px;
+      height: 34px;
+    }
+
+    .quest-toggle:hover,
+    .quest-menu-button:hover,
+    .copy-button:hover {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .08);
+    }
+
+    .quest-roster {
+      display: none;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding: 10px 12px 12px;
+    }
+
+    .quest-card.expanded .quest-roster {
+      display: grid;
+    }
+
+    .quest-character {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .48);
+      padding: 9px;
+    }
+
+    .quest-character button {
+      min-height: 32px;
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .quest-character-name {
+      min-width: 0;
+    }
+
+    .quest-character-name strong,
+    .quest-character-name span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quest-character-name span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .quest-character-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .quest-detail {
+      min-width: 0;
+      max-height: calc(100vh - 108px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .9);
+      opacity: 0;
+      transform: translateX(14px);
+      pointer-events: none;
+      transition: opacity .24s ease, transform .24s ease;
+    }
+
+    .quest-layout.detail-open .quest-detail {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .quest-detail-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #202832;
+      padding: 14px;
+    }
+
+    .quest-detail-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .quest-detail-header span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .quest-sections {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .quest-section {
+      display: grid;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .5);
+      padding: 12px;
+    }
+
+    .quest-section label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 850;
+    }
+
+    .quest-section p {
+      margin: 0;
+      color: #d4dde7;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .coord-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .coord-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(89, 195, 166, .46);
+      border-radius: 999px;
+      background: rgba(89, 195, 166, .12);
+      color: var(--accent-strong);
+      padding: 4px 5px 4px 9px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .copy-button {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .quest-section-editor {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 12px;
+    }
+
+    .coord-editor {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .coord-editor-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .coord-editor-list button {
+      border-radius: 999px;
+      border: 1px solid rgba(89, 195, 166, .35);
+      background: rgba(89, 195, 166, .1);
+      color: var(--accent-strong);
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     .toggle-line {
@@ -954,7 +1230,8 @@
     }
 
     .field input,
-    .field select {
+    .field select,
+    .field textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -966,9 +1243,16 @@
     }
 
     .field input:focus,
-    .field select:focus {
+    .field select:focus,
+    .field textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(89, 195, 166, .12);
+    }
+
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.5;
     }
 
     .form-grid {
@@ -982,15 +1266,20 @@
     }
 
     .modal-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.55fr;
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding-top: 4px;
     }
 
     .modal-actions > button {
+      flex: 1 1 138px;
       min-height: 44px;
-      width: 100%;
+    }
+
+    #questSectionEditors {
+      display: grid;
+      gap: 12px;
     }
 
     .ghost-button,
@@ -1074,6 +1363,21 @@
       .task-characters {
         grid-template-columns: 1fr;
       }
+
+      .quest-layout,
+      .quest-layout.detail-open {
+        grid-template-columns: 1fr;
+      }
+
+      .quest-detail {
+        max-height: none;
+      }
+
+      .quest-card-main,
+      .quest-character,
+      .coord-editor {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -1135,11 +1439,15 @@
       </section>
 
       <section class="tab-panel" data-panel="quests" aria-label="Quests">
-        <div class="placeholder-panel">
-          <div>
-            <strong>Quests</strong>
-            <span>Espaço reservado para acompanhar objetivos e missões.</span>
-          </div>
+        <div class="panel-toolbar">
+          <button class="primary-button" id="addQuestButton" type="button">
+            <span aria-hidden="true">+</span>
+            <span>Adicionar Quest</span>
+          </button>
+        </div>
+        <div class="quest-layout" id="questLayout">
+          <div class="quest-list" id="questList" aria-label="Lista de quests"></div>
+          <aside class="quest-detail" id="questDetail" aria-label="Detalhes da quest"></aside>
         </div>
       </section>
     </main>
@@ -1280,6 +1588,50 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="questModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="questModalTitle">
+    <div class="character-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="questModalTitle">Adicionar Quest</strong>
+          <span>Spoiler em seções, coordenadas e requisitos</span>
+        </div>
+        <button class="icon-button" id="closeQuestModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="questForm">
+        <label class="field">
+          <span>Nome da quest</span>
+          <input id="questName" type="text" maxlength="80" required>
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nível mínimo</span>
+            <input id="questMinLevel" type="number" min="1" max="625" step="1" placeholder="1">
+          </label>
+          <label class="field">
+            <span>Nível NW mínimo</span>
+            <input id="questMinNwLevel" type="number" min="1" max="100" step="1" placeholder="Opcional">
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Seções do spoiler</span>
+          <div id="questSectionEditors"></div>
+        </div>
+
+        <button class="secondary-button" id="addQuestSectionButton" type="button">Adicionar seção</button>
+
+        <div class="modal-actions">
+          <button class="ghost-button" id="cancelQuestModalButton" type="button">Cancelar</button>
+          <button class="danger-button" id="deleteQuestButton" type="button">Remover</button>
+          <button class="secondary-button" id="finishQuestEditButton" type="button">Finalizar quest</button>
+          <button class="primary-button" type="submit">Salvar quest</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "character-organizer:v3";
     const PREVIOUS_STORAGE_KEY = "character-organizer:v2";
@@ -1291,6 +1643,10 @@
     const tabPanels = document.querySelectorAll(".tab-panel");
     const routineSections = document.querySelector("#routineSections");
     const addRoutineTaskButton = document.querySelector("#addRoutineTaskButton");
+    const addQuestButton = document.querySelector("#addQuestButton");
+    const questLayout = document.querySelector("#questLayout");
+    const questList = document.querySelector("#questList");
+    const questDetail = document.querySelector("#questDetail");
     const taskModalBackdrop = document.querySelector("#taskModalBackdrop");
     const taskModalTitle = document.querySelector("#taskModalTitle");
     const closeTaskModalButton = document.querySelector("#closeTaskModalButton");
@@ -1306,6 +1662,18 @@
     const taskDurationDays = document.querySelector("#taskDurationDays");
     const taskDurationHours = document.querySelector("#taskDurationHours");
     const taskProfessionGrid = document.querySelector("#taskProfessionGrid");
+    const questModalBackdrop = document.querySelector("#questModalBackdrop");
+    const questModalTitle = document.querySelector("#questModalTitle");
+    const closeQuestModalButton = document.querySelector("#closeQuestModalButton");
+    const cancelQuestModalButton = document.querySelector("#cancelQuestModalButton");
+    const deleteQuestButton = document.querySelector("#deleteQuestButton");
+    const finishQuestEditButton = document.querySelector("#finishQuestEditButton");
+    const questForm = document.querySelector("#questForm");
+    const questName = document.querySelector("#questName");
+    const questMinLevel = document.querySelector("#questMinLevel");
+    const questMinNwLevel = document.querySelector("#questMinNwLevel");
+    const questSectionEditors = document.querySelector("#questSectionEditors");
+    const addQuestSectionButton = document.querySelector("#addQuestSectionButton");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -1377,11 +1745,17 @@
       characters: [],
       routineTasks: [],
       routineCompletions: {},
-      showRoutineOnCharacters: false
+      showRoutineOnCharacters: false,
+      quests: [],
+      questProgress: {},
+      selectedQuestId: null,
+      selectedQuestCharacterId: null
     };
 
     let editingId = null;
     let editingTaskId = null;
+    let editingQuestId = null;
+    let expandedQuestId = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -1406,6 +1780,31 @@
         showOnCharacters: Boolean(task.showOnCharacters),
         defaultTask: Boolean(task.defaultTask)
       };
+    }
+
+    function normalizeQuestSection(section = {}) {
+      return {
+        id: section.id || `section:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        title: section.title || "Nova seção",
+        text: section.text || "",
+        coordinates: Array.isArray(section.coordinates) ? section.coordinates.filter(Boolean).map(String) : []
+      };
+    }
+
+    function normalizeQuest(quest = {}) {
+      const sections = Array.isArray(quest.sections) ? quest.sections.map(normalizeQuestSection) : [];
+      return {
+        id: quest.id || `quest:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: quest.name || "Nova quest",
+        minLevel: clampNumber(quest.minLevel, 1, 625) || 1,
+        minNwLevel: hasValue(quest.minNwLevel) ? clampNumber(quest.minNwLevel, 1, 100) : "",
+        sections: sections.length ? sections : [normalizeQuestSection({ title: "Início", text: "" })],
+        createdAt: quest.createdAt || Date.now()
+      };
+    }
+
+    function normalizeQuests(quests = []) {
+      return Array.isArray(quests) ? quests.map(normalizeQuest) : [];
     }
 
     function mergeRoutineTasks(tasks = []) {
@@ -1488,6 +1887,32 @@
       if (hasValue(task.minNwLevel) && (Number(character.nwLevel) || 0) < Number(task.minNwLevel)) return false;
       if (task.professions.length && !task.professions.includes(character.profession)) return false;
       return true;
+    }
+
+    function isCharacterEligibleForQuest(character, quest) {
+      if ((Number(character.characterLevel) || 1) < (Number(quest.minLevel) || 1)) return false;
+      if (hasValue(quest.minNwLevel) && (Number(character.nwLevel) || 0) < Number(quest.minNwLevel)) return false;
+      return true;
+    }
+
+    function getQuestProgressKey(questId, characterId) {
+      return `${questId}::${characterId}`;
+    }
+
+    function getQuestProgress(questId, characterId) {
+      return state.questProgress[getQuestProgressKey(questId, characterId)] || null;
+    }
+
+    function setQuestProgress(questId, characterId, patch) {
+      const key = getQuestProgressKey(questId, characterId);
+      state.questProgress[key] = {
+        status: "started",
+        completedSections: [],
+        startedAt: Date.now(),
+        ...state.questProgress[key],
+        ...patch,
+        updatedAt: Date.now()
+      };
     }
 
     function getCompletion(taskId, characterId) {
@@ -1604,7 +2029,11 @@
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
-          showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters)
+          showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
+          quests: normalizeQuests(parsed.quests),
+          questProgress: parsed.questProgress && typeof parsed.questProgress === "object" ? parsed.questProgress : {},
+          selectedQuestId: parsed.selectedQuestId || null,
+          selectedQuestCharacterId: parsed.selectedQuestCharacterId || null
         };
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -2033,6 +2462,310 @@
       });
     }
 
+    function getSelectedQuest() {
+      return state.quests.find((quest) => quest.id === state.selectedQuestId) || null;
+    }
+
+    function getSelectedQuestCharacter() {
+      return state.characters.find((character) => character.id === state.selectedQuestCharacterId) || null;
+    }
+
+    function copyCoordinate(value, button) {
+      navigator.clipboard?.writeText(value).then(() => {
+        const previous = button.textContent;
+        button.textContent = "✓";
+        window.setTimeout(() => {
+          button.textContent = previous;
+        }, 900);
+      }).catch(() => {
+        const input = document.createElement("input");
+        input.value = value;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      });
+    }
+
+    function renderQuestList() {
+      questList.innerHTML = "";
+
+      if (!state.quests.length) {
+        questList.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>Nenhuma quest criada ainda</strong>
+              <span>Use Adicionar Quest para registrar spoilers em seções, coordenadas e progresso por personagem.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      state.quests.forEach((quest) => {
+        const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+        const completedCount = eligibleCharacters.filter((character) => getQuestProgress(quest.id, character.id)?.status === "completed").length;
+        const card = document.createElement("article");
+        card.className = `quest-card${state.selectedQuestId === quest.id ? " active" : ""}${expandedQuestId === quest.id ? " expanded" : ""}`;
+        card.innerHTML = `
+          <div class="quest-card-main">
+            <button class="nav-card-main" type="button">
+              <strong></strong>
+              <span></span>
+            </button>
+            <button class="quest-toggle" type="button" aria-label="Ver personagens" title="Ver personagens">+</button>
+            <button class="quest-menu-button" type="button" aria-label="Opções da quest" title="Opções da quest">...</button>
+          </div>
+          <div class="quest-roster"></div>
+        `;
+
+        card.querySelector("strong").textContent = quest.name;
+        card.querySelector(".quest-card-main span").textContent = `Nv. ${quest.minLevel}${hasValue(quest.minNwLevel) ? ` · NW ${quest.minNwLevel}` : ""} · ${completedCount}/${eligibleCharacters.length} completos`;
+        card.querySelector(".nav-card-main").addEventListener("click", () => {
+          state.selectedQuestId = quest.id;
+          state.selectedQuestCharacterId = eligibleCharacters[0]?.id || null;
+          saveState();
+          render();
+        });
+        card.querySelector(".quest-toggle").addEventListener("click", () => {
+          expandedQuestId = expandedQuestId === quest.id ? null : quest.id;
+          state.selectedQuestId = quest.id;
+          saveState();
+          render();
+        });
+        card.querySelector(".quest-menu-button").addEventListener("click", () => openQuestModal(quest));
+
+        const roster = card.querySelector(".quest-roster");
+        if (!eligibleCharacters.length) {
+          roster.innerHTML = '<div class="task-timer">Nenhum personagem cumpre os requisitos desta quest.</div>';
+        }
+
+        eligibleCharacters.forEach((character) => {
+          const progress = getQuestProgress(quest.id, character.id);
+          const row = document.createElement("div");
+          row.className = "quest-character";
+          row.innerHTML = `
+            <div class="quest-character-name">
+              <strong></strong>
+              <span></span>
+            </div>
+            <div class="quest-character-actions">
+              <button class="ghost-button" type="button" data-action="select">Ver</button>
+              <button class="secondary-button" type="button" data-action="start">Começar</button>
+              <button class="primary-button" type="button" data-action="complete">Marcar completada</button>
+              <button class="quest-menu-button" type="button" data-action="reset" aria-label="Resetar personagem" title="Resetar personagem">...</button>
+            </div>
+          `;
+          row.querySelector("strong").textContent = character.name;
+          row.querySelector("span").textContent = progress?.status === "completed" ? "Quest completada" : progress ? "Em andamento" : "Não iniciada";
+          row.querySelector('[data-action="select"]').addEventListener("click", () => {
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="start"]').addEventListener("click", () => {
+            setQuestProgress(quest.id, character.id, { status: "started" });
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="complete"]').addEventListener("click", () => {
+            setQuestProgress(quest.id, character.id, {
+              status: "completed",
+              completedSections: quest.sections.map((section) => section.id),
+              completedAt: Date.now()
+            });
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            saveState();
+            render();
+          });
+          row.querySelector('[data-action="reset"]').addEventListener("click", () => {
+            const key = getQuestProgressKey(quest.id, character.id);
+            delete state.questProgress[key];
+            if (state.selectedQuestCharacterId === character.id) state.selectedQuestCharacterId = null;
+            saveState();
+            render();
+          });
+          roster.appendChild(row);
+        });
+
+        questList.appendChild(card);
+      });
+    }
+
+    function renderQuestDetail() {
+      const quest = getSelectedQuest();
+      questLayout.classList.toggle("detail-open", Boolean(quest));
+      questDetail.innerHTML = "";
+      if (!quest) return;
+
+      const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+      if (!eligibleCharacters.some((character) => character.id === state.selectedQuestCharacterId)) {
+        state.selectedQuestCharacterId = eligibleCharacters[0]?.id || null;
+      }
+      const character = getSelectedQuestCharacter();
+      const progress = character ? getQuestProgress(quest.id, character.id) : null;
+      const completedSections = new Set(progress?.completedSections || []);
+
+      questDetail.innerHTML = `
+        <div class="quest-detail-header">
+          <div>
+            <h2></h2>
+            <span></span>
+          </div>
+          <button class="quest-menu-button" type="button" aria-label="Editar quest" title="Editar quest">...</button>
+        </div>
+        <div class="quest-sections"></div>
+      `;
+      questDetail.querySelector("h2").textContent = quest.name;
+      questDetail.querySelector(".quest-detail-header span").textContent = character
+        ? `${character.name} · ${progress?.status === "completed" ? "completada" : progress ? "em andamento" : "não iniciada"}`
+        : "Nenhum personagem elegível para os requisitos atuais.";
+      questDetail.querySelector(".quest-menu-button").addEventListener("click", () => openQuestModal(quest));
+
+      const sections = questDetail.querySelector(".quest-sections");
+      quest.sections.forEach((section) => {
+        const sectionEl = document.createElement("article");
+        sectionEl.className = "quest-section";
+        sectionEl.innerHTML = `
+          <label>
+            <input type="checkbox">
+            <span></span>
+          </label>
+          <p></p>
+          <div class="coord-list"></div>
+        `;
+        const checkbox = sectionEl.querySelector("input");
+        checkbox.checked = completedSections.has(section.id);
+        checkbox.disabled = !character;
+        sectionEl.querySelector("label span").textContent = section.title;
+        sectionEl.querySelector("p").textContent = section.text || "Sem texto explicativo nesta seção.";
+        checkbox.addEventListener("change", () => {
+          if (!character) return;
+          const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
+          if (checkbox.checked) nextSections.add(section.id);
+          else nextSections.delete(section.id);
+          setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections] });
+          saveState();
+          render();
+        });
+
+        const coordList = sectionEl.querySelector(".coord-list");
+        section.coordinates.forEach((coordinate) => {
+          const chip = document.createElement("span");
+          chip.className = "coord-chip";
+          chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar coordenada" title="Copiar coordenada">⧉</button>`;
+          chip.querySelector("span").textContent = coordinate;
+          chip.querySelector("button").addEventListener("click", () => copyCoordinate(coordinate, chip.querySelector("button")));
+          coordList.appendChild(chip);
+        });
+
+        sections.appendChild(sectionEl);
+      });
+    }
+
+    function renderQuests() {
+      renderQuestList();
+      renderQuestDetail();
+    }
+
+    function createQuestSectionEditor(section = {}) {
+      const draft = normalizeQuestSection(section);
+      const editor = document.createElement("div");
+      editor.className = "quest-section-editor";
+      editor.dataset.sectionId = draft.id;
+      editor.innerHTML = `
+        <label class="field">
+          <span>Título da seção</span>
+          <input class="quest-section-title" type="text" maxlength="70">
+        </label>
+        <label class="field">
+          <span>Texto do spoiler</span>
+          <textarea class="quest-section-text" placeholder="Escreva uma etapa curta da quest."></textarea>
+        </label>
+        <div class="coord-editor">
+          <label class="field">
+            <span>Coordenada</span>
+            <input class="quest-coordinate-input" type="text" maxlength="80" placeholder="Ex: 1234, 5678, 7">
+          </label>
+          <button class="secondary-button add-coordinate-button" type="button">Adicionar coordenada</button>
+        </div>
+        <div class="coord-editor-list"></div>
+      `;
+      editor.querySelector(".quest-section-title").value = draft.title;
+      editor.querySelector(".quest-section-text").value = draft.text;
+
+      const coordList = editor.querySelector(".coord-editor-list");
+      function addCoordButton(value) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.coordinate = value;
+        button.textContent = `${value} ×`;
+        button.addEventListener("click", () => button.remove());
+        coordList.appendChild(button);
+      }
+
+      draft.coordinates.forEach(addCoordButton);
+      editor.querySelector(".add-coordinate-button").addEventListener("click", () => {
+        const input = editor.querySelector(".quest-coordinate-input");
+        const value = input.value.trim();
+        if (!value) return;
+        addCoordButton(value);
+        input.value = "";
+        input.focus();
+      });
+
+      return editor;
+    }
+
+    function openQuestModal(quest = null) {
+      editingQuestId = quest?.id || null;
+      const draft = normalizeQuest(quest || {});
+      questModalTitle.textContent = editingQuestId ? "Editar Quest" : "Adicionar Quest";
+      questName.value = editingQuestId ? draft.name : "";
+      questMinLevel.value = draft.minLevel || 1;
+      questMinNwLevel.value = hasValue(draft.minNwLevel) ? draft.minNwLevel : "";
+      questSectionEditors.innerHTML = "";
+      draft.sections.forEach((section) => questSectionEditors.appendChild(createQuestSectionEditor(section)));
+      deleteQuestButton.style.display = editingQuestId ? "inline-flex" : "none";
+      questModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      questName.focus();
+    }
+
+    function closeQuestModal() {
+      questModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingQuestId = null;
+      questForm.reset();
+      questSectionEditors.innerHTML = "";
+    }
+
+    function getQuestFromForm() {
+      const existing = state.quests.find((quest) => quest.id === editingQuestId);
+      const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
+        const coordinates = [...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean);
+        return normalizeQuestSection({
+          id: editor.dataset.sectionId,
+          title: editor.querySelector(".quest-section-title").value.trim() || `Seção ${index + 1}`,
+          text: editor.querySelector(".quest-section-text").value.trim(),
+          coordinates
+        });
+      });
+
+      return normalizeQuest({
+        id: editingQuestId || `quest:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        name: questName.value.trim(),
+        minLevel: questMinLevel.value,
+        minNwLevel: questMinNwLevel.value,
+        sections,
+        createdAt: existing?.createdAt || Date.now()
+      });
+    }
+
     function render() {
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
@@ -2041,6 +2774,7 @@
       renderList();
       renderCards();
       renderRoutineSections();
+      renderQuests();
       renderStats();
     }
 
@@ -2089,7 +2823,11 @@
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
-            showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters)
+            showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
+            quests: normalizeQuests(incoming.quests),
+            questProgress: incoming.questProgress && typeof incoming.questProgress === "object" ? incoming.questProgress : {},
+            selectedQuestId: incoming.selectedQuestId || null,
+            selectedQuestCharacterId: incoming.selectedQuestCharacterId || null
           };
           saveState();
           render();
@@ -2147,6 +2885,10 @@
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
+    addQuestButton.addEventListener("click", () => openQuestModal());
+    addQuestSectionButton.addEventListener("click", () => {
+      questSectionEditors.appendChild(createQuestSectionEditor({ title: `Seção ${questSectionEditors.children.length + 1}` }));
+    });
 
     profession.addEventListener("change", () => refreshSpecializations());
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
@@ -2155,12 +2897,20 @@
     cancelModalButton.addEventListener("click", closeModal);
     closeTaskModalButton.addEventListener("click", closeTaskModal);
     cancelTaskModalButton.addEventListener("click", closeTaskModal);
+    closeQuestModalButton.addEventListener("click", closeQuestModal);
+    cancelQuestModalButton.addEventListener("click", closeQuestModal);
+    finishQuestEditButton.addEventListener("click", () => {
+      questForm.requestSubmit();
+    });
 
     modalBackdrop.addEventListener("click", (event) => {
       if (event.target === modalBackdrop) closeModal();
     });
     taskModalBackdrop.addEventListener("click", (event) => {
       if (event.target === taskModalBackdrop) closeTaskModal();
+    });
+    questModalBackdrop.addEventListener("click", (event) => {
+      if (event.target === questModalBackdrop) closeQuestModal();
     });
 
     document.addEventListener("keydown", (event) => {
@@ -2169,6 +2919,9 @@
       }
       if (event.key === "Escape" && taskModalBackdrop.classList.contains("open")) {
         closeTaskModal();
+      }
+      if (event.key === "Escape" && questModalBackdrop.classList.contains("open")) {
+        closeQuestModal();
       }
     });
 
@@ -2184,6 +2937,21 @@
       });
       saveState();
       closeTaskModal();
+      render();
+    });
+    deleteQuestButton.addEventListener("click", () => {
+      const quest = state.quests.find((item) => item.id === editingQuestId);
+      if (!quest || !confirm(`Remover ${quest.name}?`)) return;
+      state.quests = state.quests.filter((item) => item.id !== editingQuestId);
+      Object.keys(state.questProgress).forEach((key) => {
+        if (key.startsWith(`${editingQuestId}::`)) delete state.questProgress[key];
+      });
+      if (state.selectedQuestId === editingQuestId) {
+        state.selectedQuestId = state.quests[0]?.id || null;
+        state.selectedQuestCharacterId = null;
+      }
+      saveState();
+      closeQuestModal();
       render();
     });
     taskKind.addEventListener("change", () => {
@@ -2220,8 +2988,29 @@
       render();
     });
 
+    questForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const quest = getQuestFromForm();
+      if (!quest.name) return;
+      if (editingQuestId) {
+        state.quests = state.quests.map((item) => item.id === editingQuestId ? quest : item);
+      } else {
+        state.quests.unshift(quest);
+      }
+      state.selectedQuestId = quest.id;
+      expandedQuestId = quest.id;
+      saveState();
+      closeQuestModal();
+      render();
+    });
+
     loadState();
     state.routineTasks = mergeRoutineTasks(state.routineTasks);
+    state.quests = normalizeQuests(state.quests);
+    if (state.selectedQuestId && !state.quests.some((quest) => quest.id === state.selectedQuestId)) {
+      state.selectedQuestId = null;
+      state.selectedQuestCharacterId = null;
+    }
     if (!state.selectedId && state.characters.length) {
       state.selectedId = state.characters[0].id;
     }
