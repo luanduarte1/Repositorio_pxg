@@ -767,6 +767,24 @@
       display: grid;
     }
 
+    .quest-completed-panel {
+      display: none;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      background: rgba(12, 16, 20, .28);
+      padding: 10px 12px 12px;
+    }
+
+    .quest-card.show-completed .quest-completed-panel {
+      display: grid;
+    }
+
+    .quest-completed-panel > span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .quest-character {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -1789,6 +1807,7 @@
     let editingTaskId = null;
     let editingQuestId = null;
     let expandedQuestId = null;
+    let completedQuestMenuId = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -1934,6 +1953,10 @@
 
     function getQuestProgress(questId, characterId) {
       return state.questProgress[getQuestProgressKey(questId, characterId)] || null;
+    }
+
+    function isQuestCompletedByCharacter(questId, characterId) {
+      return getQuestProgress(questId, characterId)?.status === "completed";
     }
 
     function setQuestProgress(questId, characterId, patch) {
@@ -2612,9 +2635,11 @@
 
       state.quests.forEach((quest) => {
         const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+        const completedCharacters = eligibleCharacters.filter((character) => isQuestCompletedByCharacter(quest.id, character.id));
+        const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
         const completedCount = eligibleCharacters.filter((character) => getQuestProgress(quest.id, character.id)?.status === "completed").length;
         const card = document.createElement("article");
-        card.className = `quest-card${state.selectedQuestId === quest.id ? " active" : ""}${expandedQuestId === quest.id ? " expanded" : ""}`;
+        card.className = `quest-card${state.selectedQuestId === quest.id ? " active" : ""}${expandedQuestId === quest.id ? " expanded" : ""}${completedQuestMenuId === quest.id ? " show-completed" : ""}`;
         card.innerHTML = `
           <div class="quest-card-main">
             <button class="nav-card-main" type="button">
@@ -2625,13 +2650,14 @@
             <button class="quest-menu-button" type="button" aria-label="Opções da quest" title="Opções da quest">...</button>
           </div>
           <div class="quest-roster"></div>
+          <div class="quest-completed-panel"></div>
         `;
 
         card.querySelector("strong").textContent = quest.name;
         card.querySelector(".quest-card-main span").textContent = `Nv. ${quest.minLevel}${hasValue(quest.minNwLevel) ? ` · NW ${quest.minNwLevel}` : ""} · ${completedCount}/${eligibleCharacters.length} completos`;
         card.querySelector(".nav-card-main").addEventListener("click", () => {
           state.selectedQuestId = quest.id;
-          state.selectedQuestCharacterId = eligibleCharacters[0]?.id || null;
+          state.selectedQuestCharacterId = activeCharacters[0]?.id || null;
           saveState();
           render();
         });
@@ -2639,14 +2665,19 @@
           expandedQuestId = expandedQuestId === quest.id ? null : quest.id;
           render();
         });
-        card.querySelector(".quest-menu-button").addEventListener("click", () => openQuestModal(quest));
+        card.querySelector(".quest-menu-button").addEventListener("click", () => {
+          completedQuestMenuId = completedQuestMenuId === quest.id ? null : quest.id;
+          render();
+        });
 
         const roster = card.querySelector(".quest-roster");
         if (!eligibleCharacters.length) {
           roster.innerHTML = '<div class="task-timer">Nenhum personagem cumpre os requisitos desta quest.</div>';
+        } else if (!activeCharacters.length) {
+          roster.innerHTML = '<div class="task-timer">Todos os personagens elegíveis já concluíram esta quest.</div>';
         }
 
-        eligibleCharacters.forEach((character) => {
+        activeCharacters.forEach((character) => {
           const progress = getQuestProgress(quest.id, character.id);
           const row = document.createElement("div");
           row.className = "quest-character";
@@ -2685,7 +2716,7 @@
               completedAt: Date.now()
             });
             state.selectedQuestId = quest.id;
-            state.selectedQuestCharacterId = character.id;
+            state.selectedQuestCharacterId = activeCharacters.find((item) => item.id !== character.id)?.id || null;
             saveState();
             render();
           });
@@ -2699,6 +2730,46 @@
           roster.appendChild(row);
         });
 
+        const completedPanel = card.querySelector(".quest-completed-panel");
+        const editButton = document.createElement("button");
+        editButton.className = "secondary-button";
+        editButton.type = "button";
+        editButton.textContent = "Editar quest";
+        editButton.addEventListener("click", () => openQuestModal(quest));
+        completedPanel.appendChild(editButton);
+
+        if (!completedCharacters.length) {
+          const empty = document.createElement("span");
+          empty.textContent = "Nenhum personagem concluiu esta quest ainda.";
+          completedPanel.appendChild(empty);
+        }
+
+        completedCharacters.forEach((character) => {
+          const row = document.createElement("div");
+          row.className = "quest-character";
+          applyLevelBorder(row, character.characterLevel);
+          row.innerHTML = `
+            <div class="quest-character-name">
+              <strong></strong>
+              <span>Quest concluída</span>
+            </div>
+            <div class="quest-character-actions">
+              <button class="danger-button" type="button">Reverter conclusão</button>
+            </div>
+          `;
+          row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+          row.querySelector("button").addEventListener("click", () => {
+            delete state.questProgress[getQuestProgressKey(quest.id, character.id)];
+            state.selectedQuestId = quest.id;
+            state.selectedQuestCharacterId = character.id;
+            expandedQuestId = quest.id;
+            completedQuestMenuId = null;
+            saveState();
+            render();
+          });
+          completedPanel.appendChild(row);
+        });
+
         questList.appendChild(card);
       });
     }
@@ -2710,8 +2781,9 @@
       if (!quest) return;
 
       const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
-      if (!eligibleCharacters.some((character) => character.id === state.selectedQuestCharacterId)) {
-        state.selectedQuestCharacterId = eligibleCharacters[0]?.id || null;
+      const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
+      if (!activeCharacters.some((character) => character.id === state.selectedQuestCharacterId)) {
+        state.selectedQuestCharacterId = activeCharacters[0]?.id || null;
       }
       const character = getSelectedQuestCharacter();
       const progress = character ? getQuestProgress(quest.id, character.id) : null;
@@ -2736,7 +2808,9 @@
         detailMeta.appendChild(buildCharacterNameInline(character));
         detailMeta.append(` · ${progress?.status === "completed" ? "completada" : progress ? "em andamento" : "não iniciada"}`);
       } else {
-        detailMeta.textContent = "Nenhum personagem elegível para os requisitos atuais.";
+        detailMeta.textContent = eligibleCharacters.length
+          ? "Todos os personagens elegíveis já concluíram esta quest."
+          : "Nenhum personagem elegível para os requisitos atuais.";
       }
       questDetail.querySelector('[data-action="edit"]').addEventListener("click", () => openQuestModal(quest));
       questDetail.querySelector('[data-action="close"]').addEventListener("click", () => {
