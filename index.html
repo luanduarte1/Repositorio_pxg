@@ -888,6 +888,13 @@
       border-radius: 8px;
       background: rgba(17, 22, 28, .5);
       padding: 12px;
+      transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    .quest-section.completed {
+      border-color: rgba(157, 237, 177, .62);
+      background: rgba(157, 237, 177, .12);
+      box-shadow: 0 0 0 2px rgba(157, 237, 177, .08);
     }
 
     .quest-section label {
@@ -942,6 +949,19 @@
       border-radius: 8px;
       background: rgba(17, 22, 28, .46);
       padding: 12px;
+    }
+
+    .quest-routine-fields {
+      display: none;
+      gap: 10px;
+      border: 1px solid rgba(89, 195, 166, .2);
+      border-radius: 8px;
+      background: rgba(89, 195, 166, .07);
+      padding: 10px;
+    }
+
+    .quest-section-editor.routine-enabled .quest-routine-fields {
+      display: grid;
     }
 
     .coord-editor {
@@ -1774,13 +1794,7 @@
       weekly: { title: "Semanal", reset: "Reset semanal na segunda às 7:45" },
       monthly: { title: "Mensal", reset: "Reset mensal no dia 1 às 7:45" }
     };
-    const defaultRoutineTasks = [
-      ...["Bruno", "Falkner", "Daily de Pano", "Lance", "Mite"].map((name) => ({ id: `daily:${name}`, name, kind: "daily", defaultTask: true })),
-      ...["Lorelei", "Misty", "Semanal Outland", "Semanal Orre", "Semanal silver", "Terror", "Cão", "Boss Lavender"].map((name) => ({ id: `weekly:${name}`, name, kind: "weekly", defaultTask: true })),
-      ...["Lab", "Red"].map((name) => ({ id: `monthly:${name}`, name, kind: "monthly", defaultTask: true })),
-      { id: "custom:Tentacruel", name: "Tentacruel", kind: "custom", durationHours: 144, defaultTask: true },
-      { id: "custom:Subject", name: "Subject", kind: "custom", durationHours: 120, defaultTask: true }
-    ];
+    const defaultRoutineTasks = [];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -1839,7 +1853,18 @@
         id: section.id || `section:${Date.now()}:${Math.random().toString(16).slice(2)}`,
         title: section.title || "Nova seção",
         text: section.text || "",
-        coordinates: Array.isArray(section.coordinates) ? section.coordinates.filter(Boolean).map(String) : []
+        coordinates: Array.isArray(section.coordinates) ? section.coordinates.filter(Boolean).map(String) : [],
+        routine: normalizeQuestSectionRoutine(section.routine)
+      };
+    }
+
+    function normalizeQuestSectionRoutine(routine = {}) {
+      const kind = routineKinds[routine.kind] ? routine.kind : "custom";
+      return {
+        enabled: Boolean(routine.enabled),
+        name: routine.name || "",
+        kind,
+        durationHours: kind === "custom" ? clampNumber(routine.durationHours, 1, 8760) || 24 : undefined
       };
     }
 
@@ -1861,7 +1886,7 @@
 
     function mergeRoutineTasks(tasks = []) {
       const byId = new Map(defaultRoutineTasks.map((task) => [task.id, normalizeRoutineTask(task)]));
-      tasks.map(normalizeRoutineTask).forEach((task) => byId.set(task.id, task));
+      tasks.map(normalizeRoutineTask).filter((task) => !task.defaultTask).forEach((task) => byId.set(task.id, task));
       return [...byId.values()];
     }
 
@@ -2618,6 +2643,50 @@
       }
     }
 
+    function getQuestRoutineId(questId, sectionId) {
+      return `quest-routine:${questId}:${sectionId}`;
+    }
+
+    function createRoutineFromQuestSection(quest, section) {
+      if (!section.routine?.enabled) return;
+      const routineId = getQuestRoutineId(quest.id, section.id);
+      if (state.routineTasks.some((task) => task.id === routineId)) return;
+
+      state.routineTasks.push(normalizeRoutineTask({
+        id: routineId,
+        name: section.routine.name || `${quest.name} - ${section.title}`,
+        kind: section.routine.kind || "custom",
+        durationHours: section.routine.kind === "custom" ? section.routine.durationHours : undefined,
+        minLevel: quest.minLevel,
+        minNwLevel: quest.minNwLevel,
+        professions: [],
+        showOnCharacters: false,
+        defaultTask: false
+      }));
+    }
+
+    function createLinkedQuestRoutines(quest, sectionIds = []) {
+      const wantedSections = new Set(sectionIds);
+      quest.sections.forEach((section) => {
+        if (!wantedSections.size || wantedSections.has(section.id)) {
+          createRoutineFromQuestSection(quest, section);
+        }
+      });
+    }
+
+    function createLinkedRoutinesForExistingQuestProgress(quest) {
+      Object.entries(state.questProgress).forEach(([key, progress]) => {
+        if (!key.startsWith(`${quest.id}::`)) return;
+        if (progress?.status === "completed") {
+          createLinkedQuestRoutines(quest);
+          return;
+        }
+        if (Array.isArray(progress?.completedSections)) {
+          createLinkedQuestRoutines(quest, progress.completedSections);
+        }
+      });
+    }
+
     function renderQuestList() {
       questList.innerHTML = "";
 
@@ -2710,6 +2779,7 @@
             render();
           });
           row.querySelector('[data-action="complete"]').addEventListener("click", () => {
+            createLinkedQuestRoutines(quest);
             setQuestProgress(quest.id, character.id, {
               status: "completed",
               completedSections: quest.sections.map((section) => section.id),
@@ -2823,7 +2893,7 @@
       const sections = questDetail.querySelector(".quest-sections");
       quest.sections.forEach((section) => {
         const sectionEl = document.createElement("article");
-        sectionEl.className = "quest-section";
+        sectionEl.className = `quest-section${completedSections.has(section.id) ? " completed" : ""}`;
         sectionEl.innerHTML = `
           <label>
             <input type="checkbox">
@@ -2839,8 +2909,12 @@
         checkbox.addEventListener("change", () => {
           if (!character) return;
           const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
-          if (checkbox.checked) nextSections.add(section.id);
-          else nextSections.delete(section.id);
+          if (checkbox.checked) {
+            nextSections.add(section.id);
+            createLinkedQuestRoutines(quest, [section.id]);
+          } else {
+            nextSections.delete(section.id);
+          }
           setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections] });
           saveState();
           render();
@@ -2859,6 +2933,7 @@
       const draft = normalizeQuestSection(section);
       const editor = document.createElement("div");
       editor.className = "quest-section-editor";
+      editor.classList.toggle("routine-enabled", Boolean(draft.routine.enabled));
       editor.dataset.sectionId = draft.id;
       editor.innerHTML = `
         <label class="field">
@@ -2877,6 +2952,35 @@
           <button class="secondary-button add-coordinate-button" type="button">Adicionar coordenada</button>
         </div>
         <div class="coord-editor-list"></div>
+        <label class="toggle-line">
+          <input class="quest-routine-enabled" type="checkbox">
+          <span>Criar rotina ao concluir esta seção</span>
+        </label>
+        <div class="quest-routine-fields">
+          <label class="field">
+            <span>Nome da rotina</span>
+            <input class="quest-routine-name" type="text" maxlength="60" placeholder="Usar nome da quest e seção">
+          </label>
+          <div class="form-grid three">
+            <label class="field">
+              <span>Tipo</span>
+              <select class="quest-routine-kind">
+                <option value="custom">Personalizada</option>
+                <option value="daily">Diária</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </label>
+            <label class="field quest-routine-duration">
+              <span>Dias</span>
+              <input class="quest-routine-days" type="number" min="0" max="365" step="1" placeholder="0">
+            </label>
+            <label class="field quest-routine-duration">
+              <span>Horas</span>
+              <input class="quest-routine-hours" type="number" min="0" max="23" step="1" placeholder="0">
+            </label>
+          </div>
+        </div>
       `;
       editor.querySelector(".quest-section-title").value = draft.title;
       const textInput = editor.querySelector(".quest-section-text");
@@ -2885,6 +2989,29 @@
         .filter((coordinate) => !existingTokenCoords.has(coordinate))
         .map(getCoordinateToken);
       textInput.value = [draft.text, ...legacyTokens].filter(Boolean).join(legacyTokens.length && draft.text ? "\n" : "");
+
+      const routineEnabled = editor.querySelector(".quest-routine-enabled");
+      const routineKind = editor.querySelector(".quest-routine-kind");
+      const routineName = editor.querySelector(".quest-routine-name");
+      const routineDays = editor.querySelector(".quest-routine-days");
+      const routineHours = editor.querySelector(".quest-routine-hours");
+
+      routineEnabled.checked = Boolean(draft.routine.enabled);
+      routineName.value = draft.routine.name || "";
+      routineKind.value = draft.routine.kind || "custom";
+      routineDays.value = draft.routine.kind === "custom" ? Math.floor((Number(draft.routine.durationHours) || 24) / 24) : "";
+      routineHours.value = draft.routine.kind === "custom" ? (Number(draft.routine.durationHours) || 24) % 24 : "";
+
+      function refreshRoutineFields() {
+        editor.classList.toggle("routine-enabled", routineEnabled.checked);
+        editor.querySelectorAll(".quest-routine-duration").forEach((field) => {
+          field.style.display = routineKind.value === "custom" ? "flex" : "none";
+        });
+      }
+
+      routineEnabled.addEventListener("change", refreshRoutineFields);
+      routineKind.addEventListener("change", refreshRoutineFields);
+      refreshRoutineFields();
 
       editor.querySelector(".add-coordinate-button").addEventListener("click", () => {
         const input = editor.querySelector(".quest-coordinate-input");
@@ -2928,11 +3055,20 @@
           ...extractCoordinateTokens(text),
           ...[...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean)
         ])];
+        const routineKind = editor.querySelector(".quest-routine-kind").value;
+        const routineDays = Number(editor.querySelector(".quest-routine-days").value) || 0;
+        const routineHours = Number(editor.querySelector(".quest-routine-hours").value) || 0;
         return normalizeQuestSection({
           id: editor.dataset.sectionId,
           title: editor.querySelector(".quest-section-title").value.trim() || `Seção ${index + 1}`,
           text,
-          coordinates
+          coordinates,
+          routine: {
+            enabled: editor.querySelector(".quest-routine-enabled").checked,
+            name: editor.querySelector(".quest-routine-name").value.trim(),
+            kind: routineKind,
+            durationHours: routineKind === "custom" ? Math.max(1, routineDays * 24 + routineHours) : undefined
+          }
         });
       });
 
@@ -3177,6 +3313,7 @@
       } else {
         state.quests.unshift(quest);
       }
+      createLinkedRoutinesForExistingQuestProgress(quest);
       state.selectedQuestId = quest.id;
       expandedQuestId = quest.id;
       saveState();
