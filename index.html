@@ -656,13 +656,9 @@
     .routine-toolbar {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: flex-end;
       gap: 14px;
-      margin-bottom: 16px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(23, 28, 34, .68);
-      padding: 12px;
+      margin-bottom: 12px;
     }
 
     .toggle-line {
@@ -780,8 +776,14 @@
 
     .task-characters {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       padding: 12px;
+    }
+
+    .task-characters > .task-timer {
+      grid-column: 1 / -1;
+      margin-left: 0;
     }
 
     .task-character-row {
@@ -850,12 +852,25 @@
     }
 
     .checkbox-grid label {
-      display: inline-flex;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
       align-items: center;
       gap: 8px;
       color: var(--muted);
       font-size: 12px;
       font-weight: 750;
+    }
+
+    .checkbox-grid input {
+      justify-self: center;
+      margin: 0;
+    }
+
+    .checkbox-grid span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .empty-state strong {
@@ -1055,6 +1070,10 @@
       .cards-grid {
         grid-template-columns: 1fr;
       }
+
+      .task-characters {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -1095,13 +1114,6 @@
     </aside>
 
     <main>
-      <section class="topbar" aria-label="Resumo">
-        <div>
-          <h1>Organizador de Personagens PxG</h1>
-          <p>Organize personagens de PokeXGames com clã, níveis, profissão e especialização para consultar tudo rapidamente durante o jogo.</p>
-        </div>
-      </section>
-
       <nav class="tabs" aria-label="Seções do painel">
         <button class="tab-button active" type="button" data-tab="characters">Personagens</button>
         <button class="tab-button" type="button" data-tab="routine">Rotina</button>
@@ -1225,18 +1237,22 @@
           </label>
         </div>
 
-        <div class="form-grid">
+        <div class="form-grid three">
           <label class="field">
             <span>Nível mínimo</span>
             <input id="taskMinLevel" type="number" min="1" max="625" step="1" placeholder="1">
           </label>
           <label class="field">
-            <span>Exibição</span>
-            <select id="taskShowOnCharacters">
-              <option value="false">Não mostrar na aba Personagens</option>
-              <option value="true">Mostrar quando estiver livre</option>
-            </select>
+            <span>Nível NW mínimo</span>
+            <input id="taskMinNwLevel" type="number" min="1" max="100" step="1" placeholder="Opcional">
           </label>
+          <div class="field">
+            <span>Exibição</span>
+            <label class="toggle-line" for="taskShowOnCharacters">
+              <input id="taskShowOnCharacters" type="checkbox">
+              <span>Mostrar quando estiver livre na aba Personagens</span>
+            </label>
+          </div>
         </div>
 
         <div class="form-grid" id="taskDurationRow">
@@ -1251,7 +1267,7 @@
         </div>
 
         <label class="field">
-          <span>Profissões permitidas</span>
+          <span>Habilitar por profissão</span>
           <div class="checkbox-grid" id="taskProfessionGrid"></div>
         </label>
 
@@ -1284,6 +1300,7 @@
     const taskName = document.querySelector("#taskName");
     const taskKind = document.querySelector("#taskKind");
     const taskMinLevel = document.querySelector("#taskMinLevel");
+    const taskMinNwLevel = document.querySelector("#taskMinNwLevel");
     const taskShowOnCharacters = document.querySelector("#taskShowOnCharacters");
     const taskDurationRow = document.querySelector("#taskDurationRow");
     const taskDurationDays = document.querySelector("#taskDurationDays");
@@ -1384,6 +1401,7 @@
         kind: routineKinds[task.kind] ? task.kind : "daily",
         durationHours: clampNumber(task.durationHours, 1, 8760),
         minLevel: clampNumber(task.minLevel, 1, 625) || 1,
+        minNwLevel: hasValue(task.minNwLevel) ? clampNumber(task.minNwLevel, 1, 100) : "",
         professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
         showOnCharacters: Boolean(task.showOnCharacters),
         defaultTask: Boolean(task.defaultTask)
@@ -1467,6 +1485,7 @@
 
     function isCharacterEligibleForTask(character, task) {
       if ((Number(character.characterLevel) || 1) < (Number(task.minLevel) || 1)) return false;
+      if (hasValue(task.minNwLevel) && (Number(character.nwLevel) || 0) < Number(task.minNwLevel)) return false;
       if (task.professions.length && !task.professions.includes(character.profession)) return false;
       return true;
     }
@@ -1893,7 +1912,8 @@
       taskName.value = editingTaskId ? draft.name : "";
       taskKind.value = draft.kind;
       taskMinLevel.value = draft.minLevel || 1;
-      taskShowOnCharacters.value = draft.showOnCharacters ? "true" : "false";
+      taskMinNwLevel.value = hasValue(draft.minNwLevel) ? draft.minNwLevel : "";
+      taskShowOnCharacters.checked = Boolean(draft.showOnCharacters);
       taskDurationDays.value = draft.kind === "custom" ? Math.floor((Number(draft.durationHours) || 24) / 24) : "";
       taskDurationHours.value = draft.kind === "custom" ? (Number(draft.durationHours) || 24) % 24 : "";
       taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
@@ -1927,8 +1947,9 @@
         kind,
         durationHours: kind === "custom" ? Math.max(1, days * 24 + hours) : existing?.durationHours,
         minLevel: taskMinLevel.value,
+        minNwLevel: taskMinNwLevel.value,
         professions: selectedProfessions,
-        showOnCharacters: taskShowOnCharacters.value === "true",
+        showOnCharacters: taskShowOnCharacters.checked,
         defaultTask: Boolean(existing?.defaultTask)
       });
     }
