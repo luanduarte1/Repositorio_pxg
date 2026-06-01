@@ -1849,6 +1849,11 @@
     }
 
     function normalizeRoutineTask(task) {
+      const assignedCharacterIds = Array.isArray(task.assignedCharacterIds)
+        ? task.assignedCharacterIds
+        : task.assignedCharacterId
+          ? [task.assignedCharacterId]
+          : [];
       return {
         id: task.id || `task:${Date.now()}:${Math.random().toString(16).slice(2)}`,
         name: task.name || "Nova tarefa",
@@ -1859,6 +1864,7 @@
         professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
         showOnCharacters: Boolean(task.showOnCharacters),
         assignedCharacterId: task.assignedCharacterId || "",
+        assignedCharacterIds: [...new Set(assignedCharacterIds.filter(Boolean).map(String))],
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -1899,13 +1905,44 @@
       return Array.isArray(quests) ? quests.map(normalizeQuest) : [];
     }
 
+    function getRoutineNameKey(name) {
+      return String(name || "rotina")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "rotina";
+    }
+
+    function getGroupedQuestRoutineId(task) {
+      if (!task.id.startsWith("quest-routine:")) return task.id;
+      return `quest-routine:${getRoutineNameKey(task.name)}`;
+    }
+
     function mergeRoutineTasks(tasks = []) {
       const byId = new Map(defaultRoutineTasks.map((task) => [task.id, normalizeRoutineTask(task)]));
       tasks
         .map(normalizeRoutineTask)
         .filter((task) => !task.defaultTask)
-        .filter((task) => !(task.id.startsWith("quest-routine:") && !task.assignedCharacterId))
-        .forEach((task) => byId.set(task.id, task));
+        .filter((task) => !(task.id.startsWith("quest-routine:") && !task.assignedCharacterIds.length))
+        .forEach((task) => {
+          const groupedId = getGroupedQuestRoutineId(task);
+          const existing = byId.get(groupedId);
+          const normalizedTask = { ...task, id: groupedId };
+          if (!existing) {
+            byId.set(groupedId, normalizedTask);
+            return;
+          }
+
+          byId.set(groupedId, {
+            ...existing,
+            ...normalizedTask,
+            assignedCharacterIds: [...new Set([
+              ...existing.assignedCharacterIds,
+              ...normalizedTask.assignedCharacterIds
+            ])]
+          });
+        });
       return [...byId.values()];
     }
 
@@ -1979,6 +2016,7 @@
     }
 
     function isCharacterEligibleForTask(character, task) {
+      if (task.assignedCharacterIds.length && !task.assignedCharacterIds.includes(character.id)) return false;
       if (task.assignedCharacterId && task.assignedCharacterId !== character.id) return false;
       if ((Number(character.characterLevel) || 1) < (Number(task.minLevel) || 1)) return false;
       if (hasValue(task.minNwLevel) && (Number(character.nwLevel) || 0) < Number(task.minNwLevel)) return false;
@@ -2672,15 +2710,21 @@
       }
     }
 
-    function getQuestRoutineId(questId, sectionId, characterId) {
-      return `quest-routine:${questId}:${sectionId}:${characterId}`;
+    function getQuestRoutineId(quest, section) {
+      const routineName = section.routine?.name || `${quest.name} - ${section.title}`;
+      return `quest-routine:${getRoutineNameKey(routineName)}`;
     }
 
     function createRoutineFromQuestSection(quest, section, characterId) {
       if (!section.routine?.enabled) return;
       if (!characterId) return;
-      const routineId = getQuestRoutineId(quest.id, section.id, characterId);
-      if (state.routineTasks.some((task) => task.id === routineId)) return;
+      const routineId = getQuestRoutineId(quest, section);
+      const existing = state.routineTasks.find((task) => task.id === routineId);
+      if (existing) {
+        existing.assignedCharacterIds = [...new Set([...(existing.assignedCharacterIds || []), characterId])];
+        existing.assignedCharacterId = "";
+        return;
+      }
 
       state.routineTasks.push(normalizeRoutineTask({
         id: routineId,
@@ -2691,7 +2735,8 @@
         minNwLevel: quest.minNwLevel,
         professions: [],
         showOnCharacters: false,
-        assignedCharacterId: characterId,
+        assignedCharacterId: "",
+        assignedCharacterIds: [characterId],
         defaultTask: false
       }));
     }
