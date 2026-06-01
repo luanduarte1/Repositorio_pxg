@@ -1858,6 +1858,7 @@
         minNwLevel: hasValue(task.minNwLevel) ? clampNumber(task.minNwLevel, 1, 100) : "",
         professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
         showOnCharacters: Boolean(task.showOnCharacters),
+        assignedCharacterId: task.assignedCharacterId || "",
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -1900,7 +1901,11 @@
 
     function mergeRoutineTasks(tasks = []) {
       const byId = new Map(defaultRoutineTasks.map((task) => [task.id, normalizeRoutineTask(task)]));
-      tasks.map(normalizeRoutineTask).filter((task) => !task.defaultTask).forEach((task) => byId.set(task.id, task));
+      tasks
+        .map(normalizeRoutineTask)
+        .filter((task) => !task.defaultTask)
+        .filter((task) => !(task.id.startsWith("quest-routine:") && !task.assignedCharacterId))
+        .forEach((task) => byId.set(task.id, task));
       return [...byId.values()];
     }
 
@@ -1974,6 +1979,7 @@
     }
 
     function isCharacterEligibleForTask(character, task) {
+      if (task.assignedCharacterId && task.assignedCharacterId !== character.id) return false;
       if ((Number(character.characterLevel) || 1) < (Number(task.minLevel) || 1)) return false;
       if (hasValue(task.minNwLevel) && (Number(character.nwLevel) || 0) < Number(task.minNwLevel)) return false;
       if (task.professions.length && !task.professions.includes(character.profession)) return false;
@@ -2666,13 +2672,14 @@
       }
     }
 
-    function getQuestRoutineId(questId, sectionId) {
-      return `quest-routine:${questId}:${sectionId}`;
+    function getQuestRoutineId(questId, sectionId, characterId) {
+      return `quest-routine:${questId}:${sectionId}:${characterId}`;
     }
 
-    function createRoutineFromQuestSection(quest, section) {
+    function createRoutineFromQuestSection(quest, section, characterId) {
       if (!section.routine?.enabled) return;
-      const routineId = getQuestRoutineId(quest.id, section.id);
+      if (!characterId) return;
+      const routineId = getQuestRoutineId(quest.id, section.id, characterId);
       if (state.routineTasks.some((task) => task.id === routineId)) return;
 
       state.routineTasks.push(normalizeRoutineTask({
@@ -2684,28 +2691,16 @@
         minNwLevel: quest.minNwLevel,
         professions: [],
         showOnCharacters: false,
+        assignedCharacterId: characterId,
         defaultTask: false
       }));
     }
 
-    function createLinkedQuestRoutines(quest, sectionIds = []) {
+    function createLinkedQuestRoutines(quest, characterId, sectionIds = []) {
       const wantedSections = new Set(sectionIds);
       quest.sections.forEach((section) => {
         if (!wantedSections.size || wantedSections.has(section.id)) {
-          createRoutineFromQuestSection(quest, section);
-        }
-      });
-    }
-
-    function createLinkedRoutinesForExistingQuestProgress(quest) {
-      Object.entries(state.questProgress).forEach(([key, progress]) => {
-        if (!key.startsWith(`${quest.id}::`)) return;
-        if (progress?.status === "completed") {
-          createLinkedQuestRoutines(quest);
-          return;
-        }
-        if (Array.isArray(progress?.completedSections)) {
-          createLinkedQuestRoutines(quest, progress.completedSections);
+          createRoutineFromQuestSection(quest, section, characterId);
         }
       });
     }
@@ -2802,7 +2797,7 @@
             render();
           });
           row.querySelector('[data-action="complete"]').addEventListener("click", () => {
-            createLinkedQuestRoutines(quest);
+            createLinkedQuestRoutines(quest, character.id);
             setQuestProgress(quest.id, character.id, {
               status: "completed",
               completedSections: quest.sections.map((section) => section.id),
@@ -2934,7 +2929,7 @@
           const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
           if (checkbox.checked) {
             nextSections.add(section.id);
-            createLinkedQuestRoutines(quest, [section.id]);
+            createLinkedQuestRoutines(quest, character.id, [section.id]);
           } else {
             nextSections.delete(section.id);
           }
@@ -3311,7 +3306,6 @@
       } else {
         state.quests.unshift(quest);
       }
-      createLinkedRoutinesForExistingQuestProgress(quest);
       state.selectedQuestId = quest.id;
       expandedQuestId = quest.id;
       saveState();
