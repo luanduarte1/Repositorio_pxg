@@ -192,7 +192,7 @@
       grid-template-columns: minmax(0, 1fr) 26px 26px;
       align-items: center;
       column-gap: 6px;
-      min-height: 64px;
+      min-height: 78px;
       width: 100%;
       border: 1px solid color-mix(in srgb, var(--level-color, var(--line)) 72%, transparent);
       border-radius: 8px;
@@ -230,8 +230,8 @@
       transition: opacity .18s ease;
     }
 
-    .nav-text strong,
-    .nav-text span {
+    .nav-text > strong,
+    .nav-text > span {
       display: block;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -248,8 +248,12 @@
       font-size: 11px;
     }
 
-    .nav-text span .clan-inline {
-      max-width: 84px;
+    .nav-text .nav-detail-line {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .clan-inline {
@@ -586,7 +590,8 @@
     .fact {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
+      gap: 14px;
       min-height: 34px;
       border: 1px solid rgba(255, 255, 255, .06);
       border-radius: 8px;
@@ -599,7 +604,9 @@
     }
 
     .fact span {
-      display: none;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
     }
 
     .fact strong {
@@ -610,6 +617,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1 1 auto;
     }
 
     .fact strong .clan-inline {
@@ -1006,7 +1014,7 @@
       max-width: 100%;
     }
 
-    .character-name-inline > span:last-child {
+    .character-name-text {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2097,17 +2105,23 @@
     function buildCharacterNameInline(character) {
       const wrapper = document.createElement("span");
       wrapper.className = "character-name-inline";
-      if (clanIcons[character.clan]) wrapper.appendChild(buildClanIcon(character.clan));
 
       const name = document.createElement("span");
+      name.className = "character-name-text";
       name.textContent = character.name;
       wrapper.appendChild(name);
+      if (clanIcons[character.clan]) wrapper.appendChild(buildClanIcon(character.clan));
       return wrapper;
     }
 
     function renderClanPreview(clan) {
       clanPreview.innerHTML = "";
       clanPreview.appendChild(buildClanInline(clan));
+    }
+
+    function getProfessionSummary(character) {
+      if (!character.profession) return "Sem profissão";
+      return `${character.profession}${character.specialization ? ` (${character.specialization})` : ""}`;
     }
 
     function normalizeCharacter(character) {
@@ -2288,12 +2302,12 @@
 
         const text = document.createElement("span");
         text.className = "nav-text";
-        text.innerHTML = `<strong></strong><span></span>`;
+        text.innerHTML = `<strong></strong><span class="nav-detail-line"></span><span class="nav-detail-line"></span>`;
         text.querySelector("strong").appendChild(buildCharacterNameInline(character));
-        const navDetail = text.querySelector("span");
-        navDetail.title = `${character.clan} · Nível ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
-        navDetail.appendChild(buildClanInline(character.clan));
-        navDetail.append(` · Nv. ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`);
+        const [professionLine, levelLine] = text.querySelectorAll(".nav-detail-line");
+        professionLine.textContent = getProfessionSummary(character);
+        levelLine.textContent = `Nível ${character.characterLevel}${hasValue(character.nwLevel) ? ` · NW ${character.nwLevel}` : ""}`;
+        text.title = `${character.name} - ${character.clan} · ${professionLine.textContent} · ${levelLine.textContent}`;
 
         const characterControls = document.createElement("div");
         characterControls.className = "level-controls";
