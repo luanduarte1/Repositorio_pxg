@@ -1592,7 +1592,6 @@
         </div>
 
         <div class="modal-actions">
-          <button class="ghost-button" id="cancelModalButton" type="button">Cancelar</button>
           <button class="danger-button" id="deleteFromModalButton" type="button">Remover</button>
           <button class="primary-button" type="submit">Salvar personagem</button>
         </div>
@@ -1671,7 +1670,6 @@
         </label>
 
         <div class="modal-actions">
-          <button class="ghost-button" id="cancelTaskModalButton" type="button">Cancelar</button>
           <button class="danger-button" id="deleteTaskButton" type="button">Remover</button>
           <button class="primary-button" type="submit">Salvar tarefa</button>
         </div>
@@ -1714,7 +1712,6 @@
         <button class="secondary-button" id="addQuestSectionButton" type="button">Adicionar seção</button>
 
         <div class="modal-actions">
-          <button class="ghost-button" id="cancelQuestModalButton" type="button">Cancelar</button>
           <button class="danger-button" id="deleteQuestButton" type="button">Remover</button>
           <button class="secondary-button" id="finishQuestEditButton" type="button">Finalizar quest</button>
           <button class="primary-button" type="submit">Salvar quest</button>
@@ -1741,7 +1738,6 @@
     const taskModalBackdrop = document.querySelector("#taskModalBackdrop");
     const taskModalTitle = document.querySelector("#taskModalTitle");
     const closeTaskModalButton = document.querySelector("#closeTaskModalButton");
-    const cancelTaskModalButton = document.querySelector("#cancelTaskModalButton");
     const deleteTaskButton = document.querySelector("#deleteTaskButton");
     const taskForm = document.querySelector("#taskForm");
     const taskName = document.querySelector("#taskName");
@@ -1756,7 +1752,6 @@
     const questModalBackdrop = document.querySelector("#questModalBackdrop");
     const questModalTitle = document.querySelector("#questModalTitle");
     const closeQuestModalButton = document.querySelector("#closeQuestModalButton");
-    const cancelQuestModalButton = document.querySelector("#cancelQuestModalButton");
     const deleteQuestButton = document.querySelector("#deleteQuestButton");
     const finishQuestEditButton = document.querySelector("#finishQuestEditButton");
     const questForm = document.querySelector("#questForm");
@@ -1776,7 +1771,6 @@
     const modalBackdrop = document.querySelector("#characterModalBackdrop");
     const modalTitle = document.querySelector("#modalTitle");
     const closeModalButton = document.querySelector("#closeModalButton");
-    const cancelModalButton = document.querySelector("#cancelModalButton");
     const deleteFromModalButton = document.querySelector("#deleteFromModalButton");
     const characterForm = document.querySelector("#characterForm");
     const characterName = document.querySelector("#characterName");
@@ -3239,35 +3233,10 @@
     characterClan.addEventListener("change", () => renderClanPreview(characterClan.value));
 
     closeModalButton.addEventListener("click", closeModal);
-    cancelModalButton.addEventListener("click", closeModal);
     closeTaskModalButton.addEventListener("click", closeTaskModal);
-    cancelTaskModalButton.addEventListener("click", closeTaskModal);
     closeQuestModalButton.addEventListener("click", closeQuestModal);
-    cancelQuestModalButton.addEventListener("click", closeQuestModal);
     finishQuestEditButton.addEventListener("click", () => {
       questForm.requestSubmit();
-    });
-
-    modalBackdrop.addEventListener("click", (event) => {
-      if (event.target === modalBackdrop) closeModal();
-    });
-    taskModalBackdrop.addEventListener("click", (event) => {
-      if (event.target === taskModalBackdrop) closeTaskModal();
-    });
-    questModalBackdrop.addEventListener("click", (event) => {
-      if (event.target === questModalBackdrop) closeQuestModal();
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
-        closeModal();
-      }
-      if (event.key === "Escape" && taskModalBackdrop.classList.contains("open")) {
-        closeTaskModal();
-      }
-      if (event.key === "Escape" && questModalBackdrop.classList.contains("open")) {
-        closeQuestModal();
-      }
     });
 
     deleteFromModalButton.addEventListener("click", () => {
