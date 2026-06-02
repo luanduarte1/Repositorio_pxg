@@ -1249,12 +1249,18 @@
 
     .tower-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 78px;
-      align-items: center;
-      gap: 8px;
+      grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
     }
 
-    .tower-row strong {
+    .tower-player {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .tower-player strong {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1267,11 +1273,17 @@
       border-radius: 8px;
       background: var(--input);
       color: var(--text);
-      padding: 9px 10px;
+      padding: 8px 10px;
+    }
+
+    .tower-actions {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
     }
 
     .tower-check {
-      min-height: 36px;
+      min-height: 34px;
       display: inline-flex;
       align-items: center;
       justify-content: flex-start;
@@ -1284,10 +1296,6 @@
       font-size: 12px;
       font-weight: 750;
       white-space: nowrap;
-    }
-
-    .tower-check {
-      grid-column: 1 / -1;
     }
 
     .task-timer {
@@ -2816,7 +2824,8 @@
 
       current.checks[field] = checked;
       const delta = field === "tower" ? 150 : -50;
-      tower.scores[characterId] = current.score + (checked ? delta : -delta);
+      const currentScore = Number(tower.scores[characterId]) || 0;
+      tower.scores[characterId] = currentScore + (checked ? delta : -delta);
       saveState();
       render();
     }
@@ -2903,16 +2912,20 @@
         const row = document.createElement("div");
         row.className = "tower-row";
         row.innerHTML = `
-          <strong></strong>
-          <input type="number" step="1">
-          <label class="tower-check">
-            <input type="checkbox" data-action="tower">
-            <span>Done da Tower</span>
-          </label>
-          <label class="tower-check">
-            <input type="checkbox" data-action="dungeon">
-            <span>Dungeon da Tower</span>
-          </label>
+          <div class="tower-player">
+            <strong></strong>
+            <input type="number" step="1">
+          </div>
+          <div class="tower-actions">
+            <label class="tower-check">
+              <input type="checkbox" data-action="tower">
+              <span>Done da Tower</span>
+            </label>
+            <label class="tower-check">
+              <input type="checkbox" data-action="dungeon">
+              <span>Dungeon da Tower</span>
+            </label>
+          </div>
         `;
         row.querySelector("strong").appendChild(buildCharacterNameInline(character));
         const scoreInput = row.querySelector('input[type="number"]');
