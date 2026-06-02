@@ -1190,6 +1190,62 @@
       white-space: nowrap;
     }
 
+    .tower-card {
+      grid-column: 1 / -1;
+    }
+
+    .tower-summary {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 10px 12px 0;
+    }
+
+    .tower-rows {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .tower-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) 78px minmax(150px, auto) minmax(190px, auto);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tower-row strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tower-row input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--input);
+      color: var(--text);
+      padding: 9px 10px;
+    }
+
+    .tower-check {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(17, 22, 28, .5);
+      color: #c8dcf0;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
     .task-timer {
       color: var(--muted);
       font-size: 11px;
@@ -1463,6 +1519,10 @@
       }
 
       .task-characters {
+        grid-template-columns: 1fr;
+      }
+
+      .tower-row {
         grid-template-columns: 1fr;
       }
 
@@ -1819,7 +1879,17 @@
       weekly: { title: "Semanal", reset: "Reset semanal na segunda às 7:45" },
       monthly: { title: "Mensal", reset: "Reset mensal no dia 1 às 7:45" }
     };
-    const defaultRoutineTasks = [];
+    const defaultRoutineTasks = [
+      {
+        id: "special:tower7",
+        name: "Tower 7",
+        kind: "custom",
+        durationHours: 24,
+        minLevel: 1,
+        specialType: "tower7",
+        defaultTask: true
+      }
+    ];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
       Engenheiro: ["Mecânico", "Hacker", "Sem especialização"],
@@ -1835,6 +1905,7 @@
       characters: [],
       routineTasks: [],
       routineCompletions: {},
+      tower7: { scores: {}, checks: {} },
       showRoutineOnCharacters: false,
       quests: [],
       questProgress: {},
@@ -1876,6 +1947,7 @@
         showOnCharacters: Boolean(task.showOnCharacters),
         assignedCharacterId: task.assignedCharacterId || "",
         assignedCharacterIds: [...new Set(assignedCharacterIds.filter(Boolean).map(String))],
+        specialType: task.specialType || "",
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -2192,6 +2264,13 @@
       };
     }
 
+    function normalizeTower7(tower = {}) {
+      return {
+        scores: tower.scores && typeof tower.scores === "object" ? tower.scores : {},
+        checks: tower.checks && typeof tower.checks === "object" ? tower.checks : {}
+      };
+    }
+
     function loadState() {
       const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(PREVIOUS_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (!saved) return;
@@ -2205,6 +2284,7 @@
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
           quests: normalizeQuests(parsed.quests),
           questProgress: parsed.questProgress && typeof parsed.questProgress === "object" ? parsed.questProgress : {},
@@ -2557,8 +2637,102 @@
         minNwLevel: taskMinNwLevel.value,
         professions: selectedProfessions,
         showOnCharacters: taskShowOnCharacters.checked,
+        specialType: existing?.specialType || "",
         defaultTask: Boolean(existing?.defaultTask)
       });
+    }
+
+    function getTowerCharacterState(characterId) {
+      if (!state.tower7.scores) state.tower7.scores = {};
+      if (!state.tower7.checks) state.tower7.checks = {};
+      if (!state.tower7.checks[characterId]) {
+        state.tower7.checks[characterId] = { tower: false, dungeon: false };
+      }
+      return {
+        score: Number(state.tower7.scores[characterId]) || 0,
+        checks: state.tower7.checks[characterId]
+      };
+    }
+
+    function updateTowerScore(characterId, value) {
+      state.tower7.scores[characterId] = clampNumber(value, -9999, 99999) ?? 0;
+      saveState();
+      render();
+    }
+
+    function toggleTowerCheck(characterId, field, checked) {
+      const current = getTowerCharacterState(characterId);
+      const wasChecked = Boolean(current.checks[field]);
+      if (wasChecked === checked) return;
+
+      current.checks[field] = checked;
+      const delta = field === "tower" ? 150 : -50;
+      state.tower7.scores[characterId] = current.score + (checked ? delta : -delta);
+      saveState();
+      render();
+    }
+
+    function renderTower7Task(task, gridEl) {
+      const characters = getOrderedCharacters();
+      const totalParts = characters.length * 2;
+      const doneParts = characters.reduce((total, character) => {
+        const { checks } = getTowerCharacterState(character.id);
+        return total + (checks.tower ? 1 : 0) + (checks.dungeon ? 1 : 0);
+      }, 0);
+
+      const taskCard = document.createElement("article");
+      taskCard.className = "task-card tower-card";
+      taskCard.innerHTML = `
+        <header>
+          <div class="task-heading">
+            <h3></h3>
+            <span>Tower 7</span>
+          </div>
+          <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">âœŽ</button>
+        </header>
+        <div class="tower-summary"><strong></strong> partes concluÃ­das</div>
+        <div class="tower-rows"></div>
+      `;
+      taskCard.querySelector("h3").textContent = task.name;
+      taskCard.querySelector(".tower-summary strong").textContent = `${doneParts}/${totalParts}`;
+      taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
+
+      const rows = taskCard.querySelector(".tower-rows");
+      if (!characters.length) {
+        rows.innerHTML = '<div class="task-timer">Nenhum personagem criado ainda.</div>';
+      }
+
+      characters.forEach((character) => {
+        const { score, checks } = getTowerCharacterState(character.id);
+        const row = document.createElement("div");
+        row.className = "tower-row";
+        row.innerHTML = `
+          <strong></strong>
+          <input type="number" step="1">
+          <label class="tower-check">
+            <input type="checkbox" data-action="tower">
+            <span>Done da Tower</span>
+          </label>
+          <label class="tower-check">
+            <input type="checkbox" data-action="dungeon">
+            <span>Done da Dungeon da Tower</span>
+          </label>
+        `;
+        row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+        const scoreInput = row.querySelector('input[type="number"]');
+        scoreInput.value = score;
+        scoreInput.addEventListener("change", () => updateTowerScore(character.id, scoreInput.value));
+
+        const towerCheck = row.querySelector('[data-action="tower"]');
+        const dungeonCheck = row.querySelector('[data-action="dungeon"]');
+        towerCheck.checked = Boolean(checks.tower);
+        dungeonCheck.checked = Boolean(checks.dungeon);
+        towerCheck.addEventListener("change", () => toggleTowerCheck(character.id, "tower", towerCheck.checked));
+        dungeonCheck.addEventListener("change", () => toggleTowerCheck(character.id, "dungeon", dungeonCheck.checked));
+        rows.appendChild(row);
+      });
+
+      gridEl.appendChild(taskCard);
     }
 
     function renderRoutineSections() {
@@ -2580,6 +2754,11 @@
 
         const gridEl = section.querySelector(".routine-grid");
         state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
+          if (task.specialType === "tower7") {
+            renderTower7Task(task, gridEl);
+            return;
+          }
+
           const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
           const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
           const taskCard = document.createElement("article");
@@ -3213,6 +3392,7 @@
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
             quests: normalizeQuests(incoming.quests),
             questProgress: incoming.questProgress && typeof incoming.questProgress === "object" ? incoming.questProgress : {},
