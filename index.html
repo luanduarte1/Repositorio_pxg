@@ -1050,12 +1050,24 @@
 
     .routine-sections {
       display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
       gap: 18px;
+    }
+
+    .routine-section-column {
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      min-height: 90px;
     }
 
     .routine-section {
       display: grid;
       gap: 12px;
+    }
+
+    .routine-section.dragging {
+      opacity: .58;
     }
 
     .routine-section-header {
@@ -1065,6 +1077,35 @@
       gap: 12px;
       border-bottom: 1px solid var(--line);
       padding-bottom: 8px;
+    }
+
+    .routine-section-title {
+      min-width: 0;
+    }
+
+    .routine-section-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .routine-section-handle {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .5);
+      color: var(--muted);
+      cursor: grab;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .routine-section-handle:active {
+      cursor: grabbing;
     }
 
     .routine-section-header h2 {
@@ -1079,15 +1120,7 @@
 
     .routine-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(270px, 1fr));
       gap: 12px;
-    }
-
-    .routine-column {
-      display: grid;
-      align-content: start;
-      gap: 12px;
-      min-height: 72px;
     }
 
     .task-card {
@@ -1574,7 +1607,7 @@
         grid-template-columns: 1fr;
       }
 
-      .routine-grid {
+      .routine-sections {
         grid-template-columns: 1fr;
       }
 
@@ -1969,6 +2002,7 @@
       characters: [],
       routineTasks: [],
       routineCompletions: {},
+      routineSectionLayout: {},
       tower7: {},
       showRoutineOnCharacters: false,
       quests: [],
@@ -2058,6 +2092,18 @@
       return tower && typeof tower === "object" ? tower : {};
     }
 
+    function normalizeRoutineSectionLayout(layout = {}) {
+      const normalized = {};
+      Object.keys(routineKinds).forEach((kind, index) => {
+        const item = layout && typeof layout === "object" ? layout[kind] : null;
+        normalized[kind] = {
+          column: Number.isFinite(Number(item?.column)) ? clampNumber(item.column, 0, 1) : index % 2,
+          order: Number.isFinite(Number(item?.order)) ? Number(item.order) : Math.floor(index / 2)
+        };
+      });
+      return normalized;
+    }
+
     function getRoutineNameKey(name) {
       return String(name || "rotina")
         .normalize("NFD")
@@ -2122,27 +2168,34 @@
         .map((task, index) => ({ task, index }))
         .filter(({ task }) => task.kind === kind)
         .sort((a, b) => {
-          const aColumn = Number.isFinite(Number(a.task.routineColumn)) ? a.task.routineColumn : a.index % 2;
-          const bColumn = Number.isFinite(Number(b.task.routineColumn)) ? b.task.routineColumn : b.index % 2;
           const aOrder = Number.isFinite(Number(a.task.routineOrder)) ? a.task.routineOrder : a.index;
           const bOrder = Number.isFinite(Number(b.task.routineOrder)) ? b.task.routineOrder : b.index;
-          if (aColumn !== bColumn) return aColumn - bColumn;
           if (aOrder !== bOrder) return aOrder - bOrder;
           return a.task.name.localeCompare(b.task.name);
         })
         .map(({ task }) => task);
     }
 
-    function getRoutineColumn(task, fallbackIndex = 0) {
-      if (Number.isFinite(Number(task.routineColumn))) return task.routineColumn;
-      const stateIndex = state.routineTasks.findIndex((item) => item.id === task.id);
-      return (stateIndex >= 0 ? stateIndex : fallbackIndex) % 2;
+    function getOrderedRoutineSectionKinds() {
+      const layout = normalizeRoutineSectionLayout(state.routineSectionLayout);
+      state.routineSectionLayout = layout;
+      return Object.keys(routineKinds).sort((a, b) => {
+        const sectionA = layout[a];
+        const sectionB = layout[b];
+        if (sectionA.column !== sectionB.column) return sectionA.column - sectionB.column;
+        if (sectionA.order !== sectionB.order) return sectionA.order - sectionB.order;
+        return Object.keys(routineKinds).indexOf(a) - Object.keys(routineKinds).indexOf(b);
+      });
     }
 
-    function getNextRoutineOrder(kind, column = 0) {
+    function getRoutineSectionColumn(kind) {
+      state.routineSectionLayout = normalizeRoutineSectionLayout(state.routineSectionLayout);
+      return state.routineSectionLayout[kind]?.column ?? 0;
+    }
+
+    function getNextRoutineOrder(kind) {
       const orders = state.routineTasks
         .filter((task) => task.kind === kind)
-        .filter((task) => getRoutineColumn(task) === column)
         .map((task) => Number(task.routineOrder) || 0);
       return orders.length ? Math.max(...orders) + 1 : 0;
     }
@@ -2377,6 +2430,7 @@
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          routineSectionLayout: normalizeRoutineSectionLayout(parsed.routineSectionLayout),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
           quests: normalizeQuests(parsed.quests),
@@ -2830,26 +2884,35 @@
       render();
     }
 
-    function persistRoutineColumnOrder(kind, section) {
-      section.querySelectorAll(".routine-column").forEach((columnEl) => {
+    function persistRoutineTaskOrder(kind, section) {
+      section.querySelectorAll(".task-card").forEach((card, index) => {
+        const task = state.routineTasks.find((item) => item.id === card.dataset.taskId);
+        if (!task) return;
+        task.routineOrder = index;
+      });
+      saveState();
+    }
+
+    function persistRoutineSectionOrder() {
+      state.routineSectionLayout = normalizeRoutineSectionLayout(state.routineSectionLayout);
+      routineSections.querySelectorAll(".routine-section-column").forEach((columnEl) => {
         const column = Number(columnEl.dataset.column) || 0;
-        columnEl.querySelectorAll(".task-card").forEach((card, index) => {
-          const task = state.routineTasks.find((item) => item.id === card.dataset.taskId);
-          if (!task) return;
-          task.routineColumn = column;
-          task.routineOrder = index;
+        columnEl.querySelectorAll(".routine-section").forEach((section, index) => {
+          const kind = section.dataset.kind;
+          if (!routineKinds[kind]) return;
+          state.routineSectionLayout[kind] = { column, order: index };
         });
       });
       saveState();
     }
 
-    function getRoutineDropTarget(columnEl, y) {
-      const cards = [...columnEl.querySelectorAll(".task-card:not(.dragging)")];
-      return cards.reduce((closest, card) => {
-        const box = card.getBoundingClientRect();
+    function getDragDropTarget(container, selector, y) {
+      const items = [...container.querySelectorAll(`${selector}:not(.dragging)`)];
+      return items.reduce((closest, item) => {
+        const box = item.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
         if (offset < 0 && offset > closest.offset) {
-          return { offset, element: card };
+          return { offset, element: item };
         }
         return closest;
       }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
@@ -2866,6 +2929,19 @@
       });
       handle.addEventListener("dragend", () => {
         taskCard.classList.remove("dragging");
+      });
+    }
+
+    function decorateRoutineSection(section) {
+      const handle = section.querySelector(".routine-section-handle");
+      if (!handle) return;
+      handle.draggable = true;
+      handle.addEventListener("dragstart", (event) => {
+        event.dataTransfer?.setData("text/plain", section.dataset.kind || "");
+        section.classList.add("dragging");
+      });
+      handle.addEventListener("dragend", () => {
+        section.classList.remove("dragging");
       });
     }
 
@@ -2948,44 +3024,65 @@
       clearExpiredRoutineCompletions();
       routineSections.innerHTML = "";
 
-      Object.entries(routineKinds).forEach(([kind, config]) => {
+      routineSections.innerHTML = `
+        <div class="routine-section-column" data-column="0"></div>
+        <div class="routine-section-column" data-column="1"></div>
+      `;
+
+      const sectionColumns = [...routineSections.querySelectorAll(".routine-section-column")];
+      sectionColumns.forEach((columnEl) => {
+        columnEl.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          const dragging = routineSections.querySelector(".routine-section.dragging");
+          if (!dragging) return;
+          const target = getDragDropTarget(columnEl, ".routine-section", event.clientY);
+          if (target) {
+            columnEl.insertBefore(dragging, target);
+          } else {
+            columnEl.appendChild(dragging);
+          }
+        });
+        columnEl.addEventListener("drop", persistRoutineSectionOrder);
+      });
+
+      getOrderedRoutineSectionKinds().forEach((kind) => {
+        const config = routineKinds[kind];
         const section = document.createElement("section");
         section.className = "routine-section";
+        section.dataset.kind = kind;
         section.innerHTML = `
           <div class="routine-section-header">
-            <div>
+            <div class="routine-section-title">
               <h2>${config.title}</h2>
               <span>${config.reset}</span>
             </div>
+            <div class="routine-section-actions">
+              <button class="routine-section-handle" type="button" aria-label="Mover seção" title="Mover seção">✥</button>
+            </div>
           </div>
-          <div class="routine-grid">
-            <div class="routine-column" data-column="0"></div>
-            <div class="routine-column" data-column="1"></div>
-          </div>
+          <div class="routine-grid"></div>
         `;
+        decorateRoutineSection(section);
 
-        const columns = [...section.querySelectorAll(".routine-column")];
-        columns.forEach((columnEl) => {
-          columnEl.addEventListener("dragover", (event) => {
-            event.preventDefault();
-            const dragging = section.querySelector(".task-card.dragging");
-            if (!dragging) return;
-            const target = getRoutineDropTarget(columnEl, event.clientY);
-            if (target) {
-              columnEl.insertBefore(dragging, target);
-            } else {
-              columnEl.appendChild(dragging);
-            }
-          });
-          columnEl.addEventListener("drop", () => {
-            persistRoutineColumnOrder(kind, section);
-          });
+        const gridEl = section.querySelector(".routine-grid");
+        gridEl.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          const dragging = section.querySelector(".task-card.dragging");
+          if (!dragging) return;
+          const target = getDragDropTarget(gridEl, ".task-card", event.clientY);
+          if (target) {
+            gridEl.insertBefore(dragging, target);
+          } else {
+            gridEl.appendChild(dragging);
+          }
+        });
+        gridEl.addEventListener("drop", () => {
+          persistRoutineTaskOrder(kind, section);
         });
 
-        getOrderedRoutineTasks(kind).forEach((task, taskIndex) => {
-          const columnEl = columns[getRoutineColumn(task, taskIndex)] || columns[0];
+        getOrderedRoutineTasks(kind).forEach((task) => {
           if (task.specialType === "tower7") {
-            renderTower7Task(task, columnEl);
+            renderTower7Task(task, gridEl);
             return;
           }
 
@@ -3046,10 +3143,11 @@
             });
             rows.appendChild(row);
           });
-          columnEl.appendChild(taskCard);
+          gridEl.appendChild(taskCard);
         });
 
-        routineSections.appendChild(section);
+        const columnEl = sectionColumns[getRoutineSectionColumn(kind)] || sectionColumns[0];
+        columnEl.appendChild(section);
       });
     }
 
@@ -3626,6 +3724,7 @@
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            routineSectionLayout: normalizeRoutineSectionLayout(incoming.routineSectionLayout),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
             quests: normalizeQuests(incoming.quests),
