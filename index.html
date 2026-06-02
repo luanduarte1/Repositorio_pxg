@@ -1190,6 +1190,70 @@
       white-space: nowrap;
     }
 
+    .task-character-picker {
+      display: none;
+    }
+
+    .task-character-picker.open {
+      display: flex;
+    }
+
+    .tower-card {
+      grid-column: 1 / -1;
+    }
+
+    .tower-summary {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 10px 12px 0;
+    }
+
+    .tower-rows {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .tower-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) 78px minmax(150px, auto) minmax(190px, auto);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tower-row strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tower-row input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--input);
+      color: var(--text);
+      padding: 9px 10px;
+    }
+
+    .tower-check {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(17, 22, 28, .5);
+      color: #c8dcf0;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
     .task-timer {
       color: var(--muted);
       font-size: 11px;
@@ -1466,6 +1530,10 @@
         grid-template-columns: 1fr;
       }
 
+      .tower-row {
+        grid-template-columns: 1fr;
+      }
+
       .quest-layout,
       .quest-layout.detail-open {
         grid-template-columns: 1fr;
@@ -1630,6 +1698,14 @@
       </div>
 
       <form class="modal-form" id="taskForm">
+        <label class="field">
+          <span>Modelo</span>
+          <select id="taskTemplate">
+            <option value="">Tarefa comum</option>
+            <option value="tower7">Tower 7</option>
+          </select>
+        </label>
+
         <div class="form-grid">
           <label class="field">
             <span>Nome da tarefa</span>
@@ -1678,6 +1754,12 @@
         <label class="field">
           <span>Habilitar por profissão</span>
           <div class="checkbox-grid" id="taskProfessionGrid"></div>
+        </label>
+
+        <button class="secondary-button" id="editTaskCharactersButton" type="button">Editar personagens</button>
+        <label class="field task-character-picker" id="taskCharacterPicker">
+          <span>Personagens da tarefa</span>
+          <div class="checkbox-grid" id="taskCharacterGrid"></div>
         </label>
 
         <div class="modal-actions">
@@ -1751,6 +1833,7 @@
     const closeTaskModalButton = document.querySelector("#closeTaskModalButton");
     const deleteTaskButton = document.querySelector("#deleteTaskButton");
     const taskForm = document.querySelector("#taskForm");
+    const taskTemplate = document.querySelector("#taskTemplate");
     const taskName = document.querySelector("#taskName");
     const taskKind = document.querySelector("#taskKind");
     const taskMinLevel = document.querySelector("#taskMinLevel");
@@ -1760,6 +1843,9 @@
     const taskDurationDays = document.querySelector("#taskDurationDays");
     const taskDurationHours = document.querySelector("#taskDurationHours");
     const taskProfessionGrid = document.querySelector("#taskProfessionGrid");
+    const editTaskCharactersButton = document.querySelector("#editTaskCharactersButton");
+    const taskCharacterPicker = document.querySelector("#taskCharacterPicker");
+    const taskCharacterGrid = document.querySelector("#taskCharacterGrid");
     const questModalBackdrop = document.querySelector("#questModalBackdrop");
     const questModalTitle = document.querySelector("#questModalTitle");
     const closeQuestModalButton = document.querySelector("#closeQuestModalButton");
@@ -1835,6 +1921,7 @@
       characters: [],
       routineTasks: [],
       routineCompletions: {},
+      tower7: {},
       showRoutineOnCharacters: false,
       quests: [],
       questProgress: {},
@@ -1876,6 +1963,7 @@
         showOnCharacters: Boolean(task.showOnCharacters),
         assignedCharacterId: task.assignedCharacterId || "",
         assignedCharacterIds: [...new Set(assignedCharacterIds.filter(Boolean).map(String))],
+        specialType: task.specialType || "",
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -1914,6 +2002,10 @@
 
     function normalizeQuests(quests = []) {
       return Array.isArray(quests) ? quests.map(normalizeQuest) : [];
+    }
+
+    function normalizeTower7(tower = {}) {
+      return tower && typeof tower === "object" ? tower : {};
     }
 
     function getRoutineNameKey(name) {
@@ -2205,6 +2297,7 @@
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
           quests: normalizeQuests(parsed.quests),
           questProgress: parsed.questProgress && typeof parsed.questProgress === "object" ? parsed.questProgress : {},
@@ -2512,10 +2605,42 @@
       });
     }
 
+    function renderTaskCharacterChoices(selected = []) {
+      taskCharacterGrid.innerHTML = "";
+      const selectedSet = new Set(selected);
+      getOrderedCharacters().forEach((character) => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" value=""><span></span>`;
+        const checkbox = label.querySelector("input");
+        checkbox.value = character.id;
+        checkbox.checked = selectedSet.has(character.id);
+        label.querySelector("span").appendChild(buildCharacterNameInline(character));
+        taskCharacterGrid.appendChild(label);
+      });
+
+      if (!state.characters.length) {
+        taskCharacterGrid.innerHTML = '<span>Nenhum personagem criado ainda.</span>';
+      }
+    }
+
+    function refreshTaskTemplateFields() {
+      const isTower = taskTemplate.value === "tower7";
+      if (isTower && !editingTaskId) {
+        taskName.value = "Tower 7";
+        taskKind.value = "custom";
+        taskDurationDays.value = "";
+        taskDurationHours.value = "";
+      }
+      taskKind.disabled = isTower || Boolean(state.routineTasks.find((task) => task.id === editingTaskId)?.defaultTask);
+      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
+    }
+
     function openTaskModal(task = null) {
       editingTaskId = task?.id || null;
       const draft = normalizeRoutineTask(task || { kind: "daily" });
       taskModalTitle.textContent = editingTaskId ? "Editar Tarefa" : "Adicionar Tarefa";
+      taskTemplate.value = draft.specialType === "tower7" ? "tower7" : "";
+      taskTemplate.disabled = Boolean(editingTaskId);
       taskName.value = editingTaskId ? draft.name : "";
       taskKind.value = draft.kind;
       taskMinLevel.value = draft.minLevel || 1;
@@ -2523,13 +2648,15 @@
       taskShowOnCharacters.checked = Boolean(draft.showOnCharacters);
       taskDurationDays.value = draft.kind === "custom" ? Math.floor((Number(draft.durationHours) || 24) / 24) : "";
       taskDurationHours.value = draft.kind === "custom" ? (Number(draft.durationHours) || 24) % 24 : "";
-      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
       taskName.disabled = Boolean(draft.defaultTask);
       taskKind.disabled = Boolean(draft.defaultTask);
       taskDurationDays.disabled = Boolean(draft.defaultTask);
       taskDurationHours.disabled = Boolean(draft.defaultTask);
       deleteTaskButton.style.display = editingTaskId && !draft.defaultTask ? "inline-flex" : "none";
       renderProfessionChoices(draft.professions);
+      renderTaskCharacterChoices(draft.assignedCharacterIds);
+      taskCharacterPicker.classList.remove("open");
+      refreshTaskTemplateFields();
       taskModalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
       taskName.focus();
@@ -2545,6 +2672,7 @@
     function getTaskFromForm() {
       const existing = state.routineTasks.find((task) => task.id === editingTaskId);
       const selectedProfessions = [...taskProfessionGrid.querySelectorAll("input:checked")].map((input) => input.value);
+      const selectedCharacters = [...taskCharacterGrid.querySelectorAll("input:checked")].map((input) => input.value);
       const kind = existing?.defaultTask ? existing.kind : taskKind.value;
       const days = Number(taskDurationDays.value) || 0;
       const hours = Number(taskDurationHours.value) || 0;
@@ -2557,8 +2685,131 @@
         minNwLevel: taskMinNwLevel.value,
         professions: selectedProfessions,
         showOnCharacters: taskShowOnCharacters.checked,
+        assignedCharacterId: "",
+        assignedCharacterIds: selectedCharacters,
+        specialType: existing?.specialType || (taskTemplate.value === "tower7" ? "tower7" : ""),
         defaultTask: Boolean(existing?.defaultTask)
       });
+    }
+
+    function getTowerTaskState(taskId) {
+      if (!state.tower7 || typeof state.tower7 !== "object") state.tower7 = {};
+      if (!state.tower7[taskId]) {
+        state.tower7[taskId] = {
+          scores: {},
+          checks: {},
+          resetAt: nextWeeklyReset()
+        };
+      }
+
+      const tower = state.tower7[taskId];
+      if (!tower.scores || typeof tower.scores !== "object") tower.scores = {};
+      if (!tower.checks || typeof tower.checks !== "object") tower.checks = {};
+      if (!Number(tower.resetAt)) tower.resetAt = nextWeeklyReset();
+
+      if (Number(tower.resetAt) <= Date.now()) {
+        tower.checks = {};
+        tower.resetAt = nextWeeklyReset();
+        saveState();
+      }
+
+      return tower;
+    }
+
+    function getTowerCharacterState(taskId, characterId) {
+      const tower = getTowerTaskState(taskId);
+      if (!tower.checks[characterId]) {
+        tower.checks[characterId] = { tower: false, dungeon: false };
+      }
+      return {
+        score: Number(tower.scores[characterId]) || 0,
+        checks: tower.checks[characterId]
+      };
+    }
+
+    function updateTowerScore(taskId, characterId, value) {
+      const tower = getTowerTaskState(taskId);
+      tower.scores[characterId] = clampNumber(value, -9999, 99999) ?? 0;
+      saveState();
+      render();
+    }
+
+    function toggleTowerCheck(taskId, characterId, field, checked) {
+      const tower = getTowerTaskState(taskId);
+      const current = getTowerCharacterState(taskId, characterId);
+      const wasChecked = Boolean(current.checks[field]);
+      if (wasChecked === checked) return;
+
+      current.checks[field] = checked;
+      const delta = field === "tower" ? 150 : -50;
+      tower.scores[characterId] = current.score + (checked ? delta : -delta);
+      saveState();
+      render();
+    }
+
+    function renderTower7Task(task, gridEl) {
+      const characters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+      const tower = getTowerTaskState(task.id);
+      const totalParts = characters.length * 2;
+      const doneParts = characters.reduce((total, character) => {
+        const checks = tower.checks[character.id] || {};
+        return total + (checks.tower ? 1 : 0) + (checks.dungeon ? 1 : 0);
+      }, 0);
+
+      const taskCard = document.createElement("article");
+      taskCard.className = "task-card tower-card";
+      taskCard.innerHTML = `
+        <header>
+          <div class="task-heading">
+            <h3></h3>
+            <span></span>
+          </div>
+          <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">âœŽ</button>
+        </header>
+        <div class="tower-summary"><strong></strong> partes concluÃ­das</div>
+        <div class="tower-rows"></div>
+      `;
+      taskCard.querySelector("h3").textContent = task.name;
+      taskCard.querySelector(".task-heading span").textContent = `Reset em ${formatDaysHours(Number(tower.resetAt) - Date.now())}`;
+      taskCard.querySelector(".tower-summary strong").textContent = `${doneParts}/${totalParts}`;
+      taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
+
+      const rows = taskCard.querySelector(".tower-rows");
+      if (!characters.length) {
+        rows.innerHTML = '<div class="task-timer">Nenhum personagem selecionado para esta tarefa.</div>';
+      }
+
+      characters.forEach((character) => {
+        const { score, checks } = getTowerCharacterState(task.id, character.id);
+        const row = document.createElement("div");
+        row.className = "tower-row";
+        row.innerHTML = `
+          <strong></strong>
+          <input type="number" step="1">
+          <label class="tower-check">
+            <input type="checkbox" data-action="tower">
+            <span>Done da Tower</span>
+          </label>
+          <label class="tower-check">
+            <input type="checkbox" data-action="dungeon">
+            <span>Dungeon da Tower</span>
+          </label>
+        `;
+        row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+        const scoreInput = row.querySelector('input[type="number"]');
+        scoreInput.value = score;
+        scoreInput.addEventListener("change", () => updateTowerScore(task.id, character.id, scoreInput.value));
+
+        const towerCheck = row.querySelector('[data-action="tower"]');
+        const dungeonCheck = row.querySelector('[data-action="dungeon"]');
+        towerCheck.checked = Boolean(checks.tower);
+        dungeonCheck.checked = Boolean(checks.dungeon);
+        towerCheck.addEventListener("change", () => toggleTowerCheck(task.id, character.id, "tower", towerCheck.checked));
+        dungeonCheck.addEventListener("change", () => toggleTowerCheck(task.id, character.id, "dungeon", dungeonCheck.checked));
+        rows.appendChild(row);
+      });
+
+      gridEl.appendChild(taskCard);
     }
 
     function renderRoutineSections() {
@@ -2580,6 +2831,11 @@
 
         const gridEl = section.querySelector(".routine-grid");
         state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
+          if (task.specialType === "tower7") {
+            renderTower7Task(task, gridEl);
+            return;
+          }
+
           const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
           const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
           const taskCard = document.createElement("article");
@@ -3213,6 +3469,7 @@
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
             quests: normalizeQuests(incoming.quests),
             questProgress: incoming.questProgress && typeof incoming.questProgress === "object" ? incoming.questProgress : {},
@@ -3275,6 +3532,10 @@
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
+    editTaskCharactersButton.addEventListener("click", () => {
+      taskCharacterPicker.classList.toggle("open");
+    });
+    taskTemplate.addEventListener("change", refreshTaskTemplateFields);
     addQuestButton.addEventListener("click", () => openQuestModal());
     addQuestSectionButton.addEventListener("click", () => {
       questSectionEditors.appendChild(createQuestSectionEditor({ title: `Seção ${questSectionEditors.children.length + 1}` }));
@@ -3300,6 +3561,7 @@
       Object.keys(state.routineCompletions).forEach((key) => {
         if (key.startsWith(`${editingTaskId}::`)) delete state.routineCompletions[key];
       });
+      if (state.tower7?.[editingTaskId]) delete state.tower7[editingTaskId];
       saveState();
       closeTaskModal();
       render();
@@ -3320,7 +3582,7 @@
       render();
     });
     taskKind.addEventListener("change", () => {
-      taskDurationRow.style.display = taskKind.value === "custom" ? "grid" : "none";
+      refreshTaskTemplateFields();
     });
 
     characterForm.addEventListener("submit", (event) => {
