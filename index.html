@@ -532,79 +532,73 @@
       font-size: 12px;
     }
 
-    .calendar-day {
-      min-width: 54px;
-      border: 1px solid rgba(89, 195, 166, .35);
-      border-radius: 8px;
-      background: rgba(89, 195, 166, .1);
+    .calendar-month {
       color: var(--accent-strong);
-      padding: 8px;
-      text-align: center;
-    }
-
-    .calendar-day b {
-      display: block;
-      font-size: 22px;
-      line-height: 1;
-    }
-
-    .calendar-day small {
-      color: #c8dcf0;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
+      font-size: 13px;
+      font-weight: 850;
+      text-align: right;
+      text-transform: capitalize;
     }
 
     .calendar-task-list {
       display: grid;
-      gap: 10px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
     }
 
-    .calendar-task {
+    .calendar-weekday {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .calendar-day {
       display: grid;
-      gap: 8px;
+      align-content: start;
+      gap: 3px;
+      min-height: 58px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(10, 14, 18, .34);
-      padding: 10px;
+      padding: 5px;
     }
 
-    .calendar-task header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
+    .calendar-day.outside {
+      opacity: .36;
     }
 
-    .calendar-task h3 {
-      margin: 0;
-      font-size: 13px;
-    }
-
-    .calendar-task header span,
+    .calendar-day-number,
     .calendar-empty {
       color: var(--muted);
       font-size: 11px;
       line-height: 1.35;
     }
 
-    .calendar-character-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+    .calendar-day-number {
+      font-weight: 850;
     }
 
-    .calendar-character-chip {
+    .calendar-task-chip {
       display: inline-flex;
       align-items: center;
+      width: 100%;
       max-width: 100%;
       border: 1px solid rgba(89, 195, 166, .28);
-      border-radius: 999px;
+      border-radius: 6px;
       background: rgba(89, 195, 166, .08);
       color: #d9f4ea;
-      padding: 5px 8px;
-      font-size: 12px;
+      padding: 2px 4px;
+      font-size: 10px;
       font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-task-list > .calendar-empty {
+      grid-column: 1 / -1;
     }
 
     .character-card {
@@ -1946,9 +1940,9 @@
             <div class="calendar-heading">
               <div>
                 <strong>Calendário</strong>
-                <span>Tarefas livres exibidas nos personagens</span>
+                <span>Personalizadas, semanais e mensais</span>
               </div>
-              <div class="calendar-day" id="calendarToday"></div>
+              <div class="calendar-month" id="calendarToday"></div>
             </div>
             <div class="calendar-task-list" id="characterTaskCalendar"></div>
           </aside>
@@ -2634,51 +2628,89 @@
       if (!characterTaskCalendar || !calendarToday) return;
 
       const today = new Date();
-      calendarToday.innerHTML = `<b>${String(today.getDate()).padStart(2, "0")}</b><small>${today.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</small>`;
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      monthEnd.setHours(23, 59, 59, 999);
+      const firstWeekday = monthStart.getDay();
+      const calendarStart = new Date(monthStart);
+      calendarStart.setDate(monthStart.getDate() - firstWeekday);
+      calendarToday.textContent = today.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
       characterTaskCalendar.innerHTML = "";
 
+      ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach((day) => {
+        const label = document.createElement("div");
+        label.className = "calendar-weekday";
+        label.textContent = day;
+        characterTaskCalendar.appendChild(label);
+      });
+
+      const monthTaskMap = new Map();
+      const allowedKinds = new Set(["custom", "weekly", "monthly"]);
       const selectedTasks = state.routineTasks
-        .filter((task) => task.showOnCharacters)
+        .filter((task) => task.showOnCharacters && allowedKinds.has(task.kind))
         .sort((a, b) => {
           const kindOrder = Object.keys(routineKinds).indexOf(a.kind) - Object.keys(routineKinds).indexOf(b.kind);
           if (kindOrder) return kindOrder;
           return a.name.localeCompare(b.name);
         });
 
-      if (!selectedTasks.length) {
-        characterTaskCalendar.innerHTML = '<div class="calendar-empty">Nenhuma tarefa foi marcada para aparecer na aba Personagens.</div>';
-        return;
+      function getDateKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       }
 
       selectedTasks.forEach((task) => {
-        const availableCharacters = getOrderedCharacters()
-          .filter((character) => isCharacterEligibleForTask(character, task) && !getCompletion(task.id, character.id));
-        const item = document.createElement("article");
-        item.className = "calendar-task";
-        item.innerHTML = `
-          <header>
-            <h3></h3>
-            <span></span>
-          </header>
-          <div class="calendar-character-list"></div>
-        `;
-        item.querySelector("h3").textContent = task.name;
-        item.querySelector("header span").textContent = routineKinds[task.kind]?.title || "Rotina";
-        const characterList = item.querySelector(".calendar-character-list");
+        getOrderedCharacters()
+          .filter((character) => isCharacterEligibleForTask(character, task))
+          .forEach((character) => {
+            const completion = getCompletion(task.id, character.id);
+            const releaseDate = completion ? new Date(Number(completion.unlockAt)) : today;
+            if (releaseDate < monthStart || releaseDate > monthEnd) return;
 
-        if (!availableCharacters.length) {
-          characterList.innerHTML = '<span class="calendar-empty">Nenhum personagem liberado agora.</span>';
-        } else {
-          availableCharacters.forEach((character) => {
-            const chip = document.createElement("span");
-            chip.className = "calendar-character-chip";
-            chip.appendChild(buildCharacterNameInline(character));
-            characterList.appendChild(chip);
+            const dateKey = getDateKey(releaseDate);
+            const taskKey = `${dateKey}::${task.id}`;
+            if (!monthTaskMap.has(taskKey)) {
+              monthTaskMap.set(taskKey, {
+                dateKey,
+                task,
+                characters: []
+              });
+            }
+            monthTaskMap.get(taskKey).characters.push(character);
           });
-        }
-
-        characterTaskCalendar.appendChild(item);
       });
+
+      const tasksByDate = [...monthTaskMap.values()].reduce((map, item) => {
+        if (!map.has(item.dateKey)) map.set(item.dateKey, []);
+        map.get(item.dateKey).push(item);
+        return map;
+      }, new Map());
+
+      for (let index = 0; index < 42; index += 1) {
+        const date = new Date(calendarStart);
+        date.setDate(calendarStart.getDate() + index);
+        const dateKey = getDateKey(date);
+        const day = document.createElement("div");
+        day.className = `calendar-day${date.getMonth() === today.getMonth() ? "" : " outside"}`;
+        day.innerHTML = `<span class="calendar-day-number"></span>`;
+        day.querySelector(".calendar-day-number").textContent = date.getDate();
+
+        (tasksByDate.get(dateKey) || []).forEach(({ task, characters }) => {
+          const chip = document.createElement("span");
+          chip.className = "calendar-task-chip";
+          chip.textContent = task.name;
+          chip.title = `${task.name}\n${characters.map((character) => character.name).join(", ")}`;
+          day.appendChild(chip);
+        });
+
+        characterTaskCalendar.appendChild(day);
+      }
+
+      if (!selectedTasks.length) {
+        const empty = document.createElement("div");
+        empty.className = "calendar-empty";
+        empty.textContent = "Nenhuma tarefa personalizada, semanal ou mensal foi marcada para aparecer na aba Personagens.";
+        characterTaskCalendar.appendChild(empty);
+      }
     }
 
     function buildClanInline(clan) {
