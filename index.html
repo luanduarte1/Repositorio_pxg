@@ -1528,6 +1528,117 @@
       min-height: 44px;
     }
 
+    .task-modal {
+      width: min(720px, 100%);
+    }
+
+    .quest-modal {
+      width: min(860px, 100%);
+    }
+
+    .task-modal,
+    .quest-modal {
+      max-height: min(88vh, 760px);
+    }
+
+    .task-modal .modal-header,
+    .quest-modal .modal-header {
+      padding: 12px 14px;
+    }
+
+    .task-modal .modal-header strong,
+    .quest-modal .modal-header strong {
+      font-size: 18px;
+    }
+
+    .task-modal .modal-header span,
+    .quest-modal .modal-header span {
+      margin-top: 2px;
+      font-size: 11px;
+    }
+
+    .task-modal .modal-form,
+    .quest-modal .modal-form {
+      gap: 10px;
+      padding: 12px 14px 14px;
+    }
+
+    .task-modal .field,
+    .quest-modal .field {
+      gap: 5px;
+    }
+
+    .task-modal .field input,
+    .task-modal .field select,
+    .task-modal .field textarea,
+    .quest-modal .field input,
+    .quest-modal .field select,
+    .quest-modal .field textarea {
+      padding: 9px 10px;
+    }
+
+    .task-modal .field textarea,
+    .quest-modal .field textarea {
+      min-height: 72px;
+      line-height: 1.35;
+    }
+
+    .task-modal .form-grid,
+    .task-modal .form-grid.three,
+    .quest-modal .form-grid,
+    .quest-modal .form-grid.three {
+      gap: 8px;
+    }
+
+    .task-modal .checkbox-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .task-modal .checkbox-grid label {
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .task-modal .secondary-button,
+    .quest-modal .secondary-button,
+    .task-modal .danger-button,
+    .quest-modal .danger-button,
+    .task-modal .primary-button,
+    .quest-modal .primary-button {
+      min-height: 38px;
+    }
+
+    .task-modal .modal-actions,
+    .quest-modal .modal-actions {
+      gap: 8px;
+      padding-top: 0;
+    }
+
+    .task-modal .modal-actions > button,
+    .quest-modal .modal-actions > button {
+      min-height: 40px;
+    }
+
+    .quest-modal #questSectionEditors {
+      gap: 8px;
+    }
+
+    .quest-modal .quest-section-editor {
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .quest-modal .quest-routine-fields {
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .quest-modal .coord-editor {
+      gap: 8px;
+    }
+
     #questSectionEditors {
       display: grid;
       gap: 12px;
@@ -1636,6 +1747,10 @@
 
       .quest-detail {
         max-height: none;
+      }
+
+      .task-modal .checkbox-grid {
+        grid-template-columns: 1fr;
       }
 
       .quest-card-main,
@@ -1786,7 +1901,7 @@
   </template>
 
   <div class="modal-backdrop" id="taskModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
-    <div class="character-modal">
+    <div class="character-modal task-modal">
       <div class="modal-header">
         <div>
           <strong id="taskModalTitle">Adicionar Tarefa</strong>
@@ -1869,7 +1984,7 @@
   </div>
 
   <div class="modal-backdrop" id="questModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="questModalTitle">
-    <div class="character-modal">
+    <div class="character-modal quest-modal">
       <div class="modal-header">
         <div>
           <strong id="questModalTitle">Adicionar Quest</strong>
