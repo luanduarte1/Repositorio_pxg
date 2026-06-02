@@ -625,6 +625,22 @@
       box-shadow: 0 0 0 3px rgba(232, 193, 92, .12), var(--shadow);
     }
 
+    .character-card.selected {
+      border-color: var(--gold);
+    }
+
+    .character-note-preview {
+      margin: 0 18px 18px;
+      border: 1px solid rgba(232, 193, 92, .32);
+      border-radius: 8px;
+      background: rgba(232, 193, 92, .08);
+      color: #f4dfad;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
     .card-header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 42px 42px;
@@ -1257,6 +1273,11 @@
       box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
     }
 
+    .task-card.calendar-task-visible {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(232, 193, 92, .12);
+    }
+
     .task-card.dragging {
       opacity: .58;
     }
@@ -1648,6 +1669,36 @@
     .modal-actions > button {
       flex: 1 1 138px;
       min-height: 44px;
+    }
+
+    .floating-note-button {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 8;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(232, 193, 92, .42);
+      border-radius: 999px;
+      background: rgba(232, 193, 92, .18);
+      color: #ffe2a1;
+      box-shadow: var(--shadow);
+      padding: 0 18px;
+      font-weight: 850;
+    }
+
+    body:not(.characters-tab-active) .floating-note-button {
+      display: none;
+    }
+
+    .note-modal {
+      width: min(760px, 100%);
+    }
+
+    .note-modal textarea {
+      min-height: 300px;
     }
 
     .task-modal {
@@ -2178,6 +2229,38 @@
     </div>
   </div>
 
+  <button class="floating-note-button" id="addCharacterNoteButton" type="button">
+    <span aria-hidden="true">✎</span>
+    <span>Texto do personagem</span>
+  </button>
+
+  <div class="modal-backdrop" id="noteModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
+    <div class="character-modal note-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="noteModalTitle">Texto do personagem</strong>
+          <span>Anotação livre vinculada ao personagem escolhido</span>
+        </div>
+        <button class="icon-button" id="closeNoteModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="noteForm">
+        <label class="field">
+          <span>Personagem</span>
+          <select id="noteCharacterSelect" required></select>
+        </label>
+        <label class="field">
+          <span>Texto</span>
+          <textarea id="characterNoteText" placeholder="Escreva qualquer observação, plano, lembrete ou informação específica deste personagem."></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="secondary-button" id="clearCharacterNoteButton" type="button">Limpar texto</button>
+          <button class="primary-button" type="submit">Salvar texto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "character-organizer:v3";
     const PREVIOUS_STORAGE_KEY = "character-organizer:v2";
@@ -2225,6 +2308,13 @@
     const questMinNwLevel = document.querySelector("#questMinNwLevel");
     const questSectionEditors = document.querySelector("#questSectionEditors");
     const addQuestSectionButton = document.querySelector("#addQuestSectionButton");
+    const addCharacterNoteButton = document.querySelector("#addCharacterNoteButton");
+    const noteModalBackdrop = document.querySelector("#noteModalBackdrop");
+    const closeNoteModalButton = document.querySelector("#closeNoteModalButton");
+    const noteForm = document.querySelector("#noteForm");
+    const noteCharacterSelect = document.querySelector("#noteCharacterSelect");
+    const characterNoteText = document.querySelector("#characterNoteText");
+    const clearCharacterNoteButton = document.querySelector("#clearCharacterNoteButton");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -2788,6 +2878,7 @@
         profession: professionName,
         specialization: spec,
         professionLevel: clampNumber(character.professionLevel, 1, 120),
+        note: String(character.note || ""),
         order: Number.isFinite(Number(character.order)) ? Number(character.order) : null,
         createdAt: character.createdAt || Date.now()
       };
@@ -2824,6 +2915,7 @@
     }
 
     function createCharacterFromForm(id = String(Date.now())) {
+      const existing = state.characters.find((character) => character.id === id);
       return normalizeCharacter({
         id,
         name: characterName.value.trim() || "Sem nome",
@@ -2833,8 +2925,9 @@
         profession: profession.value,
         specialization: specialization.value,
         professionLevel: professionLevel.value,
-        order: state.characters.find((character) => character.id === id)?.order ?? getNextOrder(),
-        createdAt: state.characters.find((character) => character.id === id)?.createdAt || Date.now()
+        note: existing?.note || "",
+        order: existing?.order ?? getNextOrder(),
+        createdAt: existing?.createdAt || Date.now()
       });
     }
 
@@ -3003,6 +3096,7 @@
       orderedCharacters.forEach((character) => {
         const card = document.createElement("article");
         card.className = "character-card";
+        card.classList.toggle("selected", character.id === state.selectedId);
         card.dataset.cardId = character.id;
         card.draggable = false;
         applyLevelBorder(card, character.characterLevel);
@@ -3056,6 +3150,12 @@
           }
           factsContainer.appendChild(row);
         });
+        if (character.note.trim()) {
+          const note = document.createElement("div");
+          note.className = "character-note-preview";
+          note.textContent = character.note.trim();
+          card.appendChild(note);
+        }
 
         const dragButton = card.querySelector(".drag-button");
         dragButton.addEventListener("pointerdown", () => {
@@ -3087,6 +3187,12 @@
           event.preventDefault();
           card.classList.remove("drop-target");
           reorderCharacter(event.dataTransfer.getData("text/plain"), character.id);
+        });
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("button")) return;
+          state.selectedId = character.id;
+          saveState();
+          render();
         });
         card.querySelector(".edit-button").addEventListener("click", () => {
           state.selectedId = character.id;
@@ -3378,6 +3484,7 @@
 
       const taskCard = document.createElement("article");
       taskCard.className = "task-card tower-card";
+      taskCard.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
       taskCard.innerHTML = `
         <header>
           <div class="task-heading">
@@ -3513,7 +3620,7 @@
           const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
           const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
           const taskCard = document.createElement("article");
-          taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
+          taskCard.className = `task-card${anyAvailable ? " available" : ""}${task.showOnCharacters ? " calendar-task-visible" : ""}`;
           taskCard.innerHTML = `
             <header>
               <div class="task-heading">
@@ -4057,6 +4164,40 @@
       questSectionEditors.innerHTML = "";
     }
 
+    function renderNoteCharacterOptions(selectedId = state.selectedId) {
+      noteCharacterSelect.innerHTML = "";
+      getOrderedCharacters().forEach((character) => {
+        const option = new Option(character.name, character.id, false, character.id === selectedId);
+        noteCharacterSelect.add(option);
+      });
+      if (!noteCharacterSelect.value && state.characters[0]) {
+        noteCharacterSelect.value = state.characters[0].id;
+      }
+    }
+
+    function refreshCharacterNoteText() {
+      const character = state.characters.find((item) => item.id === noteCharacterSelect.value);
+      characterNoteText.value = character?.note || "";
+    }
+
+    function openNoteModal(characterId = state.selectedId) {
+      if (!state.characters.length) {
+        alert("Crie um personagem antes de adicionar um texto.");
+        return;
+      }
+      renderNoteCharacterOptions(characterId);
+      refreshCharacterNoteText();
+      noteModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      characterNoteText.focus();
+    }
+
+    function closeNoteModal() {
+      noteModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      noteForm.reset();
+    }
+
     function getQuestFromForm() {
       const existing = state.quests.find((quest) => quest.id === editingQuestId);
       const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
@@ -4090,6 +4231,7 @@
     }
 
     function render() {
+      document.body.classList.toggle("characters-tab-active", document.querySelector('.tab-panel.active')?.dataset.panel === "characters");
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
       toggleSidebar.setAttribute("aria-label", state.collapsed ? "Expandir menu" : "Recolher menu");
@@ -4108,6 +4250,7 @@
       tabPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.dataset.panel === tabName);
       });
+      document.body.classList.toggle("characters-tab-active", tabName === "characters");
     }
 
     function exportJson() {
@@ -4228,6 +4371,7 @@
     closeModalButton.addEventListener("click", closeModal);
     closeTaskModalButton.addEventListener("click", closeTaskModal);
     closeQuestModalButton.addEventListener("click", closeQuestModal);
+    closeNoteModalButton.addEventListener("click", closeNoteModal);
     finishQuestEditButton.addEventListener("click", () => {
       questForm.requestSubmit();
     });
@@ -4253,8 +4397,27 @@
       closeQuestModal();
       render();
     });
+    addCharacterNoteButton.addEventListener("click", () => openNoteModal(state.selectedId));
+    noteCharacterSelect.addEventListener("change", refreshCharacterNoteText);
+    clearCharacterNoteButton.addEventListener("click", () => {
+      characterNoteText.value = "";
+      characterNoteText.focus();
+    });
     taskKind.addEventListener("change", () => {
       refreshTaskTemplateFields();
+    });
+
+    noteForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const characterId = noteCharacterSelect.value;
+      state.characters = state.characters.map((character) => {
+        if (character.id !== characterId) return character;
+        return normalizeCharacter({ ...character, note: characterNoteText.value.trim() });
+      });
+      state.selectedId = characterId;
+      saveState();
+      closeNoteModal();
+      render();
     });
 
     characterForm.addEventListener("submit", (event) => {
