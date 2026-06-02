@@ -1307,6 +1307,14 @@
       background: var(--input);
       color: var(--text);
       padding: 8px 10px;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    .tower-row input[type="number"]::-webkit-outer-spin-button,
+    .tower-row input[type="number"]::-webkit-inner-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
     }
 
     .tower-actions {
@@ -1691,6 +1699,9 @@
             <span aria-hidden="true">+</span>
             <span>Adicionar Tarefa</span>
           </button>
+          <button class="danger-button" id="removeRoutineTaskButton" type="button">
+            <span>Remover Tarefa</span>
+          </button>
         </div>
         <div class="routine-sections" id="routineSections"></div>
       </section>
@@ -1911,6 +1922,7 @@
     const tabPanels = document.querySelectorAll(".tab-panel");
     const routineSections = document.querySelector("#routineSections");
     const addRoutineTaskButton = document.querySelector("#addRoutineTaskButton");
+    const removeRoutineTaskButton = document.querySelector("#removeRoutineTaskButton");
     const addQuestButton = document.querySelector("#addQuestButton");
     const questLayout = document.querySelector("#questLayout");
     const questList = document.querySelector("#questList");
@@ -2807,6 +2819,43 @@
       document.body.style.overflow = "";
       editingTaskId = null;
       taskForm.reset();
+    }
+
+    function removeRoutineTask(taskId) {
+      const task = state.routineTasks.find((item) => item.id === taskId);
+      if (!task || task.defaultTask || !confirm(`Remover ${task.name}?`)) return false;
+      state.routineTasks = state.routineTasks.filter((item) => item.id !== taskId);
+      Object.keys(state.routineCompletions).forEach((key) => {
+        if (key.startsWith(`${taskId}::`)) delete state.routineCompletions[key];
+      });
+      if (state.tower7?.[taskId]) delete state.tower7[taskId];
+      saveState();
+      render();
+      return true;
+    }
+
+    function chooseRoutineTaskToRemove() {
+      const tasks = state.routineTasks.filter((task) => !task.defaultTask);
+      if (!tasks.length) {
+        alert("Nenhuma tarefa removível foi criada ainda.");
+        return;
+      }
+
+      if (tasks.length === 1) {
+        removeRoutineTask(tasks[0].id);
+        return;
+      }
+
+      const options = tasks.map((task, index) => `${index + 1}. ${task.name} (${routineKinds[task.kind]?.title || "Rotina"})`).join("\n");
+      const choice = prompt(`Digite o número da tarefa que deseja remover:\n\n${options}`);
+      if (!choice) return;
+      const index = Number(choice) - 1;
+      const task = tasks[index];
+      if (!task) {
+        alert("Número de tarefa inválido.");
+        return;
+      }
+      removeRoutineTask(task.id);
     }
 
     function getTaskFromForm() {
@@ -3798,6 +3847,7 @@
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
+    removeRoutineTaskButton.addEventListener("click", chooseRoutineTaskToRemove);
     editTaskCharactersButton.addEventListener("click", () => {
       taskCharacterPicker.classList.toggle("open");
     });
@@ -3821,16 +3871,7 @@
       if (editingId) removeCharacter(editingId);
     });
     deleteTaskButton.addEventListener("click", () => {
-      const task = state.routineTasks.find((item) => item.id === editingTaskId);
-      if (!task || task.defaultTask || !confirm(`Remover ${task.name}?`)) return;
-      state.routineTasks = state.routineTasks.filter((item) => item.id !== editingTaskId);
-      Object.keys(state.routineCompletions).forEach((key) => {
-        if (key.startsWith(`${editingTaskId}::`)) delete state.routineCompletions[key];
-      });
-      if (state.tower7?.[editingTaskId]) delete state.tower7[editingTaskId];
-      saveState();
-      closeTaskModal();
-      render();
+      if (editingTaskId && removeRoutineTask(editingTaskId)) closeTaskModal();
     });
     deleteQuestButton.addEventListener("click", () => {
       const quest = state.quests.find((item) => item.id === editingQuestId);
