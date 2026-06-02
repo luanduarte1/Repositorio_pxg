@@ -1969,11 +1969,11 @@
           <div class="checkbox-grid" id="taskProfessionGrid"></div>
         </label>
 
-        <button class="secondary-button" id="editTaskCharactersButton" type="button">Editar personagens</button>
-        <label class="field task-character-picker" id="taskCharacterPicker">
+        <button class="secondary-button" id="editTaskCharactersButton" type="button" aria-expanded="false">Editar personagens</button>
+        <div class="field task-character-picker" id="taskCharacterPicker">
           <span>Personagens da tarefa</span>
           <div class="checkbox-grid" id="taskCharacterGrid"></div>
-        </label>
+        </div>
 
         <div class="modal-actions">
           <button class="danger-button" id="deleteTaskButton" type="button">Remover</button>
@@ -2890,6 +2890,12 @@
       }
     }
 
+    function setTaskCharacterPickerOpen(isOpen) {
+      taskCharacterPicker.classList.toggle("open", isOpen);
+      editTaskCharactersButton.setAttribute("aria-expanded", String(isOpen));
+      editTaskCharactersButton.textContent = isOpen ? "Ocultar personagens" : "Editar personagens";
+    }
+
     function refreshTaskTemplateFields() {
       const isTower = taskTemplate.value === "tower7";
       if (isTower && !editingTaskId) {
@@ -2922,7 +2928,7 @@
       deleteTaskButton.style.display = editingTaskId && !draft.defaultTask ? "inline-flex" : "none";
       renderProfessionChoices(draft.professions);
       renderTaskCharacterChoices(draft.assignedCharacterIds);
-      taskCharacterPicker.classList.remove("open");
+      setTaskCharacterPickerOpen(false);
       refreshTaskTemplateFields();
       taskModalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
@@ -3964,7 +3970,9 @@
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
     removeRoutineTaskButton.addEventListener("click", chooseRoutineTaskToRemove);
     editTaskCharactersButton.addEventListener("click", () => {
-      taskCharacterPicker.classList.toggle("open");
+      const selectedCharacters = [...taskCharacterGrid.querySelectorAll("input:checked")].map((input) => input.value);
+      renderTaskCharacterChoices(selectedCharacters);
+      setTaskCharacterPickerOpen(!taskCharacterPicker.classList.contains("open"));
     });
     taskTemplate.addEventListener("change", refreshTaskTemplateFields);
     addQuestButton.addEventListener("click", () => openQuestModal());
