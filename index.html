@@ -1079,8 +1079,15 @@
 
     .routine-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      grid-template-columns: repeat(2, minmax(270px, 1fr));
       gap: 12px;
+    }
+
+    .routine-column {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      min-height: 72px;
     }
 
     .task-card {
@@ -1093,6 +1100,10 @@
     .task-card.available {
       border-color: var(--danger);
       box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
+    }
+
+    .task-card.dragging {
+      opacity: .58;
     }
 
     .task-card header {
@@ -1130,6 +1141,31 @@
 
     .task-heading span {
       flex: 1 1 auto;
+    }
+
+    .task-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .task-drag-handle {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .5);
+      color: var(--muted);
+      cursor: grab;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .task-drag-handle:active {
+      cursor: grabbing;
     }
 
     .task-heading span,
@@ -1527,6 +1563,10 @@
       }
 
       .task-characters {
+        grid-template-columns: 1fr;
+      }
+
+      .routine-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1964,6 +2004,8 @@
         assignedCharacterId: task.assignedCharacterId || "",
         assignedCharacterIds: [...new Set(assignedCharacterIds.filter(Boolean).map(String))],
         specialType: task.specialType || "",
+        routineColumn: Number.isFinite(Number(task.routineColumn)) ? clampNumber(task.routineColumn, 0, 1) : null,
+        routineOrder: Number.isFinite(Number(task.routineOrder)) ? Number(task.routineOrder) : null,
         defaultTask: Boolean(task.defaultTask)
       };
     }
@@ -2065,6 +2107,36 @@
         if (a.order !== b.order) return a.order - b.order;
         return b.characterLevel - a.characterLevel;
       });
+    }
+
+    function getOrderedRoutineTasks(kind) {
+      return state.routineTasks
+        .map((task, index) => ({ task, index }))
+        .filter(({ task }) => task.kind === kind)
+        .sort((a, b) => {
+          const aColumn = Number.isFinite(Number(a.task.routineColumn)) ? a.task.routineColumn : a.index % 2;
+          const bColumn = Number.isFinite(Number(b.task.routineColumn)) ? b.task.routineColumn : b.index % 2;
+          const aOrder = Number.isFinite(Number(a.task.routineOrder)) ? a.task.routineOrder : a.index;
+          const bOrder = Number.isFinite(Number(b.task.routineOrder)) ? b.task.routineOrder : b.index;
+          if (aColumn !== bColumn) return aColumn - bColumn;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          return a.task.name.localeCompare(b.task.name);
+        })
+        .map(({ task }) => task);
+    }
+
+    function getRoutineColumn(task, fallbackIndex = 0) {
+      if (Number.isFinite(Number(task.routineColumn))) return task.routineColumn;
+      const stateIndex = state.routineTasks.findIndex((item) => item.id === task.id);
+      return (stateIndex >= 0 ? stateIndex : fallbackIndex) % 2;
+    }
+
+    function getNextRoutineOrder(kind, column = 0) {
+      const orders = state.routineTasks
+        .filter((task) => task.kind === kind)
+        .filter((task) => getRoutineColumn(task) === column)
+        .map((task) => Number(task.routineOrder) || 0);
+      return orders.length ? Math.max(...orders) + 1 : 0;
     }
 
     function getNextOrder() {
@@ -2688,6 +2760,8 @@
         assignedCharacterId: "",
         assignedCharacterIds: selectedCharacters,
         specialType: existing?.specialType || (taskTemplate.value === "tower7" ? "tower7" : ""),
+        routineColumn: existing?.routineColumn ?? 0,
+        routineOrder: existing?.routineOrder ?? getNextRoutineOrder(kind, 0),
         defaultTask: Boolean(existing?.defaultTask)
       });
     }
@@ -2747,6 +2821,45 @@
       render();
     }
 
+    function persistRoutineColumnOrder(kind, section) {
+      section.querySelectorAll(".routine-column").forEach((columnEl) => {
+        const column = Number(columnEl.dataset.column) || 0;
+        columnEl.querySelectorAll(".task-card").forEach((card, index) => {
+          const task = state.routineTasks.find((item) => item.id === card.dataset.taskId);
+          if (!task) return;
+          task.routineColumn = column;
+          task.routineOrder = index;
+        });
+      });
+      saveState();
+    }
+
+    function getRoutineDropTarget(columnEl, y) {
+      const cards = [...columnEl.querySelectorAll(".task-card:not(.dragging)")];
+      return cards.reduce((closest, card) => {
+        const box = card.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset, element: card };
+        }
+        return closest;
+      }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+    }
+
+    function decorateRoutineTaskCard(task, taskCard) {
+      taskCard.dataset.taskId = task.id;
+      const handle = taskCard.querySelector(".task-drag-handle");
+      if (!handle) return;
+      handle.draggable = true;
+      handle.addEventListener("dragstart", (event) => {
+        event.dataTransfer?.setData("text/plain", task.id);
+        taskCard.classList.add("dragging");
+      });
+      handle.addEventListener("dragend", () => {
+        taskCard.classList.remove("dragging");
+      });
+    }
+
     function renderTower7Task(task, gridEl) {
       const characters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
       const tower = getTowerTaskState(task.id);
@@ -2764,13 +2877,17 @@
             <h3></h3>
             <span></span>
           </div>
-          <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">âœŽ</button>
+          <div class="task-actions">
+            <button class="task-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">✥</button>
+            <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">âœŽ</button>
+          </div>
         </header>
         <div class="tower-summary"><strong></strong> partes concluÃ­das</div>
         <div class="tower-rows"></div>
       `;
       taskCard.querySelector(".task-edit-button").textContent = "✎";
       taskCard.querySelector(".tower-summary").innerHTML = "<strong></strong> Concluídas";
+      decorateRoutineTaskCard(task, taskCard);
       taskCard.querySelector("h3").textContent = task.name;
       taskCard.querySelector(".task-heading span").textContent = `Reset em ${formatDaysHours(Number(tower.resetAt) - Date.now())}`;
       taskCard.querySelector(".tower-summary strong").textContent = `${doneParts}/${totalParts}`;
@@ -2828,13 +2945,34 @@
               <span>${config.reset}</span>
             </div>
           </div>
-          <div class="routine-grid"></div>
+          <div class="routine-grid">
+            <div class="routine-column" data-column="0"></div>
+            <div class="routine-column" data-column="1"></div>
+          </div>
         `;
 
-        const gridEl = section.querySelector(".routine-grid");
-        state.routineTasks.filter((task) => task.kind === kind).forEach((task) => {
+        const columns = [...section.querySelectorAll(".routine-column")];
+        columns.forEach((columnEl) => {
+          columnEl.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            const dragging = section.querySelector(".task-card.dragging");
+            if (!dragging) return;
+            const target = getRoutineDropTarget(columnEl, event.clientY);
+            if (target) {
+              columnEl.insertBefore(dragging, target);
+            } else {
+              columnEl.appendChild(dragging);
+            }
+          });
+          columnEl.addEventListener("drop", () => {
+            persistRoutineColumnOrder(kind, section);
+          });
+        });
+
+        getOrderedRoutineTasks(kind).forEach((task, taskIndex) => {
+          const columnEl = columns[getRoutineColumn(task, taskIndex)] || columns[0];
           if (task.specialType === "tower7") {
-            renderTower7Task(task, gridEl);
+            renderTower7Task(task, columnEl);
             return;
           }
 
@@ -2848,10 +2986,14 @@
                 <h3></h3>
                 <span></span>
               </div>
-              <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
+              <div class="task-actions">
+                <button class="task-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">✥</button>
+                <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
+              </div>
             </header>
             <div class="task-characters"></div>
           `;
+          decorateRoutineTaskCard(task, taskCard);
           taskCard.querySelector("h3").textContent = task.name;
           taskCard.querySelector(".task-heading span").textContent = getTaskResetLabel(task);
           taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
@@ -2891,7 +3033,7 @@
             });
             rows.appendChild(row);
           });
-          gridEl.appendChild(taskCard);
+          columnEl.appendChild(taskCard);
         });
 
         routineSections.appendChild(section);
