@@ -492,6 +492,121 @@
       align-items: start;
     }
 
+    .characters-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+      align-items: start;
+      gap: 18px;
+    }
+
+    .character-calendar {
+      position: sticky;
+      top: 16px;
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .92);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .calendar-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .calendar-heading strong {
+      display: block;
+      font-size: 16px;
+    }
+
+    .calendar-heading span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .calendar-day {
+      min-width: 54px;
+      border: 1px solid rgba(89, 195, 166, .35);
+      border-radius: 8px;
+      background: rgba(89, 195, 166, .1);
+      color: var(--accent-strong);
+      padding: 8px;
+      text-align: center;
+    }
+
+    .calendar-day b {
+      display: block;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .calendar-day small {
+      color: #c8dcf0;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .calendar-task-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .calendar-task {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .34);
+      padding: 10px;
+    }
+
+    .calendar-task header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .calendar-task h3 {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .calendar-task header span,
+    .calendar-empty {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .calendar-character-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .calendar-character-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border: 1px solid rgba(89, 195, 166, .28);
+      border-radius: 999px;
+      background: rgba(89, 195, 166, .08);
+      color: #d9f4ea;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .character-card {
       border: 1px solid var(--level-color, var(--line));
       border-radius: 8px;
@@ -1741,6 +1856,14 @@
         grid-template-columns: 1fr;
       }
 
+      .characters-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .character-calendar {
+        position: static;
+      }
+
       .task-characters {
         grid-template-columns: 1fr;
       }
@@ -1818,7 +1941,19 @@
       </nav>
 
       <section class="tab-panel active" id="charactersPanel" data-panel="characters" aria-label="Personagens">
-        <div class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></div>
+        <div class="characters-layout">
+          <aside class="character-calendar" aria-label="Calendário de tarefas dos personagens">
+            <div class="calendar-heading">
+              <div>
+                <strong>Calendário</strong>
+                <span>Tarefas livres exibidas nos personagens</span>
+              </div>
+              <div class="calendar-day" id="calendarToday"></div>
+            </div>
+            <div class="calendar-task-list" id="characterTaskCalendar"></div>
+          </aside>
+          <div class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></div>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="routine" aria-label="Rotina">
@@ -2046,6 +2181,8 @@
     const app = document.querySelector("#app");
     const list = document.querySelector("#characterList");
     const grid = document.querySelector("#cardsGrid");
+    const characterTaskCalendar = document.querySelector("#characterTaskCalendar");
+    const calendarToday = document.querySelector("#calendarToday");
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
     const routineSections = document.querySelector("#routineSections");
@@ -2493,6 +2630,57 @@
         .map((task) => task.name);
     }
 
+    function renderCharacterTaskCalendar() {
+      if (!characterTaskCalendar || !calendarToday) return;
+
+      const today = new Date();
+      calendarToday.innerHTML = `<b>${String(today.getDate()).padStart(2, "0")}</b><small>${today.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</small>`;
+      characterTaskCalendar.innerHTML = "";
+
+      const selectedTasks = state.routineTasks
+        .filter((task) => task.showOnCharacters)
+        .sort((a, b) => {
+          const kindOrder = Object.keys(routineKinds).indexOf(a.kind) - Object.keys(routineKinds).indexOf(b.kind);
+          if (kindOrder) return kindOrder;
+          return a.name.localeCompare(b.name);
+        });
+
+      if (!selectedTasks.length) {
+        characterTaskCalendar.innerHTML = '<div class="calendar-empty">Nenhuma tarefa foi marcada para aparecer na aba Personagens.</div>';
+        return;
+      }
+
+      selectedTasks.forEach((task) => {
+        const availableCharacters = getOrderedCharacters()
+          .filter((character) => isCharacterEligibleForTask(character, task) && !getCompletion(task.id, character.id));
+        const item = document.createElement("article");
+        item.className = "calendar-task";
+        item.innerHTML = `
+          <header>
+            <h3></h3>
+            <span></span>
+          </header>
+          <div class="calendar-character-list"></div>
+        `;
+        item.querySelector("h3").textContent = task.name;
+        item.querySelector("header span").textContent = routineKinds[task.kind]?.title || "Rotina";
+        const characterList = item.querySelector(".calendar-character-list");
+
+        if (!availableCharacters.length) {
+          characterList.innerHTML = '<span class="calendar-empty">Nenhum personagem liberado agora.</span>';
+        } else {
+          availableCharacters.forEach((character) => {
+            const chip = document.createElement("span");
+            chip.className = "calendar-character-chip";
+            chip.appendChild(buildCharacterNameInline(character));
+            characterList.appendChild(chip);
+          });
+        }
+
+        characterTaskCalendar.appendChild(item);
+      });
+    }
+
     function buildClanInline(clan) {
       const wrapper = document.createElement("span");
       wrapper.className = "clan-inline";
@@ -2760,6 +2948,7 @@
     }
 
     function renderCards() {
+      renderCharacterTaskCalendar();
       grid.innerHTML = "";
 
       if (!state.characters.length) {
