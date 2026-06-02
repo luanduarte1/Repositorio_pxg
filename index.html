@@ -995,6 +995,19 @@
       display: grid;
     }
 
+    .quest-section-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .copy-selection-button {
+      min-height: 38px;
+      min-width: 42px;
+      padding: 0 12px;
+    }
+
     .coord-editor {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -1988,7 +2001,7 @@
       <div class="modal-header">
         <div>
           <strong id="questModalTitle">Adicionar Quest</strong>
-          <span>Spoiler em seções, coordenadas e requisitos</span>
+          <span>Spoiler em seções, textos copiáveis e requisitos</span>
         </div>
         <button class="icon-button" id="closeQuestModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
       </div>
@@ -3360,7 +3373,7 @@
     function createCoordinateChip(value) {
       const chip = document.createElement("span");
       chip.className = "coord-chip";
-      chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar coordenada" title="Copiar coordenada">⧉</button>`;
+      chip.innerHTML = `<span></span><button class="copy-button" type="button" aria-label="Copiar texto" title="Copiar texto">⧉</button>`;
       chip.querySelector("span").textContent = value;
       chip.querySelector("button").addEventListener("click", () => copyCoordinate(value, chip.querySelector("button")));
       return chip;
@@ -3460,7 +3473,7 @@
           <div class="empty-state">
             <div>
               <strong>Nenhuma quest criada ainda</strong>
-              <span>Use Adicionar Quest para registrar spoilers em seções, coordenadas e progresso por personagem.</span>
+              <span>Use Adicionar Quest para registrar spoilers em seções, textos copiáveis e progresso por personagem.</span>
             </div>
           </div>
         `;
@@ -3701,22 +3714,17 @@
       editor.classList.toggle("routine-enabled", Boolean(draft.routine.enabled));
       editor.dataset.sectionId = draft.id;
       editor.innerHTML = `
-        <label class="field">
-          <span>Título da seção</span>
-          <input class="quest-section-title" type="text" maxlength="70">
-        </label>
+        <div class="quest-section-title-row">
+          <label class="field">
+            <span>Título da seção</span>
+            <input class="quest-section-title" type="text" maxlength="70">
+          </label>
+          <button class="secondary-button copy-selection-button" type="button" aria-label="Transformar seleção em texto copiável" title="Transformar seleção em texto copiável">⧉</button>
+        </div>
         <label class="field">
           <span>Texto do spoiler</span>
           <textarea class="quest-section-text" placeholder="Escreva uma etapa curta da quest."></textarea>
         </label>
-        <div class="coord-editor">
-          <label class="field">
-            <span>Coordenada</span>
-            <input class="quest-coordinate-input" type="text" maxlength="80" placeholder="Ex: 1234, 5678, 7">
-          </label>
-          <button class="secondary-button add-coordinate-button" type="button">Adicionar coordenada</button>
-        </div>
-        <div class="coord-editor-list"></div>
         <label class="toggle-line">
           <input class="quest-routine-enabled" type="checkbox">
           <span>Criar rotina ao concluir esta seção</span>
@@ -3778,12 +3786,18 @@
       routineKind.addEventListener("change", refreshRoutineFields);
       refreshRoutineFields();
 
-      editor.querySelector(".add-coordinate-button").addEventListener("click", () => {
-        const input = editor.querySelector(".quest-coordinate-input");
-        const value = input.value.trim();
-        if (!value) return;
-        insertAtCursor(textInput, getCoordinateToken(value));
-        input.value = "";
+      editor.querySelector(".copy-selection-button").addEventListener("click", () => {
+        const start = textInput.selectionStart ?? 0;
+        const end = textInput.selectionEnd ?? 0;
+        const selectedText = textInput.value.slice(start, end).trim();
+        if (!selectedText) {
+          alert("Selecione um trecho do texto do spoiler para torná-lo copiável.");
+          textInput.focus();
+          return;
+        }
+        const token = getCoordinateToken(selectedText);
+        textInput.setRangeText(token, start, end, "end");
+        textInput.focus();
       });
 
       return editor;
@@ -3816,10 +3830,7 @@
       const existing = state.quests.find((quest) => quest.id === editingQuestId);
       const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
         const text = editor.querySelector(".quest-section-text").value.trim();
-        const coordinates = [...new Set([
-          ...extractCoordinateTokens(text),
-          ...[...editor.querySelectorAll(".coord-editor-list button")].map((button) => button.dataset.coordinate).filter(Boolean)
-        ])];
+        const coordinates = [...new Set(extractCoordinateTokens(text))];
         const routineKind = editor.querySelector(".quest-routine-kind").value;
         const routineDays = Number(editor.querySelector(".quest-routine-days").value) || 0;
         const routineHours = Number(editor.querySelector(".quest-routine-hours").value) || 0;
