@@ -1050,7 +1050,7 @@
 
     .routine-sections {
       display: grid;
-      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
       gap: 18px;
     }
 
@@ -1590,6 +1590,12 @@
       }
     }
 
+    @media (max-width: 1180px) {
+      .routine-sections {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+      }
+    }
+
     @media (max-width: 620px) {
       .modal-actions,
       .form-grid,
@@ -2097,8 +2103,8 @@
       Object.keys(routineKinds).forEach((kind, index) => {
         const item = layout && typeof layout === "object" ? layout[kind] : null;
         normalized[kind] = {
-          column: Number.isFinite(Number(item?.column)) ? clampNumber(item.column, 0, 1) : index % 2,
-          order: Number.isFinite(Number(item?.order)) ? Number(item.order) : Math.floor(index / 2)
+          column: Number.isFinite(Number(item?.column)) ? clampNumber(item.column, 0, 3) : index % 4,
+          order: Number.isFinite(Number(item?.order)) ? Number(item.order) : Math.floor(index / 4)
         };
       });
       return normalized;
@@ -3027,6 +3033,8 @@
       routineSections.innerHTML = `
         <div class="routine-section-column" data-column="0"></div>
         <div class="routine-section-column" data-column="1"></div>
+        <div class="routine-section-column" data-column="2"></div>
+        <div class="routine-section-column" data-column="3"></div>
       `;
 
       const sectionColumns = [...routineSections.querySelectorAll(".routine-section-column")];
