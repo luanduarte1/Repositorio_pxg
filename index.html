@@ -2883,9 +2883,11 @@
       if (wasChecked === checked) return;
 
       current.checks[field] = checked;
-      const delta = field === "tower" ? 150 : -50;
-      const currentScore = Number(tower.scores[characterId]) || 0;
-      tower.scores[characterId] = currentScore + (checked ? delta : -delta);
+      if (checked) {
+        const delta = field === "tower" ? 150 : -50;
+        const currentScore = Number(tower.scores[characterId]) || 0;
+        tower.scores[characterId] = currentScore + delta;
+      }
       saveState();
       render();
     }
