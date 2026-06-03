@@ -558,11 +558,16 @@
       display: grid;
       align-content: start;
       gap: 3px;
-      min-height: 58px;
+      min-height: 78px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(10, 14, 18, .34);
       padding: 5px;
+    }
+
+    .calendar-day.today {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(89, 195, 166, .14);
     }
 
     .calendar-day.outside {
@@ -621,24 +626,8 @@
     }
 
     .character-card.drop-target {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(232, 193, 92, .12), var(--shadow);
-    }
-
-    .character-card.selected {
-      border-color: var(--gold);
-    }
-
-    .character-note-preview {
-      margin: 0 18px 18px;
-      border: 1px solid rgba(232, 193, 92, .32);
-      border-radius: 8px;
-      background: rgba(232, 193, 92, .08);
-      color: #f4dfad;
-      padding: 10px 12px;
-      font-size: 12px;
-      line-height: 1.45;
-      white-space: pre-wrap;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(89, 195, 166, .12), var(--shadow);
     }
 
     .card-header {
@@ -1273,7 +1262,8 @@
       box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
     }
 
-    .task-card.calendar-task-visible {
+    .task-character-row.calendar-task-visible,
+    .tower-row.calendar-task-visible {
       border-color: var(--gold);
       box-shadow: 0 0 0 2px rgba(232, 193, 92, .12);
     }
@@ -1400,6 +1390,67 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .task-character-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .task-character-main label {
+      flex: 1 1 auto;
+    }
+
+    .character-note-button {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(232, 193, 92, .38);
+      border-radius: 8px;
+      background: rgba(232, 193, 92, .1);
+      color: var(--gold);
+      font-size: 13px;
+    }
+
+    .note-copy-tooltip {
+      position: fixed;
+      z-index: 20;
+      display: none;
+      max-width: min(360px, calc(100vw - 24px));
+      border: 1px solid rgba(232, 193, 92, .45);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .98);
+      box-shadow: var(--shadow);
+      padding: 8px;
+      pointer-events: auto;
+    }
+
+    .note-copy-tooltip.open {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 30px;
+      gap: 8px;
+    }
+
+    .note-copy-tooltip span {
+      color: #f4dfad;
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+
+    .note-copy-tooltip button {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .7);
+      color: var(--accent-strong);
     }
 
     .task-character-picker {
@@ -1676,20 +1727,23 @@
       right: 24px;
       bottom: 24px;
       z-index: 8;
-      min-height: 48px;
+      width: 52px;
+      height: 52px;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       border: 1px solid rgba(232, 193, 92, .42);
       border-radius: 999px;
       background: rgba(232, 193, 92, .18);
       color: #ffe2a1;
       box-shadow: var(--shadow);
-      padding: 0 18px;
+      padding: 0;
+      font-size: 18px;
       font-weight: 850;
     }
 
-    body:not(.characters-tab-active) .floating-note-button {
+    body:not(.routine-tab-active) .floating-note-button {
       display: none;
     }
 
@@ -2229,10 +2283,14 @@
     </div>
   </div>
 
-  <button class="floating-note-button" id="addCharacterNoteButton" type="button">
+  <button class="floating-note-button" id="addCharacterNoteButton" type="button" aria-label="Editar texto de personagem" title="Editar texto de personagem">
     <span aria-hidden="true">✎</span>
-    <span>Texto do personagem</span>
   </button>
+
+  <div class="note-copy-tooltip" id="noteCopyTooltip" role="tooltip">
+    <span id="noteCopyTooltipText"></span>
+    <button id="noteCopyTooltipButton" type="button" aria-label="Copiar texto" title="Copiar texto">⧉</button>
+  </div>
 
   <div class="modal-backdrop" id="noteModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
     <div class="character-modal note-modal">
@@ -2254,6 +2312,7 @@
           <textarea id="characterNoteText" placeholder="Escreva qualquer observação, plano, lembrete ou informação específica deste personagem."></textarea>
         </label>
         <div class="modal-actions">
+          <button class="danger-button" id="removeCharacterNoteButton" type="button">Remover texto</button>
           <button class="secondary-button" id="clearCharacterNoteButton" type="button">Limpar texto</button>
           <button class="primary-button" type="submit">Salvar texto</button>
         </div>
@@ -2315,6 +2374,10 @@
     const noteCharacterSelect = document.querySelector("#noteCharacterSelect");
     const characterNoteText = document.querySelector("#characterNoteText");
     const clearCharacterNoteButton = document.querySelector("#clearCharacterNoteButton");
+    const removeCharacterNoteButton = document.querySelector("#removeCharacterNoteButton");
+    const noteCopyTooltip = document.querySelector("#noteCopyTooltip");
+    const noteCopyTooltipText = document.querySelector("#noteCopyTooltipText");
+    const noteCopyTooltipButton = document.querySelector("#noteCopyTooltipButton");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -2790,7 +2853,8 @@
         date.setDate(calendarStart.getDate() + index);
         const dateKey = getDateKey(date);
         const day = document.createElement("div");
-        day.className = `calendar-day${date.getMonth() === today.getMonth() ? "" : " outside"}`;
+        const isToday = getDateKey(date) === getDateKey(today);
+        day.className = `calendar-day${date.getMonth() === today.getMonth() ? "" : " outside"}${isToday ? " today" : ""}`;
         day.innerHTML = `<span class="calendar-day-number"></span>`;
         day.querySelector(".calendar-day-number").textContent = date.getDate();
 
@@ -3096,7 +3160,6 @@
       orderedCharacters.forEach((character) => {
         const card = document.createElement("article");
         card.className = "character-card";
-        card.classList.toggle("selected", character.id === state.selectedId);
         card.dataset.cardId = character.id;
         card.draggable = false;
         applyLevelBorder(card, character.characterLevel);
@@ -3150,13 +3213,6 @@
           }
           factsContainer.appendChild(row);
         });
-        if (character.note.trim()) {
-          const note = document.createElement("div");
-          note.className = "character-note-preview";
-          note.textContent = character.note.trim();
-          card.appendChild(note);
-        }
-
         const dragButton = card.querySelector(".drag-button");
         dragButton.addEventListener("pointerdown", () => {
           card.draggable = true;
@@ -3484,7 +3540,6 @@
 
       const taskCard = document.createElement("article");
       taskCard.className = "task-card tower-card";
-      taskCard.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
       taskCard.innerHTML = `
         <header>
           <div class="task-heading">
@@ -3516,6 +3571,12 @@
         const { score, checks } = getTowerCharacterState(task.id, character.id);
         const row = document.createElement("div");
         row.className = "tower-row";
+        row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
+        row.addEventListener("click", (event) => {
+          if (event.target.closest("button, input, label")) return;
+          state.selectedId = character.id;
+          saveState();
+        });
         row.innerHTML = `
           <div class="tower-player">
             <strong></strong>
@@ -3533,6 +3594,23 @@
           </div>
         `;
         row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+        if (character.note.trim()) {
+          const noteButton = document.createElement("button");
+          noteButton.className = "character-note-button";
+          noteButton.type = "button";
+          noteButton.title = "Editar/copiar texto do personagem";
+          noteButton.setAttribute("aria-label", "Editar texto do personagem");
+          noteButton.textContent = "✎";
+          noteButton.addEventListener("mouseenter", (event) => showNoteCopyTooltip(character, event));
+          noteButton.addEventListener("mousemove", (event) => showNoteCopyTooltip(character, event));
+          noteButton.addEventListener("mouseleave", () => {
+            window.setTimeout(() => {
+              if (!noteCopyTooltip.matches(":hover")) hideNoteCopyTooltip();
+            }, 120);
+          });
+          noteButton.addEventListener("click", () => openNoteModal(character.id));
+          row.querySelector(".tower-player").appendChild(noteButton);
+        }
         const scoreInput = row.querySelector('input[type="number"]');
         scoreInput.value = score;
         scoreInput.addEventListener("change", () => updateTowerScore(task.id, character.id, scoreInput.value));
@@ -3620,7 +3698,7 @@
           const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
           const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
           const taskCard = document.createElement("article");
-          taskCard.className = `task-card${anyAvailable ? " available" : ""}${task.showOnCharacters ? " calendar-task-visible" : ""}`;
+          taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
           taskCard.innerHTML = `
             <header>
               <div class="task-heading">
@@ -3647,16 +3725,41 @@
             const completion = getCompletion(task.id, character.id);
             const row = document.createElement("div");
             row.className = "task-character-row";
+            row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
+            row.addEventListener("click", (event) => {
+              if (event.target.closest("button, input, label")) return;
+              state.selectedId = character.id;
+              saveState();
+            });
             row.innerHTML = `
-              <label>
-                <input type="checkbox">
-                <span></span>
-              </label>
+              <div class="task-character-main">
+                <label>
+                  <input type="checkbox">
+                  <span></span>
+                </label>
+              </div>
               <div class="task-timer"></div>
             `;
             const checkbox = row.querySelector("input");
             checkbox.checked = Boolean(completion);
             row.querySelector("label span").appendChild(buildCharacterNameInline(character));
+            if (character.note.trim()) {
+              const noteButton = document.createElement("button");
+              noteButton.className = "character-note-button";
+              noteButton.type = "button";
+              noteButton.title = "Editar/copiar texto do personagem";
+              noteButton.setAttribute("aria-label", "Editar texto do personagem");
+              noteButton.textContent = "✎";
+              noteButton.addEventListener("mouseenter", (event) => showNoteCopyTooltip(character, event));
+              noteButton.addEventListener("mousemove", (event) => showNoteCopyTooltip(character, event));
+              noteButton.addEventListener("mouseleave", () => {
+                window.setTimeout(() => {
+                  if (!noteCopyTooltip.matches(":hover")) hideNoteCopyTooltip();
+                }, 120);
+              });
+              noteButton.addEventListener("click", () => openNoteModal(character.id));
+              row.querySelector(".task-character-main").appendChild(noteButton);
+            }
             row.querySelector(".task-timer").textContent = completion ? formatRemaining(completion.unlockAt) : "Liberada";
             checkbox.addEventListener("change", () => {
               const key = getCompletionKey(task.id, character.id);
@@ -4198,6 +4301,32 @@
       noteForm.reset();
     }
 
+    function saveCharacterNote(characterId, noteText) {
+      state.characters = state.characters.map((character) => {
+        if (character.id !== characterId) return character;
+        return normalizeCharacter({ ...character, note: noteText.trim() });
+      });
+      state.selectedId = characterId;
+      saveState();
+      render();
+    }
+
+    function hideNoteCopyTooltip() {
+      noteCopyTooltip.classList.remove("open");
+      noteCopyTooltip.dataset.note = "";
+    }
+
+    function showNoteCopyTooltip(character, event) {
+      if (!character?.note?.trim()) return;
+      noteCopyTooltipText.textContent = character.note.trim();
+      noteCopyTooltip.dataset.note = character.note.trim();
+      const left = Math.max(12, Math.min(event.clientX + 12, window.innerWidth - 380));
+      const top = Math.max(12, Math.min(event.clientY + 12, window.innerHeight - 160));
+      noteCopyTooltip.style.left = `${left}px`;
+      noteCopyTooltip.style.top = `${top}px`;
+      noteCopyTooltip.classList.add("open");
+    }
+
     function getQuestFromForm() {
       const existing = state.quests.find((quest) => quest.id === editingQuestId);
       const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
@@ -4231,7 +4360,7 @@
     }
 
     function render() {
-      document.body.classList.toggle("characters-tab-active", document.querySelector('.tab-panel.active')?.dataset.panel === "characters");
+      document.body.classList.toggle("routine-tab-active", document.querySelector('.tab-panel.active')?.dataset.panel === "routine");
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
       toggleSidebar.setAttribute("aria-label", state.collapsed ? "Expandir menu" : "Recolher menu");
@@ -4250,7 +4379,7 @@
       tabPanels.forEach((panel) => {
         panel.classList.toggle("active", panel.dataset.panel === tabName);
       });
-      document.body.classList.toggle("characters-tab-active", tabName === "characters");
+      document.body.classList.toggle("routine-tab-active", tabName === "routine");
     }
 
     function exportJson() {
@@ -4403,6 +4532,35 @@
       characterNoteText.value = "";
       characterNoteText.focus();
     });
+    removeCharacterNoteButton.addEventListener("click", () => {
+      const characterId = noteCharacterSelect.value;
+      if (!characterId || !confirm("Remover o texto deste personagem?")) return;
+      saveCharacterNote(characterId, "");
+      closeNoteModal();
+    });
+    noteCopyTooltipButton.addEventListener("click", () => {
+      const note = noteCopyTooltip.dataset.note || "";
+      if (!note) return;
+      const done = () => {
+        noteCopyTooltipButton.textContent = "✓";
+        window.setTimeout(() => {
+          noteCopyTooltipButton.textContent = "⧉";
+          hideNoteCopyTooltip();
+        }, 800);
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(note).then(done).catch(done);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = note;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+        done();
+      }
+    });
+    noteCopyTooltip.addEventListener("mouseleave", hideNoteCopyTooltip);
     taskKind.addEventListener("change", () => {
       refreshTaskTemplateFields();
     });
@@ -4410,14 +4568,8 @@
     noteForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const characterId = noteCharacterSelect.value;
-      state.characters = state.characters.map((character) => {
-        if (character.id !== characterId) return character;
-        return normalizeCharacter({ ...character, note: characterNoteText.value.trim() });
-      });
-      state.selectedId = characterId;
-      saveState();
+      saveCharacterNote(characterId, characterNoteText.value);
       closeNoteModal();
-      render();
     });
 
     characterForm.addEventListener("submit", (event) => {
