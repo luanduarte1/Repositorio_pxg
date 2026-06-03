@@ -1416,43 +1416,6 @@
       font-size: 13px;
     }
 
-    .note-copy-tooltip {
-      position: fixed;
-      z-index: 20;
-      display: none;
-      max-width: min(360px, calc(100vw - 24px));
-      border: 1px solid rgba(232, 193, 92, .45);
-      border-radius: 8px;
-      background: rgba(17, 22, 28, .98);
-      box-shadow: var(--shadow);
-      padding: 8px;
-      pointer-events: auto;
-    }
-
-    .note-copy-tooltip.open {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 30px;
-      gap: 8px;
-    }
-
-    .note-copy-tooltip span {
-      color: #f4dfad;
-      font-size: 12px;
-      line-height: 1.35;
-      white-space: pre-wrap;
-    }
-
-    .note-copy-tooltip button {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(10, 14, 18, .7);
-      color: var(--accent-strong);
-    }
-
     .task-character-picker {
       display: none;
     }
@@ -1753,6 +1716,24 @@
 
     .note-modal textarea {
       min-height: 300px;
+    }
+
+    .note-tools {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: -4px;
+    }
+
+    .note-preview {
+      min-height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .38);
+      color: var(--muted);
+      padding: 10px 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
     }
 
     .task-modal {
@@ -2287,22 +2268,21 @@
     <span aria-hidden="true">✎</span>
   </button>
 
-  <div class="note-copy-tooltip" id="noteCopyTooltip" role="tooltip">
-    <span id="noteCopyTooltipText"></span>
-    <button id="noteCopyTooltipButton" type="button" aria-label="Copiar texto" title="Copiar texto">⧉</button>
-  </div>
-
   <div class="modal-backdrop" id="noteModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
     <div class="character-modal note-modal">
       <div class="modal-header">
         <div>
           <strong id="noteModalTitle">Texto do personagem</strong>
-          <span>Anotação livre vinculada ao personagem escolhido</span>
+          <span>Anotação livre vinculada a uma rotina e um personagem</span>
         </div>
         <button class="icon-button" id="closeNoteModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
       </div>
 
       <form class="modal-form" id="noteForm">
+        <label class="field">
+          <span>Rotina</span>
+          <input id="noteTaskName" type="text" readonly>
+        </label>
         <label class="field">
           <span>Personagem</span>
           <select id="noteCharacterSelect" required></select>
@@ -2310,6 +2290,13 @@
         <label class="field">
           <span>Texto</span>
           <textarea id="characterNoteText" placeholder="Escreva qualquer observação, plano, lembrete ou informação específica deste personagem."></textarea>
+        </label>
+        <div class="note-tools">
+          <button class="secondary-button" id="makeNoteCopyButton" type="button" aria-label="Transformar seleção em texto copiável" title="Transformar seleção em texto copiável">⧉</button>
+        </div>
+        <label class="field">
+          <span>Prévia copiável</span>
+          <div class="note-preview" id="characterNotePreview"></div>
         </label>
         <div class="modal-actions">
           <button class="danger-button" id="removeCharacterNoteButton" type="button">Remover texto</button>
@@ -2371,13 +2358,13 @@
     const noteModalBackdrop = document.querySelector("#noteModalBackdrop");
     const closeNoteModalButton = document.querySelector("#closeNoteModalButton");
     const noteForm = document.querySelector("#noteForm");
+    const noteTaskName = document.querySelector("#noteTaskName");
     const noteCharacterSelect = document.querySelector("#noteCharacterSelect");
     const characterNoteText = document.querySelector("#characterNoteText");
+    const characterNotePreview = document.querySelector("#characterNotePreview");
+    const makeNoteCopyButton = document.querySelector("#makeNoteCopyButton");
     const clearCharacterNoteButton = document.querySelector("#clearCharacterNoteButton");
     const removeCharacterNoteButton = document.querySelector("#removeCharacterNoteButton");
-    const noteCopyTooltip = document.querySelector("#noteCopyTooltip");
-    const noteCopyTooltipText = document.querySelector("#noteCopyTooltipText");
-    const noteCopyTooltipButton = document.querySelector("#noteCopyTooltipButton");
     const toggleSidebar = document.querySelector("#toggleSidebar");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
@@ -2442,6 +2429,7 @@
       characters: [],
       routineTasks: [],
       routineCompletions: {},
+      routineNotes: {},
       routineSectionLayout: {},
       tower7: {},
       showRoutineOnCharacters: false,
@@ -2454,6 +2442,7 @@
     let editingId = null;
     let editingTaskId = null;
     let editingQuestId = null;
+    let selectedRoutineNoteTaskId = null;
     let expandedQuestId = null;
     let completedQuestMenuId = null;
 
@@ -2689,6 +2678,18 @@
 
     function getCompletionKey(taskId, characterId) {
       return `${taskId}::${characterId}`;
+    }
+
+    function getRoutineNoteKey(taskId, characterId) {
+      return `${taskId}::${characterId}`;
+    }
+
+    function getRoutineNote(taskId, characterId) {
+      return String(state.routineNotes?.[getRoutineNoteKey(taskId, characterId)] || "");
+    }
+
+    function isRoutineCharacterVisible(task, character) {
+      return Boolean(task.showOnCharacters) && !getCompletion(task.id, character.id);
     }
 
     function isCharacterEligibleForTask(character, task) {
@@ -2961,6 +2962,7 @@
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
+          routineNotes: parsed.routineNotes && typeof parsed.routineNotes === "object" ? parsed.routineNotes : {},
           routineSectionLayout: normalizeRoutineSectionLayout(parsed.routineSectionLayout),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
@@ -3043,6 +3045,12 @@
       if (!confirm(`Remover ${label}?`)) return;
 
       state.characters = state.characters.filter((item) => item.id !== id);
+      Object.keys(state.routineNotes).forEach((key) => {
+        if (key.endsWith(`::${id}`)) delete state.routineNotes[key];
+      });
+      Object.keys(state.routineCompletions).forEach((key) => {
+        if (key.endsWith(`::${id}`)) delete state.routineCompletions[key];
+      });
       if (state.selectedId === id) {
         state.selectedId = state.characters[0]?.id || null;
       }
@@ -3355,6 +3363,9 @@
       Object.keys(state.routineCompletions).forEach((key) => {
         if (key.startsWith(`${taskId}::`)) delete state.routineCompletions[key];
       });
+      Object.keys(state.routineNotes).forEach((key) => {
+        if (key.startsWith(`${taskId}::`)) delete state.routineNotes[key];
+      });
       if (state.tower7?.[taskId]) delete state.tower7[taskId];
       saveState();
       render();
@@ -3571,10 +3582,11 @@
         const { score, checks } = getTowerCharacterState(task.id, character.id);
         const row = document.createElement("div");
         row.className = "tower-row";
-        row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
+        row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters) && !checks.dungeon);
         row.addEventListener("click", (event) => {
           if (event.target.closest("button, input, label")) return;
           state.selectedId = character.id;
+          selectedRoutineNoteTaskId = task.id;
           saveState();
         });
         row.innerHTML = `
@@ -3594,22 +3606,8 @@
           </div>
         `;
         row.querySelector("strong").appendChild(buildCharacterNameInline(character));
-        if (character.note.trim()) {
-          const noteButton = document.createElement("button");
-          noteButton.className = "character-note-button";
-          noteButton.type = "button";
-          noteButton.title = "Editar/copiar texto do personagem";
-          noteButton.setAttribute("aria-label", "Editar texto do personagem");
-          noteButton.textContent = "✎";
-          noteButton.addEventListener("mouseenter", (event) => showNoteCopyTooltip(character, event));
-          noteButton.addEventListener("mousemove", (event) => showNoteCopyTooltip(character, event));
-          noteButton.addEventListener("mouseleave", () => {
-            window.setTimeout(() => {
-              if (!noteCopyTooltip.matches(":hover")) hideNoteCopyTooltip();
-            }, 120);
-          });
-          noteButton.addEventListener("click", () => openNoteModal(character.id));
-          row.querySelector(".tower-player").appendChild(noteButton);
+        if (getRoutineNote(task.id, character.id).trim()) {
+          row.querySelector(".tower-player").appendChild(createRoutineNoteButton(task, character));
         }
         const scoreInput = row.querySelector('input[type="number"]');
         scoreInput.value = score;
@@ -3619,8 +3617,16 @@
         const dungeonCheck = row.querySelector('[data-action="dungeon"]');
         towerCheck.checked = Boolean(checks.tower);
         dungeonCheck.checked = Boolean(checks.dungeon);
-        towerCheck.addEventListener("change", () => toggleTowerCheck(task.id, character.id, "tower", towerCheck.checked));
-        dungeonCheck.addEventListener("change", () => toggleTowerCheck(task.id, character.id, "dungeon", dungeonCheck.checked));
+        towerCheck.addEventListener("change", () => {
+          state.selectedId = character.id;
+          selectedRoutineNoteTaskId = task.id;
+          toggleTowerCheck(task.id, character.id, "tower", towerCheck.checked);
+        });
+        dungeonCheck.addEventListener("change", () => {
+          state.selectedId = character.id;
+          selectedRoutineNoteTaskId = task.id;
+          toggleTowerCheck(task.id, character.id, "dungeon", dungeonCheck.checked);
+        });
         rows.appendChild(row);
       });
 
@@ -3725,10 +3731,11 @@
             const completion = getCompletion(task.id, character.id);
             const row = document.createElement("div");
             row.className = "task-character-row";
-            row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters));
+            row.classList.toggle("calendar-task-visible", isRoutineCharacterVisible(task, character));
             row.addEventListener("click", (event) => {
               if (event.target.closest("button, input, label")) return;
               state.selectedId = character.id;
+              selectedRoutineNoteTaskId = task.id;
               saveState();
             });
             row.innerHTML = `
@@ -3743,26 +3750,14 @@
             const checkbox = row.querySelector("input");
             checkbox.checked = Boolean(completion);
             row.querySelector("label span").appendChild(buildCharacterNameInline(character));
-            if (character.note.trim()) {
-              const noteButton = document.createElement("button");
-              noteButton.className = "character-note-button";
-              noteButton.type = "button";
-              noteButton.title = "Editar/copiar texto do personagem";
-              noteButton.setAttribute("aria-label", "Editar texto do personagem");
-              noteButton.textContent = "✎";
-              noteButton.addEventListener("mouseenter", (event) => showNoteCopyTooltip(character, event));
-              noteButton.addEventListener("mousemove", (event) => showNoteCopyTooltip(character, event));
-              noteButton.addEventListener("mouseleave", () => {
-                window.setTimeout(() => {
-                  if (!noteCopyTooltip.matches(":hover")) hideNoteCopyTooltip();
-                }, 120);
-              });
-              noteButton.addEventListener("click", () => openNoteModal(character.id));
-              row.querySelector(".task-character-main").appendChild(noteButton);
+            if (getRoutineNote(task.id, character.id).trim()) {
+              row.querySelector(".task-character-main").appendChild(createRoutineNoteButton(task, character));
             }
             row.querySelector(".task-timer").textContent = completion ? formatRemaining(completion.unlockAt) : "Liberada";
             checkbox.addEventListener("change", () => {
               const key = getCompletionKey(task.id, character.id);
+              state.selectedId = character.id;
+              selectedRoutineNoteTaskId = task.id;
               if (checkbox.checked) {
                 const now = new Date();
                 state.routineCompletions[key] = {
@@ -4267,28 +4262,84 @@
       questSectionEditors.innerHTML = "";
     }
 
-    function renderNoteCharacterOptions(selectedId = state.selectedId) {
+    function getCopyToken(value) {
+      return `[[copy:${encodeURIComponent(value)}]]`;
+    }
+
+    function renderCopyableText(container, text) {
+      container.innerHTML = "";
+      const source = String(text || "");
+      const pattern = /\[\[copy:([^\]]+)\]\]|\[\[coord:([^\]]+)\]\]/g;
+      let lastIndex = 0;
+      let matched = false;
+
+      source.replace(pattern, (match, copyText, coordinate, index) => {
+        if (index > lastIndex) container.appendChild(document.createTextNode(source.slice(lastIndex, index)));
+        let value = (coordinate || "").trim();
+        if (copyText) {
+          try {
+            value = decodeURIComponent(copyText.trim());
+          } catch {
+            value = copyText.trim();
+          }
+        }
+        container.appendChild(createCoordinateChip(value));
+        lastIndex = index + match.length;
+        matched = true;
+        return match;
+      });
+
+      if (lastIndex < source.length) container.appendChild(document.createTextNode(source.slice(lastIndex)));
+      if (!source.trim()) container.appendChild(document.createTextNode("Sem texto salvo para esta rotina."));
+    }
+
+    function createRoutineNoteButton(task, character) {
+      const noteButton = document.createElement("button");
+      noteButton.className = "character-note-button";
+      noteButton.type = "button";
+      noteButton.title = "Editar texto da rotina";
+      noteButton.setAttribute("aria-label", "Editar texto da rotina");
+      noteButton.textContent = "✎";
+      noteButton.addEventListener("click", () => openNoteModal(task.id, character.id));
+      return noteButton;
+    }
+
+    function renderNoteCharacterOptions(taskId, selectedId = state.selectedId) {
       noteCharacterSelect.innerHTML = "";
-      getOrderedCharacters().forEach((character) => {
+      const task = state.routineTasks.find((item) => item.id === taskId);
+      getOrderedCharacters().filter((character) => !task || isCharacterEligibleForTask(character, task)).forEach((character) => {
         const option = new Option(character.name, character.id, false, character.id === selectedId);
         noteCharacterSelect.add(option);
       });
-      if (!noteCharacterSelect.value && state.characters[0]) {
-        noteCharacterSelect.value = state.characters[0].id;
+      if (!noteCharacterSelect.value && noteCharacterSelect.options.length) {
+        noteCharacterSelect.value = noteCharacterSelect.options[0].value;
       }
     }
 
     function refreshCharacterNoteText() {
-      const character = state.characters.find((item) => item.id === noteCharacterSelect.value);
-      characterNoteText.value = character?.note || "";
+      const characterId = noteCharacterSelect.value;
+      characterNoteText.value = getRoutineNote(selectedRoutineNoteTaskId, characterId);
+      renderCopyableText(characterNotePreview, characterNoteText.value);
     }
 
-    function openNoteModal(characterId = state.selectedId) {
+    function openNoteModal(taskId = selectedRoutineNoteTaskId, characterId = state.selectedId) {
       if (!state.characters.length) {
         alert("Crie um personagem antes de adicionar um texto.");
         return;
       }
-      renderNoteCharacterOptions(characterId);
+      const task = state.routineTasks.find((item) => item.id === taskId);
+      if (!task) {
+        alert("Clique em um personagem dentro de uma rotina antes de adicionar um texto.");
+        return;
+      }
+      selectedRoutineNoteTaskId = task.id;
+      state.selectedId = characterId;
+      noteTaskName.value = task.name;
+      renderNoteCharacterOptions(task.id, characterId);
+      if (!noteCharacterSelect.options.length) {
+        alert("Esta rotina não tem personagens disponíveis para anotar.");
+        return;
+      }
       refreshCharacterNoteText();
       noteModalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
@@ -4301,30 +4352,18 @@
       noteForm.reset();
     }
 
-    function saveCharacterNote(characterId, noteText) {
-      state.characters = state.characters.map((character) => {
-        if (character.id !== characterId) return character;
-        return normalizeCharacter({ ...character, note: noteText.trim() });
-      });
+    function saveCharacterNote(taskId, characterId, noteText) {
+      const key = getRoutineNoteKey(taskId, characterId);
+      const value = noteText.trim();
+      if (value) {
+        state.routineNotes[key] = value;
+      } else {
+        delete state.routineNotes[key];
+      }
       state.selectedId = characterId;
+      selectedRoutineNoteTaskId = taskId;
       saveState();
       render();
-    }
-
-    function hideNoteCopyTooltip() {
-      noteCopyTooltip.classList.remove("open");
-      noteCopyTooltip.dataset.note = "";
-    }
-
-    function showNoteCopyTooltip(character, event) {
-      if (!character?.note?.trim()) return;
-      noteCopyTooltipText.textContent = character.note.trim();
-      noteCopyTooltip.dataset.note = character.note.trim();
-      const left = Math.max(12, Math.min(event.clientX + 12, window.innerWidth - 380));
-      const top = Math.max(12, Math.min(event.clientY + 12, window.innerHeight - 160));
-      noteCopyTooltip.style.left = `${left}px`;
-      noteCopyTooltip.style.top = `${top}px`;
-      noteCopyTooltip.classList.add("open");
     }
 
     function getQuestFromForm() {
@@ -4418,6 +4457,7 @@
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
+            routineNotes: incoming.routineNotes && typeof incoming.routineNotes === "object" ? incoming.routineNotes : {},
             routineSectionLayout: normalizeRoutineSectionLayout(incoming.routineSectionLayout),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
@@ -4526,41 +4566,36 @@
       closeQuestModal();
       render();
     });
-    addCharacterNoteButton.addEventListener("click", () => openNoteModal(state.selectedId));
+    addCharacterNoteButton.addEventListener("click", () => openNoteModal(selectedRoutineNoteTaskId, state.selectedId));
     noteCharacterSelect.addEventListener("change", refreshCharacterNoteText);
+    characterNoteText.addEventListener("input", () => {
+      renderCopyableText(characterNotePreview, characterNoteText.value);
+    });
+    makeNoteCopyButton.addEventListener("click", () => {
+      const start = characterNoteText.selectionStart ?? 0;
+      const end = characterNoteText.selectionEnd ?? 0;
+      const selectedText = characterNoteText.value.slice(start, end).trim();
+      if (!selectedText) {
+        alert("Selecione um trecho do texto para transformá-lo em botão copiável.");
+        characterNoteText.focus();
+        return;
+      }
+      const token = getCopyToken(selectedText);
+      characterNoteText.setRangeText(token, start, end, "end");
+      characterNoteText.focus();
+      renderCopyableText(characterNotePreview, characterNoteText.value);
+    });
     clearCharacterNoteButton.addEventListener("click", () => {
       characterNoteText.value = "";
+      renderCopyableText(characterNotePreview, characterNoteText.value);
       characterNoteText.focus();
     });
     removeCharacterNoteButton.addEventListener("click", () => {
       const characterId = noteCharacterSelect.value;
       if (!characterId || !confirm("Remover o texto deste personagem?")) return;
-      saveCharacterNote(characterId, "");
+      saveCharacterNote(selectedRoutineNoteTaskId, characterId, "");
       closeNoteModal();
     });
-    noteCopyTooltipButton.addEventListener("click", () => {
-      const note = noteCopyTooltip.dataset.note || "";
-      if (!note) return;
-      const done = () => {
-        noteCopyTooltipButton.textContent = "✓";
-        window.setTimeout(() => {
-          noteCopyTooltipButton.textContent = "⧉";
-          hideNoteCopyTooltip();
-        }, 800);
-      };
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(note).then(done).catch(done);
-      } else {
-        const input = document.createElement("textarea");
-        input.value = note;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        input.remove();
-        done();
-      }
-    });
-    noteCopyTooltip.addEventListener("mouseleave", hideNoteCopyTooltip);
     taskKind.addEventListener("change", () => {
       refreshTaskTemplateFields();
     });
@@ -4568,7 +4603,7 @@
     noteForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const characterId = noteCharacterSelect.value;
-      saveCharacterNote(characterId, characterNoteText.value);
+      saveCharacterNote(selectedRoutineNoteTaskId, characterId, characterNoteText.value);
       closeNoteModal();
     });
 
