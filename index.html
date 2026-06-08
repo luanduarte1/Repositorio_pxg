@@ -489,19 +489,18 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
-      align-items: start;
+      align-items: stretch;
     }
 
     .characters-layout {
       display: grid;
-      grid-template-columns: minmax(360px, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       align-items: start;
       gap: 18px;
     }
 
     .character-calendar {
-      position: sticky;
-      top: 16px;
+      position: relative;
       display: grid;
       gap: 12px;
       border: 1px solid var(--line);
@@ -511,6 +510,102 @@
       padding: 14px;
     }
 
+    .routine-release-panel {
+      position: relative;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .today-summary {
+      display: grid;
+      gap: 7px;
+      max-height: 260px;
+      overflow: hidden;
+      border: 1px solid rgba(89, 195, 166, .24);
+      border-radius: 8px;
+      background: rgba(89, 195, 166, .07);
+      padding: 10px 12px;
+      opacity: 1;
+      transform: translateY(0);
+      transition: max-height .34s ease, opacity .24s ease, transform .34s ease, padding .34s ease, border-width .34s ease;
+    }
+
+    .today-summary.collapsed {
+      max-height: 0;
+      border-width: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      transform: translateY(-18px);
+      pointer-events: none;
+    }
+
+    .today-summary strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .today-summary-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .today-summary-row {
+      display: grid;
+      grid-template-columns: minmax(130px, .8fr) minmax(130px, .7fr) minmax(0, 1fr);
+      gap: 4px;
+      color: #d9f4ea;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .today-summary-row b {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .today-summary-row span {
+      min-width: 0;
+      color: var(--muted);
+    }
+
+    .today-summary-row time {
+      min-width: 0;
+      color: #d3a247;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-summary-toggle {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      z-index: 2;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      background: rgba(10, 14, 18, .34);
+      color: rgba(217, 244, 234, .9);
+      font-size: 16px;
+      font-weight: 900;
+      opacity: .72;
+      transform: translateX(-50%);
+    }
+
+    .calendar-summary-toggle:hover {
+      border-color: rgba(89, 195, 166, .55);
+      background: rgba(89, 195, 166, .12);
+      opacity: 1;
+    }
+
     .calendar-heading {
       display: flex;
       align-items: flex-start;
@@ -518,6 +613,13 @@
       gap: 10px;
       border-bottom: 1px solid var(--line);
       padding-bottom: 10px;
+    }
+
+    .calendar-heading-side {
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+      flex: 0 0 auto;
     }
 
     .calendar-heading strong {
@@ -533,16 +635,41 @@
     }
 
     .calendar-month {
-      color: var(--accent-strong);
-      font-size: 13px;
+      display: grid;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 11px;
       font-weight: 850;
       text-align: right;
+      text-transform: none;
+      line-height: 1.12;
+    }
+
+    .calendar-date-main,
+    .calendar-time {
+      color: var(--accent-strong);
+      font-weight: 900;
+    }
+
+    .calendar-date-main {
+      font-size: 16px;
+      text-transform: lowercase;
+    }
+
+    .calendar-weekday-label {
+      color: var(--muted);
+      font-size: 12px;
       text-transform: capitalize;
+    }
+
+    .calendar-time {
+      font-size: 15px;
     }
 
     .calendar-task-list {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-rows: auto repeat(6, 112px);
       gap: 4px;
     }
 
@@ -557,12 +684,14 @@
     .calendar-day {
       display: grid;
       align-content: start;
-      gap: 3px;
-      min-height: 78px;
+      gap: 2px;
+      min-height: 112px;
+      max-height: 112px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(10, 14, 18, .34);
-      padding: 5px;
+      padding: 4px;
+      overflow: hidden;
     }
 
     .calendar-day.today {
@@ -588,15 +717,31 @@
     .calendar-task-chip {
       display: inline-flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 3px;
       width: 100%;
       max-width: 100%;
       border: 1px solid rgba(89, 195, 166, .28);
       border-radius: 6px;
       background: rgba(89, 195, 166, .08);
       color: #d9f4ea;
-      padding: 2px 4px;
-      font-size: 10px;
+      padding: 1px 4px;
+      font-size: 9px;
       font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-task-chip small {
+      color: rgba(217, 244, 234, .68);
+      font-size: 9px;
+      font-weight: 800;
+      margin-left: 0;
+    }
+
+    .calendar-task-chip > span {
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -606,7 +751,46 @@
       grid-column: 1 / -1;
     }
 
+    .calendar-scheduler {
+      display: none;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, .75fr) minmax(140px, .65fr) minmax(100px, .45fr) auto auto;
+      align-items: end;
+      gap: 8px;
+      border: 1px solid rgba(89, 195, 166, .2);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .46);
+      padding: 10px;
+    }
+
+    .calendar-scheduler.open {
+      display: grid;
+    }
+
+    .calendar-scheduler .field {
+      gap: 5px;
+    }
+
+    .calendar-scheduler button {
+      min-height: 38px;
+      white-space: nowrap;
+    }
+
+    #scheduleTaskButton {
+      justify-self: end;
+      min-height: 34px;
+      background: var(--accent);
+      color: #06130f;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
+    #scheduleTaskButton:hover {
+      background: var(--accent-strong);
+    }
+
     .character-card {
+      display: grid;
+      grid-template-rows: auto 1fr;
       border: 1px solid var(--level-color, var(--line));
       border-radius: 8px;
       background: rgba(23, 28, 34, .92);
@@ -697,16 +881,18 @@
 
     .card-facts {
       display: grid;
+      align-content: start;
       gap: 9px;
       padding: 16px 18px 18px;
     }
 
     .fact {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(78px, 96px) minmax(0, 1fr);
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      min-height: 34px;
+      gap: 8px;
+      min-height: 38px;
       border: 1px solid rgba(255, 255, 255, .06);
       border-radius: 8px;
       background: rgba(17, 22, 28, .46);
@@ -718,9 +904,13 @@
     }
 
     .fact span {
+      min-width: 0;
       color: var(--muted);
       font-size: 12px;
       font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .fact strong {
@@ -731,7 +921,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex: 1 1 auto;
     }
 
     .fact strong .clan-inline {
@@ -955,6 +1144,18 @@
       font-size: 11px;
     }
 
+    .quest-character-name > span.status-started {
+      color: #d88b1f;
+    }
+
+    .quest-character-name > span.status-not-started {
+      color: #ff6b6b;
+    }
+
+    .quest-character-name > span.status-completed {
+      color: #9dedb1;
+    }
+
     .quest-character-name .character-name-inline {
       display: flex;
     }
@@ -1012,6 +1213,19 @@
       margin-top: 4px;
       color: var(--muted);
       font-size: 12px;
+    }
+
+    .quest-detail-header .character-name-inline {
+      display: inline-flex;
+      max-width: min(260px, 100%);
+      vertical-align: middle;
+    }
+
+    .quest-detail-header .character-name-text {
+      display: inline;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 850;
     }
 
     .quest-detail-actions {
@@ -1080,6 +1294,37 @@
       vertical-align: middle;
     }
 
+    .quest-image {
+      display: block;
+      width: min(520px, 100%);
+      max-height: 280px;
+      object-fit: contain;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .42);
+    }
+
+    .quest-subtasks {
+      display: grid;
+      gap: 7px;
+    }
+
+    .quest-subtask-view {
+      display: grid;
+      gap: 6px;
+    }
+
+    .quest-subtask-view .toggle-line {
+      width: max-content;
+      max-width: 100%;
+    }
+
+    .quest-subtask-view .quest-image {
+      width: min(420px, 100%);
+      max-height: 220px;
+      margin-left: 27px;
+    }
+
     .copy-button {
       width: 24px;
       height: 24px;
@@ -1122,6 +1367,36 @@
       padding: 0 12px;
     }
 
+    .image-selection-button {
+      min-height: 38px;
+      min-width: 42px;
+      padding: 0 12px;
+    }
+
+    .quest-image-editor {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .quest-image-editor.has-image {
+      display: flex;
+    }
+
+    .quest-image-editor img {
+      width: 72px;
+      height: 48px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .42);
+    }
+
+    .quest-subtask-row .quest-image-editor {
+      grid-column: 2 / -1;
+    }
+
     .coord-editor {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -1147,7 +1422,7 @@
     .character-name-inline {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       min-width: 0;
       max-width: 100%;
     }
@@ -1189,8 +1464,11 @@
     }
 
     .routine-section {
+      position: relative;
       display: grid;
       gap: 12px;
+      min-height: 0;
+      overflow: visible;
     }
 
     .routine-section.dragging {
@@ -1248,6 +1526,33 @@
     .routine-grid {
       display: grid;
       gap: 12px;
+      min-height: 0;
+    }
+
+    .routine-scroll-button {
+      display: none;
+    }
+
+    .routine-scroll-button:hover {
+      border-color: rgba(89, 195, 166, .52);
+      background: rgba(89, 195, 166, .12);
+      opacity: 1;
+    }
+
+    .routine-scroll-button.up {
+      top: 46px;
+      margin: -4px auto -20px;
+    }
+
+    .routine-scroll-button.down {
+      bottom: 8px;
+      margin: -20px auto 0;
+    }
+
+    .routine-section:not(.can-scroll-up) .routine-scroll-button.up,
+    .routine-section:not(.can-scroll-down) .routine-scroll-button.down {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .task-card {
@@ -1257,9 +1562,19 @@
       overflow: hidden;
     }
 
-    .task-card.available {
-      border-color: var(--danger);
-      box-shadow: 0 0 0 2px rgba(238, 111, 117, .1);
+    .task-card.collapsed > :not(header) {
+      display: none;
+    }
+
+    .task-card.collapsed header {
+      border-bottom: 0;
+    }
+
+    .task-card.collapsed .task-heading span,
+    .task-card.collapsed .task-heading small,
+    .task-card.collapsed .task-drag-handle,
+    .task-card.collapsed .task-edit-button {
+      display: none;
     }
 
     .task-character-row.calendar-task-visible,
@@ -1288,9 +1603,11 @@
     }
 
     .task-heading {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: baseline;
-      gap: 8px;
+      column-gap: 8px;
+      row-gap: 3px;
       min-width: 0;
     }
 
@@ -1307,6 +1624,18 @@
 
     .task-heading span {
       flex: 1 1 auto;
+    }
+
+    .task-heading small {
+      grid-column: 1 / -1;
+      min-width: 0;
+      overflow: hidden;
+      color: #d3a247;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .task-actions {
@@ -1328,6 +1657,25 @@
       cursor: grab;
       font-size: 16px;
       line-height: 1;
+    }
+
+    .task-collapse-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .5);
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .task-collapse-button:hover {
+      border-color: rgba(89, 195, 166, .52);
+      color: var(--accent-strong);
     }
 
     .task-drag-handle:active {
@@ -1404,16 +1752,36 @@
     }
 
     .character-note-button {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       flex: 0 0 auto;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(232, 193, 92, .38);
+      border: 1px solid rgba(77, 163, 255, .62);
       border-radius: 8px;
-      background: rgba(232, 193, 92, .1);
-      color: var(--gold);
-      font-size: 13px;
+      background: rgba(77, 163, 255, .16);
+      color: #8fc8ff;
+      font-size: 16px;
+      box-shadow: 0 0 0 2px rgba(77, 163, 255, .08);
+    }
+
+    .character-note-button:hover {
+      border-color: rgba(126, 194, 255, .9);
+      background: rgba(77, 163, 255, .24);
+    }
+
+    body.note-targeting,
+    body.note-targeting .task-character-row,
+    body.note-targeting .tower-row,
+    body.note-targeting .task-character-row *,
+    body.note-targeting .tower-row * {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%238fc8ff' stroke='%2306130f' stroke-width='1' d='M4 17.5V21h3.5L19.1 9.4l-3.5-3.5L4 17.5zM20.2 8.3l-3.5-3.5 1.2-1.2c.5-.5 1.3-.5 1.8 0l1.7 1.7c.5.5.5 1.3 0 1.8l-1.2 1.2z'/%3E%3C/svg%3E") 2 22, pointer;
+    }
+
+    .floating-note-button.active {
+      border-color: rgba(77, 163, 255, .72);
+      background: rgba(77, 163, 255, .22);
+      color: #b9ddff;
     }
 
     .task-character-picker {
@@ -1422,6 +1790,10 @@
 
     .task-character-picker.open {
       display: flex;
+    }
+
+    #taskScheduleFields.open {
+      display: grid;
     }
 
     .tower-summary {
@@ -1736,12 +2108,151 @@
       white-space: pre-wrap;
     }
 
+    .note-modal.view-only .note-edit-only {
+      display: none;
+    }
+
+    .calendar-page {
+      display: grid;
+      gap: 14px;
+    }
+
+    .calendar-page-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .92);
+      padding: 12px 14px;
+    }
+
+    .calendar-page-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .calendar-page-title strong {
+      font-size: 18px;
+    }
+
+    .calendar-page-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .calendar-page-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .user-calendar {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .user-calendar-weekday {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .user-calendar-day {
+      min-height: 128px;
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .42);
+      padding: 8px;
+      overflow: hidden;
+    }
+
+    .user-calendar-day.today {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(89, 195, 166, .14);
+    }
+
+    .user-calendar-day.outside {
+      opacity: .42;
+    }
+
+    .user-calendar-day header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .user-calendar-day-number {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .user-calendar-add {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(89, 195, 166, .1);
+      color: var(--accent-strong);
+      font-weight: 900;
+    }
+
+    .user-calendar-events {
+      display: grid;
+      gap: 4px;
+    }
+
+    .user-calendar-event {
+      display: grid;
+      gap: 2px;
+      border: 1px solid rgba(232, 193, 92, .28);
+      border-radius: 7px;
+      background: rgba(232, 193, 92, .09);
+      color: #f4dfad;
+      padding: 5px 6px;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .user-calendar-event strong,
+    .user-calendar-event span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user-calendar-event strong {
+      font-size: 12px;
+    }
+
+    .user-calendar-event span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .calendar-event-modal {
+      width: min(620px, 100%);
+    }
+
     .task-modal {
       width: min(720px, 100%);
     }
 
     .quest-modal {
-      width: min(860px, 100%);
+      width: min(1040px, 100%);
     }
 
     .task-modal,
@@ -1795,6 +2306,29 @@
     .task-modal .form-grid.three,
     .quest-modal .form-grid,
     .quest-modal .form-grid.three {
+      gap: 8px;
+    }
+
+    .quest-modal .quest-level-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quest-section-topline {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 42px 42px minmax(170px, auto) auto auto;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .quest-subtasks {
+      display: grid;
+      gap: 6px;
+    }
+
+    .quest-subtask-row {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr) 42px auto;
+      align-items: center;
       gap: 8px;
     }
 
@@ -1929,7 +2463,7 @@
       }
 
       .character-calendar {
-        position: static;
+        position: relative;
       }
     }
 
@@ -1946,12 +2480,16 @@
         grid-template-columns: 1fr;
       }
 
+      .calendar-scheduler {
+        grid-template-columns: 1fr;
+      }
+
       .characters-layout {
         grid-template-columns: 1fr;
       }
 
       .character-calendar {
-        position: static;
+        position: relative;
       }
 
       .task-characters {
@@ -2027,36 +2565,76 @@
       <nav class="tabs" aria-label="Seções do painel">
         <button class="tab-button active" type="button" data-tab="characters">Personagens</button>
         <button class="tab-button" type="button" data-tab="routine">Rotina</button>
+        <button class="tab-button" type="button" data-tab="calendar">Calendário</button>
         <button class="tab-button" type="button" data-tab="quests">Quests</button>
       </nav>
 
       <section class="tab-panel active" id="charactersPanel" data-panel="characters" aria-label="Personagens">
         <div class="characters-layout">
-          <aside class="character-calendar" aria-label="Calendário de tarefas dos personagens">
-            <div class="calendar-heading">
-              <div>
-                <strong>Calendário</strong>
-                <span>Personalizadas, semanais e mensais</span>
-              </div>
-              <div class="calendar-month" id="calendarToday"></div>
-            </div>
-            <div class="calendar-task-list" id="characterTaskCalendar"></div>
-          </aside>
           <div class="cards-grid" id="cardsGrid" aria-label="Cards dos personagens"></div>
         </div>
       </section>
 
       <section class="tab-panel" data-panel="routine" aria-label="Rotina">
+        <section class="routine-release-panel" aria-label="Próximas liberações importantes">
+          <button class="calendar-summary-toggle" id="calendarSummaryToggle" type="button" aria-label="Ocultar próximas liberações" title="Ocultar próximas liberações">v</button>
+          <section class="today-summary" id="todaySummary" aria-label="Próximas liberações importantes">
+            <strong>Próximas tarefas importantes livres:</strong>
+            <div class="today-summary-list" id="todaySummaryList"></div>
+          </section>
+          <div class="calendar-scheduler" id="taskScheduleFields">
+            <label class="field">
+              <span>Tarefa</span>
+              <select id="taskScheduleTask"></select>
+            </label>
+            <label class="field">
+              <span>Personagem</span>
+              <select id="taskScheduleCharacter"></select>
+            </label>
+            <label class="field">
+              <span>Dia programado</span>
+              <input id="taskScheduledDate" type="date">
+            </label>
+            <label class="field">
+              <span>Horário</span>
+              <input id="taskScheduledTime" type="time">
+            </label>
+            <button class="primary-button" id="saveScheduledTaskButton" type="button">Salvar</button>
+            <button class="secondary-button" id="clearScheduledTaskButton" type="button">Limpar</button>
+          </div>
+        </section>
         <div class="routine-toolbar">
           <button class="primary-button" id="addRoutineTaskButton" type="button">
             <span aria-hidden="true">+</span>
             <span>Adicionar Tarefa</span>
           </button>
+          <button class="secondary-button" id="scheduleTaskButton" type="button" aria-expanded="false">Programar tarefa</button>
           <button class="danger-button" id="removeRoutineTaskButton" type="button">
             <span>Remover Tarefa</span>
           </button>
         </div>
         <div class="routine-sections" id="routineSections"></div>
+      </section>
+
+      <section class="tab-panel" data-panel="calendar" aria-label="Calendário">
+        <div class="calendar-page">
+          <div class="calendar-page-toolbar">
+            <div class="calendar-page-title">
+              <strong id="userCalendarTitle">Calendário</strong>
+              <span>Eventos criados pelo jogador</span>
+            </div>
+            <div class="calendar-page-actions">
+              <button class="secondary-button" id="previousUserCalendarMonth" type="button">Anterior</button>
+              <button class="secondary-button" id="todayUserCalendarMonth" type="button">Hoje</button>
+              <button class="secondary-button" id="nextUserCalendarMonth" type="button">Próximo</button>
+              <button class="primary-button" id="addCalendarEventButton" type="button">
+                <span aria-hidden="true">+</span>
+                <span>Adicionar evento</span>
+              </button>
+            </div>
+          </div>
+          <div class="user-calendar" id="userCalendar" aria-label="Calendário mensal"></div>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="quests" aria-label="Quests">
@@ -2072,6 +2650,51 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="calendarEventModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="calendarEventModalTitle">
+    <div class="character-modal calendar-event-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="calendarEventModalTitle">Adicionar evento</strong>
+          <span>Evento manual do calendário</span>
+        </div>
+        <button class="icon-button" id="closeCalendarEventModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
+      </div>
+
+      <form class="modal-form" id="calendarEventForm">
+        <label class="field">
+          <span>Nome do evento</span>
+          <input id="calendarEventTitle" type="text" maxlength="80" required>
+        </label>
+        <div class="form-grid three">
+          <label class="field">
+            <span>Dia</span>
+            <input id="calendarEventDate" type="date" required>
+          </label>
+          <label class="field">
+            <span>Horário</span>
+            <input id="calendarEventTime" type="time">
+          </label>
+          <label class="field">
+            <span>Repetição</span>
+            <select id="calendarEventRepeat">
+              <option value="none">Não repetir</option>
+              <option value="weekly">Semanalmente</option>
+              <option value="monthly">Mensalmente</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Detalhes</span>
+          <textarea id="calendarEventDescription" placeholder="Observações opcionais sobre este evento."></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="danger-button" id="deleteCalendarEventButton" type="button">Remover evento</button>
+          <button class="primary-button" type="submit">Salvar evento</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="modal-backdrop" id="characterModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -2157,7 +2780,7 @@
           </select>
         </label>
 
-        <div class="form-grid">
+        <div class="form-grid quest-level-grid">
           <label class="field">
             <span>Nome da tarefa</span>
             <input id="taskName" type="text" maxlength="60" required>
@@ -2264,7 +2887,7 @@
     </div>
   </div>
 
-  <button class="floating-note-button" id="addCharacterNoteButton" type="button" aria-label="Editar texto de personagem" title="Editar texto de personagem">
+  <button class="floating-note-button" id="addCharacterNoteButton" type="button" aria-label="Editar texto de personagem" title="Editar texto de personagem" aria-pressed="false">
     <span aria-hidden="true">✎</span>
   </button>
 
@@ -2287,18 +2910,18 @@
           <span>Personagem</span>
           <select id="noteCharacterSelect" required></select>
         </label>
-        <label class="field">
+        <label class="field note-edit-only">
           <span>Texto</span>
           <textarea id="characterNoteText" placeholder="Escreva qualquer observação, plano, lembrete ou informação específica deste personagem."></textarea>
         </label>
-        <div class="note-tools">
+        <div class="note-tools note-edit-only">
           <button class="secondary-button" id="makeNoteCopyButton" type="button" aria-label="Transformar seleção em texto copiável" title="Transformar seleção em texto copiável">⧉</button>
         </div>
         <label class="field">
           <span>Prévia copiável</span>
           <div class="note-preview" id="characterNotePreview"></div>
         </label>
-        <div class="modal-actions">
+        <div class="modal-actions note-edit-only">
           <button class="danger-button" id="removeCharacterNoteButton" type="button">Remover texto</button>
           <button class="secondary-button" id="clearCharacterNoteButton" type="button">Limpar texto</button>
           <button class="primary-button" type="submit">Salvar texto</button>
@@ -2316,6 +2939,22 @@
     const grid = document.querySelector("#cardsGrid");
     const characterTaskCalendar = document.querySelector("#characterTaskCalendar");
     const calendarToday = document.querySelector("#calendarToday");
+    const userCalendar = document.querySelector("#userCalendar");
+    const userCalendarTitle = document.querySelector("#userCalendarTitle");
+    const previousUserCalendarMonth = document.querySelector("#previousUserCalendarMonth");
+    const todayUserCalendarMonth = document.querySelector("#todayUserCalendarMonth");
+    const nextUserCalendarMonth = document.querySelector("#nextUserCalendarMonth");
+    const addCalendarEventButton = document.querySelector("#addCalendarEventButton");
+    const calendarEventModalBackdrop = document.querySelector("#calendarEventModalBackdrop");
+    const calendarEventModalTitle = document.querySelector("#calendarEventModalTitle");
+    const closeCalendarEventModalButton = document.querySelector("#closeCalendarEventModalButton");
+    const calendarEventForm = document.querySelector("#calendarEventForm");
+    const calendarEventTitle = document.querySelector("#calendarEventTitle");
+    const calendarEventDate = document.querySelector("#calendarEventDate");
+    const calendarEventTime = document.querySelector("#calendarEventTime");
+    const calendarEventRepeat = document.querySelector("#calendarEventRepeat");
+    const calendarEventDescription = document.querySelector("#calendarEventDescription");
+    const deleteCalendarEventButton = document.querySelector("#deleteCalendarEventButton");
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
     const routineSections = document.querySelector("#routineSections");
@@ -2339,6 +2978,14 @@
     const taskDurationRow = document.querySelector("#taskDurationRow");
     const taskDurationDays = document.querySelector("#taskDurationDays");
     const taskDurationHours = document.querySelector("#taskDurationHours");
+    const scheduleTaskButton = document.querySelector("#scheduleTaskButton");
+    const taskScheduleFields = document.querySelector("#taskScheduleFields");
+    const taskScheduleTask = document.querySelector("#taskScheduleTask");
+    const taskScheduleCharacter = document.querySelector("#taskScheduleCharacter");
+    const taskScheduledDate = document.querySelector("#taskScheduledDate");
+    const taskScheduledTime = document.querySelector("#taskScheduledTime");
+    const saveScheduledTaskButton = document.querySelector("#saveScheduledTaskButton");
+    const clearScheduledTaskButton = document.querySelector("#clearScheduledTaskButton");
     const taskProfessionGrid = document.querySelector("#taskProfessionGrid");
     const editTaskCharactersButton = document.querySelector("#editTaskCharactersButton");
     const taskCharacterPicker = document.querySelector("#taskCharacterPicker");
@@ -2356,6 +3003,7 @@
     const addQuestSectionButton = document.querySelector("#addQuestSectionButton");
     const addCharacterNoteButton = document.querySelector("#addCharacterNoteButton");
     const noteModalBackdrop = document.querySelector("#noteModalBackdrop");
+    const noteModalTitle = document.querySelector("#noteModalTitle");
     const closeNoteModalButton = document.querySelector("#closeNoteModalButton");
     const noteForm = document.querySelector("#noteForm");
     const noteTaskName = document.querySelector("#noteTaskName");
@@ -2375,6 +3023,9 @@
     const importJsonInput = document.querySelector("#importJsonInput");
     const modalBackdrop = document.querySelector("#characterModalBackdrop");
     const modalTitle = document.querySelector("#modalTitle");
+    const todaySummary = document.querySelector("#todaySummary");
+    const todaySummaryList = document.querySelector("#todaySummaryList");
+    const calendarSummaryToggle = document.querySelector("#calendarSummaryToggle");
     const closeModalButton = document.querySelector("#closeModalButton");
     const deleteFromModalButton = document.querySelector("#deleteFromModalButton");
     const characterForm = document.querySelector("#characterForm");
@@ -2426,13 +3077,18 @@
       collapsed: false,
       sidebarWidth: 292,
       selectedId: null,
+      selectedCharacterIds: [],
       characters: [],
       routineTasks: [],
       routineCompletions: {},
       routineNotes: {},
+      routineTaskCollapsed: {},
       routineSectionLayout: {},
+      calendarEvents: [],
+      calendarView: { year: new Date().getFullYear(), month: new Date().getMonth() },
       tower7: {},
       showRoutineOnCharacters: false,
+      todaySummaryCollapsed: false,
       quests: [],
       questProgress: {},
       selectedQuestId: null,
@@ -2442,9 +3098,14 @@
     let editingId = null;
     let editingTaskId = null;
     let editingQuestId = null;
+    let editingCalendarEventId = null;
     let selectedRoutineNoteTaskId = null;
+    let lastSelectedCharacterId = null;
+    let noteTargetMode = false;
+    let noteViewOnly = false;
     let expandedQuestId = null;
     let completedQuestMenuId = null;
+    let todaySummaryAutoHideTimer = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -2455,6 +3116,53 @@
 
     function hasValue(value) {
       return value !== "" && value !== null && value !== undefined;
+    }
+
+    function parseDateKey(dateKey) {
+      const [year, month, day] = String(dateKey || "").split("-").map(Number);
+      return new Date(year || new Date().getFullYear(), (month || 1) - 1, day || 1);
+    }
+
+    function normalizeCalendarEvent(event = {}) {
+      return {
+        id: event.id || `calendar:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        title: String(event.title || "").trim(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(String(event.date || "")) ? event.date : getDateKey(new Date()),
+        time: /^\d{2}:\d{2}$/.test(String(event.time || "")) ? event.time : "",
+        repeat: ["none", "weekly", "monthly"].includes(event.repeat) ? event.repeat : "none",
+        description: String(event.description || "").trim(),
+        createdAt: event.createdAt || Date.now()
+      };
+    }
+
+    function normalizeCalendarEvents(events = []) {
+      return Array.isArray(events)
+        ? events.map(normalizeCalendarEvent).filter((event) => event.title)
+        : [];
+    }
+
+    function normalizeCalendarView(view = {}) {
+      const today = new Date();
+      const year = Number.isFinite(Number(view.year)) ? Number(view.year) : today.getFullYear();
+      const month = Number.isFinite(Number(view.month)) ? clampNumber(Number(view.month), 0, 11) : today.getMonth();
+      return { year, month };
+    }
+
+    function normalizeScheduledAt(value) {
+      if (!hasValue(value)) return "";
+      const time = Number(value);
+      if (Number.isFinite(time) && time > 0) return time;
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : "";
+    }
+
+    function normalizeTaskSchedules(schedules = {}) {
+      if (!schedules || typeof schedules !== "object") return {};
+      return Object.entries(schedules).reduce((map, [characterId, value]) => {
+        const scheduledAt = normalizeScheduledAt(value);
+        if (scheduledAt) map[String(characterId)] = scheduledAt;
+        return map;
+      }, {});
     }
 
     function normalizeRoutineTask(task) {
@@ -2470,6 +3178,8 @@
         durationHours: clampNumber(task.durationHours, 1, 8760),
         minLevel: clampNumber(task.minLevel, 1, 625) || 1,
         minNwLevel: hasValue(task.minNwLevel) ? clampNumber(task.minNwLevel, 1, 100) : "",
+        scheduledAt: normalizeScheduledAt(task.scheduledAt),
+        schedules: normalizeTaskSchedules(task.schedules),
         professions: Array.isArray(task.professions) ? task.professions.filter((item) => professionOptions.includes(item)) : [],
         showOnCharacters: Boolean(task.showOnCharacters),
         assignedCharacterId: task.assignedCharacterId || "",
@@ -2486,7 +3196,15 @@
         id: section.id || `section:${Date.now()}:${Math.random().toString(16).slice(2)}`,
         title: section.title || "Nova seção",
         text: section.text || "",
+        image: String(section.image || ""),
         coordinates: Array.isArray(section.coordinates) ? section.coordinates.filter(Boolean).map(String) : [],
+        subtasks: Array.isArray(section.subtasks)
+          ? section.subtasks.map((item) => ({
+              id: item.id || `subtask:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+              text: String(item.text || ""),
+              image: String(item.image || "")
+            })).filter((item) => item.text.trim())
+          : [],
         routine: normalizeQuestSectionRoutine(section.routine)
       };
     }
@@ -2724,6 +3442,7 @@
       state.questProgress[key] = {
         status: "started",
         completedSections: [],
+        completedSubtasks: {},
         startedAt: Date.now(),
         ...state.questProgress[key],
         ...patch,
@@ -2748,6 +3467,51 @@
       return `${minutes}m`;
     }
 
+    function getTaskMinimumUnlockLabel(task, characters) {
+      if (!characters.length) return "Sem personagens elegíveis";
+      const unlockTimes = characters.map((character) => {
+        const completion = getCompletion(task.id, character.id);
+        return completion ? Number(completion.unlockAt) : Date.now();
+      });
+      const earliestUnlock = Math.min(...unlockTimes);
+      return earliestUnlock <= Date.now()
+        ? "Menor liberação: agora"
+        : `Menor liberação: ${formatRemaining(earliestUnlock)}`;
+    }
+
+    function getTowerMinimumUnlockLabel(task, characters, tower) {
+      if (!characters.length) return "Sem personagens elegíveis";
+      const hasAvailableCharacter = characters.some((character) => !tower.checks[character.id]?.dungeon);
+      return hasAvailableCharacter
+        ? "Menor liberação: agora"
+        : `Menor liberação: ${formatRemaining(tower.resetAt)}`;
+    }
+
+    function isRoutineTaskCollapsed(taskId, allCompleted) {
+      const savedValue = state.routineTaskCollapsed?.[taskId];
+      return typeof savedValue === "boolean" ? savedValue : allCompleted;
+    }
+
+    function setRoutineTaskCollapsed(taskId, collapsed) {
+      state.routineTaskCollapsed = state.routineTaskCollapsed && typeof state.routineTaskCollapsed === "object"
+        ? state.routineTaskCollapsed
+        : {};
+      state.routineTaskCollapsed[taskId] = Boolean(collapsed);
+      saveState();
+      render();
+    }
+
+    function configureRoutineTaskCollapse(taskCard, task, allCompleted) {
+      const collapsed = isRoutineTaskCollapsed(task.id, allCompleted);
+      taskCard.classList.toggle("collapsed", collapsed);
+      const button = taskCard.querySelector(".task-collapse-button");
+      button.textContent = collapsed ? "⌄" : "⌃";
+      button.title = collapsed ? "Mostrar personagens" : "Minimizar personagens";
+      button.setAttribute("aria-label", button.title);
+      button.setAttribute("aria-expanded", String(!collapsed));
+      button.addEventListener("click", () => setRoutineTaskCollapsed(task.id, !collapsed));
+    }
+
     function formatDaysHours(ms) {
       const totalHours = Math.max(0, Math.ceil(ms / (60 * 60 * 1000)));
       const days = Math.floor(totalHours / 24);
@@ -2764,11 +3528,21 @@
       return `Reset em ${formatDaysHours(getTaskUnlockAt(task) - Date.now())}`;
     }
 
+    function getRoutineSectionResetLabel(kind) {
+      if (kind === "daily") return `Todas resetam em ${formatRemaining(nextDailyReset())}`;
+      if (kind === "weekly") return `Todas resetam em ${formatRemaining(nextWeeklyReset())}`;
+      if (kind === "monthly") return `Todas resetam em ${formatRemaining(nextMonthlyReset())}`;
+      return routineKinds[kind]?.reset || "";
+    }
+
     function clearExpiredRoutineCompletions() {
       let changed = false;
       Object.entries(state.routineCompletions).forEach(([key, completion]) => {
         if (!completion || Number(completion.unlockAt) <= Date.now()) {
           delete state.routineCompletions[key];
+          const separatorIndex = key.lastIndexOf("::");
+          const taskId = separatorIndex >= 0 ? key.slice(0, separatorIndex) : "";
+          if (taskId) state.routineTaskCollapsed[taskId] = false;
           changed = true;
         }
       });
@@ -2778,19 +3552,149 @@
     function getAvailableRoutineCount(characterId) {
       return state.routineTasks.filter((task) => {
         const character = state.characters.find((item) => item.id === characterId);
-        return character && task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, characterId);
+        return character && task.showOnCharacters && isCharacterEligibleForTask(character, task) && isRoutineCharacterPending(task, character);
       }).length;
     }
 
     function getAvailableRoutineNames(character) {
       return state.routineTasks
-        .filter((task) => task.showOnCharacters && isCharacterEligibleForTask(character, task) && !getCompletion(task.id, character.id))
+        .filter((task) => task.showOnCharacters && isCharacterEligibleForTask(character, task) && isRoutineCharacterPending(task, character))
         .map((task) => task.name);
+    }
+
+    function isRoutineCharacterPending(task, character) {
+      if (task.specialType === "tower7") {
+        return !getTowerCharacterState(task.id, character.id).checks.dungeon;
+      }
+      return !getCompletion(task.id, character.id);
+    }
+
+    function getDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function formatRoutineReleaseDate(date) {
+      const value = new Date(date);
+      const dayMonth = value.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short"
+      }).replace(".", "");
+      const weekday = value.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+      const time = value.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      return `${dayMonth} · ${weekday} · ${time}`;
+    }
+
+    function getRoutineDisplayDate(task, character, today = new Date()) {
+      const scheduledAt = getTaskCharacterScheduledAt(task, character.id);
+      if (scheduledAt) return new Date(Number(scheduledAt));
+      const completion = getCompletion(task.id, character.id);
+      if (completion) return new Date(Number(completion.unlockAt));
+      return today;
+    }
+
+    function getRoutineProjectedReleaseDate(task, character, today = new Date()) {
+      const scheduledAt = getTaskCharacterScheduledAt(task, character.id);
+      if (scheduledAt) return new Date(Number(scheduledAt));
+      if (task.specialType === "tower7") {
+        const tower = getTowerTaskState(task.id);
+        return new Date(Number(tower.resetAt));
+      }
+      const completion = getCompletion(task.id, character.id);
+      if (completion) return new Date(Number(completion.unlockAt));
+      return new Date(getTaskUnlockAt(task, today));
+    }
+
+    function getTaskCharacterScheduledAt(task, characterId) {
+      return normalizeScheduledAt(task.schedules?.[characterId]);
+    }
+
+    function isCalendarRoutineTask(task) {
+      return Boolean(task.showOnCharacters) && task.kind === "custom" && task.specialType !== "tower7";
+    }
+
+    function getCalendarRoutineItems() {
+      const today = new Date();
+      const items = [];
+
+      state.routineTasks
+        .filter(isCalendarRoutineTask)
+        .forEach((task) => {
+          getOrderedCharacters()
+            .filter((character) => isCharacterEligibleForTask(character, task))
+            .forEach((character) => {
+              items.push({
+                task,
+                character,
+                date: getRoutineDisplayDate(task, character, today)
+              });
+            });
+        });
+
+      return items.sort((a, b) => {
+        const kindOrder = Object.keys(routineKinds).indexOf(a.task.kind) - Object.keys(routineKinds).indexOf(b.task.kind);
+        if (kindOrder) return kindOrder;
+        const taskOrder = a.task.name.localeCompare(b.task.name);
+        if (taskOrder) return taskOrder;
+        return a.character.name.localeCompare(b.character.name);
+      });
+    }
+
+    function getImportantRoutineReleaseItems() {
+      const today = new Date();
+      return state.routineTasks
+        .filter((task) => task.showOnCharacters)
+        .flatMap((task) => {
+          return getFilteredOrderedCharacters()
+            .filter((character) => isCharacterEligibleForTask(character, task))
+            .map((character) => {
+              const date = getRoutineProjectedReleaseDate(task, character, today);
+              return { task, character, date };
+            });
+        })
+        .sort((a, b) => {
+          const dateOrder = a.date - b.date;
+          if (dateOrder) return dateOrder;
+          const taskOrder = a.task.name.localeCompare(b.task.name);
+          if (taskOrder) return taskOrder;
+          return a.character.name.localeCompare(b.character.name);
+        });
+    }
+
+    function renderTodaySummary() {
+      if (!todaySummary || !todaySummaryList || !calendarSummaryToggle) return;
+
+      todaySummaryList.innerHTML = "";
+      const rows = getImportantRoutineReleaseItems();
+
+      if (!rows.length) {
+        const row = document.createElement("div");
+        row.className = "today-summary-row";
+        row.innerHTML = "<b>Nada marcado</b><span>Nenhuma tarefa está marcada para exibição.</span><time></time>";
+        todaySummaryList.appendChild(row);
+      } else {
+        rows.forEach(({ task, character, date }) => {
+          const row = document.createElement("div");
+          row.className = "today-summary-row";
+          row.innerHTML = "<b></b><span></span><time></time>";
+          row.querySelector("b").textContent = task.name;
+          row.querySelector("span").textContent = character.name;
+          row.querySelector("time").textContent = formatRoutineReleaseDate(date);
+          todaySummaryList.appendChild(row);
+        });
+      }
+
+      const collapsed = Boolean(state.todaySummaryCollapsed);
+      todaySummary.classList.toggle("collapsed", collapsed);
+      calendarSummaryToggle.textContent = collapsed ? "^" : "v";
+      calendarSummaryToggle.setAttribute("aria-label", collapsed ? "Mostrar resumo de hoje" : "Ocultar resumo de hoje");
+      calendarSummaryToggle.title = collapsed ? "Mostrar resumo de hoje" : "Ocultar resumo de hoje";
     }
 
     function renderCharacterTaskCalendar() {
       if (!characterTaskCalendar || !calendarToday) return;
 
+      renderTodaySummary();
+      renderTaskScheduleChoices();
       const today = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
       const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -2798,7 +3702,14 @@
       const firstWeekday = monthStart.getDay();
       const calendarStart = new Date(monthStart);
       calendarStart.setDate(monthStart.getDate() - firstWeekday);
-      calendarToday.textContent = today.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      calendarToday.innerHTML = "<span class=\"calendar-date-main\"></span><span class=\"calendar-weekday-label\"></span><span class=\"calendar-time\"></span>";
+      calendarToday.querySelector(".calendar-date-main").textContent = today.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short"
+      }).replace(".", "");
+      const weekday = today.toLocaleDateString("pt-BR", { weekday: "long" }).replace("-feira", "");
+      calendarToday.querySelector(".calendar-weekday-label").textContent = `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}`;
+      calendarToday.querySelector(".calendar-time").textContent = today.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
       characterTaskCalendar.innerHTML = "";
 
       ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach((day) => {
@@ -2808,44 +3719,12 @@
         characterTaskCalendar.appendChild(label);
       });
 
-      const monthTaskMap = new Map();
-      const allowedKinds = new Set(["custom", "weekly", "monthly"]);
-      const selectedTasks = state.routineTasks
-        .filter((task) => task.showOnCharacters && allowedKinds.has(task.kind))
-        .sort((a, b) => {
-          const kindOrder = Object.keys(routineKinds).indexOf(a.kind) - Object.keys(routineKinds).indexOf(b.kind);
-          if (kindOrder) return kindOrder;
-          return a.name.localeCompare(b.name);
-        });
-
-      function getDateKey(date) {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      }
-
-      selectedTasks.forEach((task) => {
-        getOrderedCharacters()
-          .filter((character) => isCharacterEligibleForTask(character, task))
-          .forEach((character) => {
-            const completion = getCompletion(task.id, character.id);
-            const releaseDate = completion ? new Date(Number(completion.unlockAt)) : today;
-            if (releaseDate < monthStart || releaseDate > monthEnd) return;
-
-            const dateKey = getDateKey(releaseDate);
-            const taskKey = `${dateKey}::${task.id}`;
-            if (!monthTaskMap.has(taskKey)) {
-              monthTaskMap.set(taskKey, {
-                dateKey,
-                task,
-                characters: []
-              });
-            }
-            monthTaskMap.get(taskKey).characters.push(character);
-          });
-      });
-
-      const tasksByDate = [...monthTaskMap.values()].reduce((map, item) => {
-        if (!map.has(item.dateKey)) map.set(item.dateKey, []);
-        map.get(item.dateKey).push(item);
+      const calendarItems = getCalendarRoutineItems();
+      const tasksByDate = calendarItems.reduce((map, item) => {
+        if (item.date < monthStart || item.date > monthEnd) return map;
+        const dateKey = getDateKey(item.date);
+        if (!map.has(dateKey)) map.set(dateKey, []);
+        map.get(dateKey).push(item);
         return map;
       }, new Map());
 
@@ -2859,21 +3738,33 @@
         day.innerHTML = `<span class="calendar-day-number"></span>`;
         day.querySelector(".calendar-day-number").textContent = date.getDate();
 
-        (tasksByDate.get(dateKey) || []).forEach(({ task, characters }) => {
+        const dayTasks = tasksByDate.get(dateKey) || [];
+        dayTasks.slice(0, 5).forEach(({ task, character }) => {
           const chip = document.createElement("span");
           chip.className = "calendar-task-chip";
-          chip.textContent = task.name;
-          chip.title = `${task.name}\n${characters.map((character) => character.name).join(", ")}`;
+          chip.innerHTML = "<span></span><small></small>";
+          chip.querySelector("span").textContent = character.name;
+          chip.querySelector("small").textContent = task.name;
+          chip.title = `${character.name}\n${task.name}`;
           day.appendChild(chip);
         });
+        if (dayTasks.length > 5) {
+          const more = document.createElement("span");
+          more.className = "calendar-task-chip";
+          more.innerHTML = "<span></span><small></small>";
+          more.querySelector("span").textContent = "Mais tarefas";
+          more.querySelector("small").textContent = `+${dayTasks.length - 5}`;
+          more.title = dayTasks.slice(5).map(({ task, character }) => `${character.name}: ${task.name}`).join("\n");
+          day.appendChild(more);
+        }
 
         characterTaskCalendar.appendChild(day);
       }
 
-      if (!selectedTasks.length) {
+      if (!calendarItems.length) {
         const empty = document.createElement("div");
         empty.className = "calendar-empty";
-        empty.textContent = "Nenhuma tarefa personalizada, semanal ou mensal foi marcada para aparecer na aba Personagens.";
+        empty.textContent = "Nenhuma rotina pendente foi marcada para aparecer no calendário.";
         characterTaskCalendar.appendChild(empty);
       }
     }
@@ -2893,8 +3784,8 @@
       const name = document.createElement("span");
       name.textContent = clan;
 
-      if (clanIcons[clan]) wrapper.appendChild(icon);
       wrapper.appendChild(name);
+      if (clanIcons[clan]) wrapper.appendChild(icon);
       return wrapper;
     }
 
@@ -2914,8 +3805,8 @@
       const name = document.createElement("span");
       name.className = "character-name-text";
       name.textContent = character.name;
-      wrapper.appendChild(name);
       if (clanIcons[character.clan]) wrapper.appendChild(buildClanIcon(character.clan));
+      wrapper.appendChild(name);
       return wrapper;
     }
 
@@ -2959,13 +3850,18 @@
           collapsed: Boolean(parsed.collapsed),
           sidebarWidth: clampNumber(parsed.sidebarWidth || 292, 236, 460) || 292,
           selectedId: parsed.selectedId || null,
+          selectedCharacterIds: Array.isArray(parsed.selectedCharacterIds) ? parsed.selectedCharacterIds.map(String) : [],
           characters: Array.isArray(parsed.characters) ? normalizeCharacters(parsed.characters) : [],
           routineTasks: mergeRoutineTasks(parsed.routineTasks),
           routineCompletions: parsed.routineCompletions && typeof parsed.routineCompletions === "object" ? parsed.routineCompletions : {},
           routineNotes: parsed.routineNotes && typeof parsed.routineNotes === "object" ? parsed.routineNotes : {},
+          routineTaskCollapsed: parsed.routineTaskCollapsed && typeof parsed.routineTaskCollapsed === "object" ? parsed.routineTaskCollapsed : {},
           routineSectionLayout: normalizeRoutineSectionLayout(parsed.routineSectionLayout),
+          calendarEvents: normalizeCalendarEvents(parsed.calendarEvents),
+          calendarView: normalizeCalendarView(parsed.calendarView),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
+          todaySummaryCollapsed: Boolean(parsed.todaySummaryCollapsed),
           quests: normalizeQuests(parsed.quests),
           questProgress: parsed.questProgress && typeof parsed.questProgress === "object" ? parsed.questProgress : {},
           selectedQuestId: parsed.selectedQuestId || null,
@@ -3051,8 +3947,9 @@
       Object.keys(state.routineCompletions).forEach((key) => {
         if (key.endsWith(`::${id}`)) delete state.routineCompletions[key];
       });
+      state.selectedCharacterIds = getSelectedCharacterIds().filter((selectedId) => selectedId !== id);
       if (state.selectedId === id) {
-        state.selectedId = state.characters[0]?.id || null;
+        state.selectedId = state.selectedCharacterIds[0] || state.characters[0]?.id || null;
       }
       saveState();
       closeModal();
@@ -3093,8 +3990,24 @@
       updateCharacter(id, { [field]: clampNumber(Number(character[field]) + delta, 1, max) });
     }
 
-    function selectCharacter(id) {
-      state.selectedId = id;
+    function selectCharacter(id, event = null) {
+      const orderedIds = getOrderedCharacters().map((character) => character.id);
+      let selectedIds = getSelectedCharacterIds();
+      if (event?.shiftKey && lastSelectedCharacterId && orderedIds.includes(lastSelectedCharacterId)) {
+        const start = orderedIds.indexOf(lastSelectedCharacterId);
+        const end = orderedIds.indexOf(id);
+        const [from, to] = start < end ? [start, end] : [end, start];
+        selectedIds = [...new Set([...selectedIds, ...orderedIds.slice(from, to + 1)])];
+      } else if (event?.ctrlKey || event?.metaKey) {
+        selectedIds = selectedIds.includes(id)
+          ? selectedIds.filter((item) => item !== id)
+          : [...selectedIds, id];
+      } else {
+        selectedIds = [id];
+      }
+      state.selectedCharacterIds = selectedIds;
+      state.selectedId = selectedIds.includes(id) ? id : selectedIds[0] || id;
+      lastSelectedCharacterId = id;
       saveState();
       render();
       document.querySelector(`[data-card-id="${id}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -3106,8 +4019,9 @@
       const orderedCharacters = getOrderedCharacters();
 
       orderedCharacters.forEach((character) => {
+        const selectedIds = getSelectedCharacterIds();
         const item = document.createElement("div");
-        item.className = `nav-card${character.id === state.selectedId ? " active" : ""}`;
+        item.className = `nav-card${selectedIds.includes(character.id) ? " active" : ""}`;
         item.title = character.name;
         applyLevelBorder(item, character.characterLevel);
 
@@ -3115,7 +4029,7 @@
         select.className = "nav-card-main";
         select.type = "button";
         select.setAttribute("aria-label", `Selecionar ${character.name}`);
-        select.addEventListener("click", () => selectCharacter(character.id));
+        select.addEventListener("click", (event) => selectCharacter(character.id, event));
 
         const text = document.createElement("span");
         text.className = "nav-text";
@@ -3155,7 +4069,6 @@
     }
 
     function renderCards() {
-      renderCharacterTaskCalendar();
       grid.innerHTML = "";
 
       if (!state.characters.length) {
@@ -3273,6 +4186,21 @@
       editSelectedButton.disabled = !state.selectedId;
     }
 
+    function setTodaySummaryCollapsed(collapsed, shouldSave = true) {
+      state.todaySummaryCollapsed = collapsed;
+      renderTodaySummary();
+      if (shouldSave) saveState();
+    }
+
+    function startTodaySummaryAutoHide() {
+      if (!todaySummary) return;
+      window.clearTimeout(todaySummaryAutoHideTimer);
+      setTodaySummaryCollapsed(false, false);
+      todaySummaryAutoHideTimer = window.setTimeout(() => {
+        setTodaySummaryCollapsed(true);
+      }, 3000);
+    }
+
     function renderProfessionChoices(selected = []) {
       taskProfessionGrid.innerHTML = "";
       professionOptions.forEach((professionName) => {
@@ -3308,6 +4236,112 @@
       taskCharacterPicker.classList.toggle("open", isOpen);
       editTaskCharactersButton.setAttribute("aria-expanded", String(isOpen));
       editTaskCharactersButton.textContent = isOpen ? "Ocultar personagens" : "Editar personagens";
+    }
+
+    function setTaskScheduleOpen(isOpen) {
+      taskScheduleFields.classList.toggle("open", isOpen);
+      scheduleTaskButton.setAttribute("aria-expanded", String(isOpen));
+      scheduleTaskButton.textContent = isOpen ? "Ocultar programação" : "Programar tarefa";
+    }
+
+    function renderTaskScheduleChoices() {
+      if (!taskScheduleTask) return;
+      const selectedId = taskScheduleTask.value;
+      taskScheduleTask.innerHTML = "";
+      const tasks = state.routineTasks
+        .filter(isCalendarRoutineTask)
+        .sort((a, b) => {
+          const kindOrder = Object.keys(routineKinds).indexOf(a.kind) - Object.keys(routineKinds).indexOf(b.kind);
+          if (kindOrder) return kindOrder;
+          return a.name.localeCompare(b.name);
+        });
+
+      tasks.forEach((task) => {
+        taskScheduleTask.add(new Option(`${task.name} (${routineKinds[task.kind]?.title || "Rotina"})`, task.id));
+      });
+
+      if (!tasks.length) taskScheduleTask.add(new Option("Nenhuma tarefa visível", ""));
+      taskScheduleTask.value = tasks.some((task) => task.id === selectedId) ? selectedId : tasks[0]?.id || "";
+      refreshTaskScheduleFields();
+    }
+
+    function refreshTaskScheduleFields() {
+      const task = state.routineTasks.find((item) => item.id === taskScheduleTask.value);
+      renderTaskScheduleCharacterChoices(task);
+      const characterId = taskScheduleCharacter.value;
+      const scheduledAt = task && characterId ? getTaskCharacterScheduledAt(task, characterId) : "";
+      taskScheduledDate.value = getLocalDateInputValue(scheduledAt);
+      taskScheduledTime.value = getLocalTimeInputValue(scheduledAt);
+      const hasTask = Boolean(task);
+      const hasCharacter = Boolean(characterId);
+      taskScheduledDate.disabled = !hasTask || !hasCharacter;
+      taskScheduledTime.disabled = !hasTask || !hasCharacter;
+      saveScheduledTaskButton.disabled = !hasTask || !hasCharacter;
+      clearScheduledTaskButton.disabled = !hasTask || !hasCharacter || !scheduledAt;
+    }
+
+    function renderTaskScheduleCharacterChoices(task) {
+      if (!taskScheduleCharacter) return;
+      const selectedId = taskScheduleCharacter.value;
+      taskScheduleCharacter.innerHTML = "";
+      const characters = task
+        ? getOrderedCharacters()
+            .filter((character) => isCharacterEligibleForTask(character, task))
+            .filter((character) => isRoutineCharacterPending(task, character))
+        : [];
+      characters.forEach((character) => {
+        taskScheduleCharacter.add(new Option(character.name, character.id));
+      });
+      if (!characters.length) taskScheduleCharacter.add(new Option("Nenhum personagem pendente", ""));
+      taskScheduleCharacter.value = characters.some((character) => character.id === selectedId) ? selectedId : characters[0]?.id || "";
+    }
+
+    function getLocalDateInputValue(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(Number(timestamp));
+      if (!Number.isFinite(date.getTime())) return "";
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function getLocalTimeInputValue(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(Number(timestamp));
+      if (!Number.isFinite(date.getTime())) return "";
+      return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    }
+
+    function getScheduledAtFromForm() {
+      if (!taskScheduledDate.value) return "";
+      const time = taskScheduledTime.value || "00:00";
+      const timestamp = new Date(`${taskScheduledDate.value}T${time}`).getTime();
+      return Number.isFinite(timestamp) ? timestamp : "";
+    }
+
+    function saveScheduledTask() {
+      const task = state.routineTasks.find((item) => item.id === taskScheduleTask.value);
+      if (!task) return;
+      const characterId = taskScheduleCharacter.value;
+      if (!characterId) return;
+      task.schedules = normalizeTaskSchedules(task.schedules);
+      task.schedules[characterId] = getScheduledAtFromForm();
+      task.scheduledAt = "";
+      task.showOnCharacters = true;
+      saveState();
+      render();
+      setTaskScheduleOpen(true);
+    }
+
+    function clearScheduledTask() {
+      const task = state.routineTasks.find((item) => item.id === taskScheduleTask.value);
+      if (!task) return;
+      const characterId = taskScheduleCharacter.value;
+      if (!characterId) return;
+      task.schedules = normalizeTaskSchedules(task.schedules);
+      delete task.schedules[characterId];
+      task.scheduledAt = "";
+      saveState();
+      render();
+      setTaskScheduleOpen(true);
     }
 
     function refreshTaskTemplateFields() {
@@ -3367,9 +4401,26 @@
         if (key.startsWith(`${taskId}::`)) delete state.routineNotes[key];
       });
       if (state.tower7?.[taskId]) delete state.tower7[taskId];
+      if (state.routineTaskCollapsed?.[taskId] !== undefined) delete state.routineTaskCollapsed[taskId];
       saveState();
       render();
       return true;
+    }
+
+    function getSelectedCharacterIds() {
+      const existingIds = new Set(state.characters.map((character) => character.id));
+      const selectedIds = Array.isArray(state.selectedCharacterIds) ? state.selectedCharacterIds.filter((id) => existingIds.has(id)) : [];
+      if (selectedIds.length !== state.selectedCharacterIds?.length) state.selectedCharacterIds = selectedIds;
+      return selectedIds;
+    }
+
+    function isCharacterInSelectionFilter(character) {
+      const selectedIds = getSelectedCharacterIds();
+      return !selectedIds.length || selectedIds.includes(character.id);
+    }
+
+    function getFilteredOrderedCharacters() {
+      return getOrderedCharacters().filter(isCharacterInSelectionFilter);
     }
 
     function chooseRoutineTaskToRemove() {
@@ -3408,6 +4459,7 @@
         name: existing?.defaultTask ? existing.name : taskName.value.trim(),
         kind,
         durationHours: kind === "custom" ? Math.max(1, days * 24 + hours) : existing?.durationHours,
+        scheduledAt: existing?.scheduledAt || "",
         minLevel: taskMinLevel.value,
         minNwLevel: taskMinNwLevel.value,
         professions: selectedProfessions,
@@ -3439,6 +4491,7 @@
       if (Number(tower.resetAt) <= Date.now()) {
         tower.checks = {};
         tower.resetAt = nextWeeklyReset();
+        state.routineTaskCollapsed[taskId] = false;
         saveState();
       }
 
@@ -3474,6 +4527,12 @@
         const delta = field === "tower" ? 150 : -50;
         const currentScore = Number(tower.scores[characterId]) || 0;
         tower.scores[characterId] = currentScore + delta;
+      }
+      if (field === "dungeon") {
+        const task = state.routineTasks.find((item) => item.id === taskId);
+        const characters = task ? getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task)) : [];
+        const allCompleted = characters.length > 0 && characters.every((character) => Boolean(tower.checks[character.id]?.dungeon));
+        state.routineTaskCollapsed[taskId] = allCompleted;
       }
       saveState();
       render();
@@ -3540,14 +4599,47 @@
       });
     }
 
+    function decorateRoutineSectionScroll(section) {
+      const gridEl = section.querySelector(".routine-grid");
+      const upButton = section.querySelector(".routine-scroll-button.up");
+      const downButton = section.querySelector(".routine-scroll-button.down");
+      if (!gridEl || !upButton || !downButton) return;
+
+      let scrollTimer = null;
+      const updateScrollState = () => {
+        const maxScroll = section.scrollHeight - section.clientHeight;
+        section.classList.toggle("can-scroll-up", section.scrollTop > 1);
+        section.classList.toggle("can-scroll-down", maxScroll > 1 && section.scrollTop < maxScroll - 1);
+      };
+      const stopScroll = () => {
+        window.clearInterval(scrollTimer);
+        scrollTimer = null;
+      };
+      const startScroll = (direction) => {
+        stopScroll();
+        scrollTimer = window.setInterval(() => {
+          section.scrollBy({ top: direction * 18, behavior: "auto" });
+          updateScrollState();
+        }, 16);
+      };
+
+      upButton.addEventListener("mouseenter", () => startScroll(-1));
+      downButton.addEventListener("mouseenter", () => startScroll(1));
+      upButton.addEventListener("mouseleave", stopScroll);
+      downButton.addEventListener("mouseleave", stopScroll);
+      section.addEventListener("scroll", updateScrollState, { passive: true });
+      window.requestAnimationFrame(updateScrollState);
+    }
+
     function renderTower7Task(task, gridEl) {
-      const characters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+      const characters = getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
       const tower = getTowerTaskState(task.id);
       const totalParts = characters.length;
       const doneParts = characters.reduce((total, character) => {
         const checks = tower.checks[character.id] || {};
         return total + (checks.dungeon ? 1 : 0);
       }, 0);
+      const allCompleted = characters.length > 0 && doneParts === totalParts;
 
       const taskCard = document.createElement("article");
       taskCard.className = "task-card tower-card";
@@ -3556,13 +4648,15 @@
           <div class="task-heading">
             <h3></h3>
             <span></span>
+            <small></small>
           </div>
           <div class="task-actions">
+            <button class="task-collapse-button" type="button"></button>
             <button class="task-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">✥</button>
-            <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">âœŽ</button>
+            <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
           </div>
         </header>
-        <div class="tower-summary"><strong></strong> partes concluÃ­das</div>
+        <div class="tower-summary"><strong></strong> partes concluídas</div>
         <div class="tower-rows"></div>
       `;
       taskCard.querySelector(".task-edit-button").textContent = "✎";
@@ -3570,8 +4664,10 @@
       decorateRoutineTaskCard(task, taskCard);
       taskCard.querySelector("h3").textContent = task.name;
       taskCard.querySelector(".task-heading span").textContent = `Reset em ${formatDaysHours(Number(tower.resetAt) - Date.now())}`;
+      taskCard.querySelector(".task-heading small").textContent = getTowerMinimumUnlockLabel(task, characters, tower);
       taskCard.querySelector(".tower-summary strong").textContent = `${doneParts}/${totalParts}`;
       taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
+      configureRoutineTaskCollapse(taskCard, task, allCompleted);
 
       const rows = taskCard.querySelector(".tower-rows");
       if (!characters.length) {
@@ -3583,6 +4679,9 @@
         const row = document.createElement("div");
         row.className = "tower-row";
         row.classList.toggle("calendar-task-visible", Boolean(task.showOnCharacters) && !checks.dungeon);
+        row.addEventListener("click", (event) => {
+          handleRoutineNoteTarget(task, character, event);
+        }, true);
         row.addEventListener("click", (event) => {
           if (event.target.closest("button, input, label")) return;
           state.selectedId = character.id;
@@ -3669,13 +4768,15 @@
           <div class="routine-section-header">
             <div class="routine-section-title">
               <h2>${config.title}</h2>
-              <span>${config.reset}</span>
+              <span>${getRoutineSectionResetLabel(kind)}</span>
             </div>
             <div class="routine-section-actions">
               <button class="routine-section-handle" type="button" aria-label="Mover seção" title="Mover seção">✥</button>
             </div>
           </div>
+          <button class="routine-scroll-button up" type="button" aria-label="Rolar tarefas para cima" title="Rolar tarefas para cima">^</button>
           <div class="routine-grid"></div>
+          <button class="routine-scroll-button down" type="button" aria-label="Rolar tarefas para baixo" title="Rolar tarefas para baixo">v</button>
         `;
         decorateRoutineSection(section);
 
@@ -3701,8 +4802,9 @@
             return;
           }
 
-          const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+          const eligibleCharacters = getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
           const anyAvailable = eligibleCharacters.some((character) => !getCompletion(task.id, character.id));
+          const allCompleted = eligibleCharacters.length > 0 && eligibleCharacters.every((character) => Boolean(getCompletion(task.id, character.id)));
           const taskCard = document.createElement("article");
           taskCard.className = `task-card${anyAvailable ? " available" : ""}`;
           taskCard.innerHTML = `
@@ -3710,8 +4812,10 @@
               <div class="task-heading">
                 <h3></h3>
                 <span></span>
+                <small></small>
               </div>
               <div class="task-actions">
+                <button class="task-collapse-button" type="button"></button>
                 <button class="task-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">✥</button>
                 <button class="task-edit-button" type="button" aria-label="Editar tarefa" title="Editar tarefa">✎</button>
               </div>
@@ -3721,7 +4825,9 @@
           decorateRoutineTaskCard(task, taskCard);
           taskCard.querySelector("h3").textContent = task.name;
           taskCard.querySelector(".task-heading span").textContent = getTaskResetLabel(task);
+          taskCard.querySelector(".task-heading small").textContent = getTaskMinimumUnlockLabel(task, eligibleCharacters);
           taskCard.querySelector(".task-edit-button").addEventListener("click", () => openTaskModal(task));
+          configureRoutineTaskCollapse(taskCard, task, allCompleted);
 
           const rows = taskCard.querySelector(".task-characters");
           if (!eligibleCharacters.length) {
@@ -3732,6 +4838,9 @@
             const row = document.createElement("div");
             row.className = "task-character-row";
             row.classList.toggle("calendar-task-visible", isRoutineCharacterVisible(task, character));
+            row.addEventListener("click", (event) => {
+              handleRoutineNoteTarget(task, character, event);
+            }, true);
             row.addEventListener("click", (event) => {
               if (event.target.closest("button, input, label")) return;
               state.selectedId = character.id;
@@ -3767,6 +4876,9 @@
               } else {
                 delete state.routineCompletions[key];
               }
+              const completedByEveryone = eligibleCharacters.length > 0
+                && eligibleCharacters.every((item) => Boolean(getCompletion(task.id, item.id)));
+              state.routineTaskCollapsed[task.id] = completedByEveryone;
               saveState();
               render();
             });
@@ -3777,6 +4889,7 @@
 
         const columnEl = sectionColumns[getRoutineSectionColumn(kind)] || sectionColumns[0];
         columnEl.appendChild(section);
+        decorateRoutineSectionScroll(section);
       });
     }
 
@@ -3861,6 +4974,41 @@
       }
     }
 
+    function createQuestImageElement(src) {
+      if (!src) return null;
+      const image = document.createElement("img");
+      image.className = "quest-image";
+      image.src = src;
+      image.alt = "Imagem da quest";
+      image.loading = "lazy";
+      return image;
+    }
+
+    function refreshQuestImageEditor(holder) {
+      const image = holder.querySelector("img");
+      holder.classList.toggle("has-image", Boolean(holder.dataset.image));
+      if (holder.dataset.image) image.src = holder.dataset.image;
+    }
+
+    function setupQuestImagePicker(button, input, holder) {
+      button.addEventListener("click", () => input.click());
+      input.addEventListener("change", () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          alert("Escolha um arquivo de imagem.");
+          input.value = "";
+          return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          holder.dataset.image = String(reader.result || "");
+          refreshQuestImageEditor(holder);
+        });
+        reader.readAsDataURL(file);
+      });
+    }
+
     function getQuestRoutineId(quest, section) {
       const routineName = section.routine?.name || `${quest.name} - ${section.title}`;
       return `quest-routine:${getRoutineNameKey(routineName)}`;
@@ -3916,8 +5064,37 @@
         return;
       }
 
-      state.quests.forEach((quest) => {
-        const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+      const orderedQuests = [...state.quests].sort((left, right) => {
+        const levelDiff = (Number(left.minLevel) || 0) - (Number(right.minLevel) || 0);
+        if (levelDiff) return levelDiff;
+        const leftNw = hasValue(left.minNwLevel) ? Number(left.minNwLevel) : -1;
+        const rightNw = hasValue(right.minNwLevel) ? Number(right.minNwLevel) : -1;
+        if (leftNw !== rightNw) return leftNw - rightNw;
+        return left.name.localeCompare(right.name, "pt-BR");
+      }).filter((quest) => {
+        const eligibleCharacters = getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+        return eligibleCharacters.some((character) => !isQuestCompletedByCharacter(quest.id, character.id));
+      });
+
+      if (state.selectedQuestId && !orderedQuests.some((quest) => quest.id === state.selectedQuestId)) {
+        state.selectedQuestId = null;
+        state.selectedQuestCharacterId = null;
+      }
+
+      if (!orderedQuests.length) {
+        questList.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>Nenhuma quest pendente</strong>
+              <span>Os personagens selecionados não têm quests pendentes nos requisitos atuais.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      orderedQuests.forEach((quest) => {
+        const eligibleCharacters = getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
         const completedCharacters = eligibleCharacters.filter((character) => isQuestCompletedByCharacter(quest.id, character.id));
         const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
         const completedCount = eligibleCharacters.filter((character) => getQuestProgress(quest.id, character.id)?.status === "completed").length;
@@ -3978,7 +5155,9 @@
             </div>
           `;
           row.querySelector("strong").appendChild(buildCharacterNameInline(character));
-          row.querySelector("span").textContent = progress?.status === "completed" ? "Quest completada" : progress ? "Em andamento" : "Não iniciada";
+          const statusText = row.querySelector(".quest-character-name > span");
+          statusText.textContent = progress?.status === "completed" ? "Quest completada" : progress ? "Em andamento" : "Não iniciada";
+          statusText.className = progress?.status === "completed" ? "status-completed" : progress ? "status-started" : "status-not-started";
           row.querySelector('[data-action="select"]').addEventListener("click", () => {
             state.selectedQuestId = quest.id;
             state.selectedQuestCharacterId = character.id;
@@ -3997,6 +5176,10 @@
             setQuestProgress(quest.id, character.id, {
               status: "completed",
               completedSections: quest.sections.map((section) => section.id),
+              completedSubtasks: quest.sections.reduce((map, section) => {
+                map[section.id] = section.subtasks.map((subtask) => subtask.id);
+                return map;
+              }, {}),
               completedAt: Date.now()
             });
             state.selectedQuestId = quest.id;
@@ -4035,7 +5218,7 @@
           row.innerHTML = `
             <div class="quest-character-name">
               <strong></strong>
-              <span>Quest concluída</span>
+              <span class="status-completed">Quest concluída</span>
             </div>
             <div class="quest-character-actions">
               <button class="danger-button" type="button">Reverter conclusão</button>
@@ -4064,7 +5247,7 @@
       questDetail.innerHTML = "";
       if (!quest) return;
 
-      const eligibleCharacters = getOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
+      const eligibleCharacters = getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForQuest(character, quest));
       const activeCharacters = eligibleCharacters.filter((character) => !isQuestCompletedByCharacter(quest.id, character.id));
       if (!activeCharacters.some((character) => character.id === state.selectedQuestCharacterId)) {
         state.selectedQuestCharacterId = activeCharacters[0]?.id || null;
@@ -4072,6 +5255,7 @@
       const character = getSelectedQuestCharacter();
       const progress = character ? getQuestProgress(quest.id, character.id) : null;
       const completedSections = new Set(progress?.completedSections || []);
+      const completedSubtasks = progress?.completedSubtasks && typeof progress.completedSubtasks === "object" ? progress.completedSubtasks : {};
 
       questDetail.innerHTML = `
         <div class="quest-detail-header">
@@ -4105,7 +5289,8 @@
       });
 
       const sections = questDetail.querySelector(".quest-sections");
-      quest.sections.forEach((section) => {
+      quest.sections.forEach((section, sectionIndex) => {
+        const previousDone = sectionIndex === 0 || completedSections.has(quest.sections[sectionIndex - 1].id);
         const sectionEl = document.createElement("article");
         sectionEl.className = `quest-section${completedSections.has(section.id) ? " completed" : ""}`;
         sectionEl.innerHTML = `
@@ -4114,22 +5299,67 @@
             <span></span>
           </label>
           <p></p>
+          <div class="quest-section-image"></div>
+          <div class="quest-subtasks"></div>
         `;
         const checkbox = sectionEl.querySelector("input");
         checkbox.checked = completedSections.has(section.id);
-        checkbox.disabled = !character;
+        checkbox.disabled = !character || !previousDone;
         sectionEl.querySelector("label span").textContent = section.title;
         renderSpoilerText(sectionEl.querySelector("p"), section.text, section.coordinates);
+        const sectionImage = createQuestImageElement(section.image);
+        if (sectionImage) sectionEl.querySelector(".quest-section-image").appendChild(sectionImage);
+        const subtasks = sectionEl.querySelector(".quest-subtasks");
+        section.subtasks.forEach((subtask, subtaskIndex) => {
+          const row = document.createElement("div");
+          row.className = "quest-subtask-view";
+          row.innerHTML = "<label class=\"toggle-line\"><input type=\"checkbox\"><span></span></label>";
+          const subtaskCheckbox = row.querySelector("input");
+          subtaskCheckbox.checked = Boolean(completedSubtasks[section.id]?.includes(subtask.id));
+          subtaskCheckbox.disabled = !character;
+          row.querySelector("span").textContent = subtask.text;
+          const subtaskImage = createQuestImageElement(subtask.image);
+          if (subtaskImage) row.appendChild(subtaskImage);
+          subtaskCheckbox.addEventListener("change", () => {
+            if (!character) return;
+            const currentProgress = getQuestProgress(quest.id, character.id) || {};
+            const nextSubtasks = {
+              ...(currentProgress.completedSubtasks && typeof currentProgress.completedSubtasks === "object" ? currentProgress.completedSubtasks : {})
+            };
+            const currentList = new Set(nextSubtasks[section.id] || []);
+            if (subtaskCheckbox.checked) {
+              currentList.add(subtask.id);
+            } else {
+              currentList.delete(subtask.id);
+            }
+            nextSubtasks[section.id] = [...currentList];
+            setQuestProgress(quest.id, character.id, { status: "started", completedSubtasks: nextSubtasks });
+            saveState();
+            render();
+          });
+          subtasks.appendChild(row);
+        });
         checkbox.addEventListener("change", () => {
           if (!character) return;
           const nextSections = new Set(getQuestProgress(quest.id, character.id)?.completedSections || []);
           if (checkbox.checked) {
+            const previousSection = quest.sections[sectionIndex - 1];
+            if (previousSection && !nextSections.has(previousSection.id)) {
+              checkbox.checked = false;
+              alert("Conclua as seções anteriores primeiro.");
+              return;
+            }
             nextSections.add(section.id);
             createLinkedQuestRoutines(quest, character.id, [section.id]);
           } else {
+            quest.sections.slice(sectionIndex).forEach((item) => nextSections.delete(item.id));
             nextSections.delete(section.id);
           }
-          setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections] });
+          const currentProgress = getQuestProgress(quest.id, character.id) || {};
+          const nextSubtasks = {
+            ...(currentProgress.completedSubtasks && typeof currentProgress.completedSubtasks === "object" ? currentProgress.completedSubtasks : {})
+          };
+          setQuestProgress(quest.id, character.id, { status: "started", completedSections: [...nextSections], completedSubtasks: nextSubtasks });
           saveState();
           render();
         });
@@ -4150,21 +5380,27 @@
       editor.classList.toggle("routine-enabled", Boolean(draft.routine.enabled));
       editor.dataset.sectionId = draft.id;
       editor.innerHTML = `
-        <div class="quest-section-title-row">
+        <div class="quest-section-topline">
           <label class="field">
             <span>Título da seção</span>
             <input class="quest-section-title" type="text" maxlength="70">
           </label>
           <button class="secondary-button copy-selection-button" type="button" aria-label="Transformar seleção em texto copiável" title="Transformar seleção em texto copiável">⧉</button>
+          <button class="secondary-button image-selection-button section-image-button" type="button" aria-label="Adicionar imagem à seção" title="Adicionar imagem à seção">🖼</button>
+          <label class="toggle-line">
+            <input class="quest-routine-enabled" type="checkbox">
+            <span>Criar rotina ao concluir seção</span>
+          </label>
+          <button class="secondary-button add-subtask-button" type="button">Criar caixa de seleção</button>
+          <button class="danger-button remove-section-button" type="button">Remover seção</button>
         </div>
+        <input class="quest-section-image-input" type="file" accept="image/*" hidden>
+        <div class="quest-image-editor section-image-preview"><img alt=""></div>
         <label class="field">
           <span>Texto do spoiler</span>
           <textarea class="quest-section-text" placeholder="Escreva uma etapa curta da quest."></textarea>
         </label>
-        <label class="toggle-line">
-          <input class="quest-routine-enabled" type="checkbox">
-          <span>Criar rotina ao concluir esta seção</span>
-        </label>
+        <div class="quest-subtasks"></div>
         <div class="quest-routine-fields">
           <label class="field">
             <span>Nome da rotina</span>
@@ -4192,6 +5428,34 @@
         </div>
       `;
       editor.querySelector(".quest-section-title").value = draft.title;
+      const subtasks = editor.querySelector(".quest-subtasks");
+
+      function appendSubtaskEditor(subtask = {}) {
+        const row = document.createElement("div");
+        row.className = "quest-subtask-row";
+        row.dataset.subtaskId = subtask.id || `subtask:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+        row.innerHTML = `
+          <input type="checkbox" disabled>
+          <input class="quest-subtask-text" type="text" maxlength="120" placeholder="Texto da subtarefa">
+          <button class="secondary-button image-selection-button subtask-image-button" type="button" aria-label="Adicionar imagem à subtarefa" title="Adicionar imagem à subtarefa">🖼</button>
+          <button class="danger-button" type="button" aria-label="Remover caixa de seleção" title="Remover caixa de seleção">Remover</button>
+          <input class="quest-subtask-image-input" type="file" accept="image/*" hidden>
+          <div class="quest-image-editor subtask-image-preview"><img alt=""></div>
+        `;
+        row.querySelector(".quest-subtask-text").value = subtask.text || "";
+        const imageHolder = row.querySelector(".subtask-image-preview");
+        imageHolder.dataset.image = subtask.image || "";
+        refreshQuestImageEditor(imageHolder);
+        setupQuestImagePicker(row.querySelector(".subtask-image-button"), row.querySelector(".quest-subtask-image-input"), imageHolder);
+        row.querySelector(".danger-button").addEventListener("click", () => row.remove());
+        subtasks.appendChild(row);
+      }
+
+      draft.subtasks.forEach(appendSubtaskEditor);
+      const sectionImageHolder = editor.querySelector(".section-image-preview");
+      sectionImageHolder.dataset.image = draft.image || "";
+      refreshQuestImageEditor(sectionImageHolder);
+      setupQuestImagePicker(editor.querySelector(".section-image-button"), editor.querySelector(".quest-section-image-input"), sectionImageHolder);
       const textInput = editor.querySelector(".quest-section-text");
       const existingTokenCoords = new Set(extractCoordinateTokens(draft.text));
       const legacyTokens = draft.coordinates
@@ -4234,6 +5498,18 @@
         const token = getCoordinateToken(selectedText);
         textInput.setRangeText(token, start, end, "end");
         textInput.focus();
+      });
+      editor.querySelector(".add-subtask-button").addEventListener("click", () => {
+        textInput.value = `${textInput.value}${textInput.value.endsWith("\n") || !textInput.value ? "" : "\n"}`;
+        appendSubtaskEditor();
+        subtasks.lastElementChild?.querySelector(".quest-subtask-text")?.focus();
+      });
+      editor.querySelector(".remove-section-button").addEventListener("click", () => {
+        if (questSectionEditors.children.length <= 1) {
+          alert("A quest precisa ter pelo menos uma seção.");
+          return;
+        }
+        editor.remove();
       });
 
       return editor;
@@ -4293,14 +5569,31 @@
       if (!source.trim()) container.appendChild(document.createTextNode("Sem texto salvo para esta rotina."));
     }
 
+    function setNoteTargetMode(isActive) {
+      noteTargetMode = Boolean(isActive);
+      document.body.classList.toggle("note-targeting", noteTargetMode);
+      addCharacterNoteButton.classList.toggle("active", noteTargetMode);
+      addCharacterNoteButton.setAttribute("aria-pressed", String(noteTargetMode));
+      addCharacterNoteButton.title = noteTargetMode ? "Clique em um personagem de uma rotina" : "Editar texto de personagem";
+    }
+
+    function handleRoutineNoteTarget(task, character, event) {
+      if (!noteTargetMode) return false;
+      event.preventDefault();
+      event.stopPropagation();
+      setNoteTargetMode(false);
+      openNoteModal(task.id, character.id, false);
+      return true;
+    }
+
     function createRoutineNoteButton(task, character) {
       const noteButton = document.createElement("button");
       noteButton.className = "character-note-button";
       noteButton.type = "button";
-      noteButton.title = "Editar texto da rotina";
-      noteButton.setAttribute("aria-label", "Editar texto da rotina");
-      noteButton.textContent = "✎";
-      noteButton.addEventListener("click", () => openNoteModal(task.id, character.id));
+      noteButton.title = "Ver texto da rotina";
+      noteButton.setAttribute("aria-label", "Ver texto da rotina");
+      noteButton.textContent = "📋";
+      noteButton.addEventListener("click", () => openNoteModal(task.id, character.id, true));
       return noteButton;
     }
 
@@ -4322,7 +5615,7 @@
       renderCopyableText(characterNotePreview, characterNoteText.value);
     }
 
-    function openNoteModal(taskId = selectedRoutineNoteTaskId, characterId = state.selectedId) {
+    function openNoteModal(taskId = selectedRoutineNoteTaskId, characterId = state.selectedId, viewOnly = false) {
       if (!state.characters.length) {
         alert("Crie um personagem antes de adicionar um texto.");
         return;
@@ -4332,8 +5625,10 @@
         alert("Clique em um personagem dentro de uma rotina antes de adicionar um texto.");
         return;
       }
+      noteViewOnly = Boolean(viewOnly);
       selectedRoutineNoteTaskId = task.id;
       state.selectedId = characterId;
+      noteModalTitle.textContent = noteViewOnly ? "Texto da rotina" : "Texto do personagem";
       noteTaskName.value = task.name;
       renderNoteCharacterOptions(task.id, characterId);
       if (!noteCharacterSelect.options.length) {
@@ -4341,14 +5636,25 @@
         return;
       }
       refreshCharacterNoteText();
+      noteModalBackdrop.querySelector(".note-modal").classList.toggle("view-only", noteViewOnly);
+      noteCharacterSelect.disabled = noteViewOnly;
+      characterNoteText.readOnly = noteViewOnly;
       noteModalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
-      characterNoteText.focus();
+      if (noteViewOnly) {
+        characterNotePreview.focus?.();
+      } else {
+        characterNoteText.focus();
+      }
     }
 
     function closeNoteModal() {
       noteModalBackdrop.classList.remove("open");
       document.body.style.overflow = "";
+      noteViewOnly = false;
+      noteCharacterSelect.disabled = false;
+      characterNoteText.readOnly = false;
+      noteModalBackdrop.querySelector(".note-modal").classList.remove("view-only");
       noteForm.reset();
     }
 
@@ -4371,6 +5677,13 @@
       const sections = [...questSectionEditors.querySelectorAll(".quest-section-editor")].map((editor, index) => {
         const text = editor.querySelector(".quest-section-text").value.trim();
         const coordinates = [...new Set(extractCoordinateTokens(text))];
+        const subtasks = [...editor.querySelectorAll(".quest-subtask-row")]
+          .map((row) => ({
+            id: row.dataset.subtaskId,
+            text: row.querySelector(".quest-subtask-text").value.trim(),
+            image: row.querySelector(".subtask-image-preview").dataset.image || ""
+          }))
+          .filter((subtask) => subtask.text);
         const routineKind = editor.querySelector(".quest-routine-kind").value;
         const routineDays = Number(editor.querySelector(".quest-routine-days").value) || 0;
         const routineHours = Number(editor.querySelector(".quest-routine-hours").value) || 0;
@@ -4378,7 +5691,9 @@
           id: editor.dataset.sectionId,
           title: editor.querySelector(".quest-section-title").value.trim() || `Seção ${index + 1}`,
           text,
+          image: editor.querySelector(".section-image-preview").dataset.image || "",
           coordinates,
+          subtasks,
           routine: {
             enabled: editor.querySelector(".quest-routine-enabled").checked,
             name: editor.querySelector(".quest-routine-name").value.trim(),
@@ -4398,6 +5713,132 @@
       });
     }
 
+    function doesCalendarEventOccurOn(event, date) {
+      const start = parseDateKey(event.date);
+      start.setHours(0, 0, 0, 0);
+      const target = new Date(date);
+      target.setHours(0, 0, 0, 0);
+      if (target < start) return false;
+      if (event.repeat === "weekly") {
+        return target.getDay() === start.getDay();
+      }
+      if (event.repeat === "monthly") {
+        return target.getDate() === start.getDate();
+      }
+      return getDateKey(target) === event.date;
+    }
+
+    function getCalendarEventsForDate(date) {
+      return normalizeCalendarEvents(state.calendarEvents)
+        .filter((event) => doesCalendarEventOccurOn(event, date))
+        .sort((left, right) => {
+          if (left.time !== right.time) return (left.time || "99:99").localeCompare(right.time || "99:99");
+          return left.title.localeCompare(right.title);
+        });
+    }
+
+    function getCalendarEventRepeatLabel(repeat) {
+      if (repeat === "weekly") return "Semanal";
+      if (repeat === "monthly") return "Mensal";
+      return "Evento único";
+    }
+
+    function renderUserCalendar() {
+      if (!userCalendar || !userCalendarTitle) return;
+      state.calendarView = normalizeCalendarView(state.calendarView);
+      const today = new Date();
+      const viewDate = new Date(state.calendarView.year, state.calendarView.month, 1);
+      const monthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+      const firstWeekday = monthStart.getDay();
+      const calendarStart = new Date(monthStart);
+      calendarStart.setDate(monthStart.getDate() - firstWeekday);
+
+      userCalendarTitle.textContent = viewDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      userCalendar.innerHTML = "";
+
+      ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach((weekday) => {
+        const label = document.createElement("div");
+        label.className = "user-calendar-weekday";
+        label.textContent = weekday;
+        userCalendar.appendChild(label);
+      });
+
+      for (let index = 0; index < 42; index += 1) {
+        const date = new Date(calendarStart);
+        date.setDate(calendarStart.getDate() + index);
+        const dateKey = getDateKey(date);
+        const day = document.createElement("section");
+        day.className = `user-calendar-day${date.getMonth() === viewDate.getMonth() ? "" : " outside"}${dateKey === getDateKey(today) ? " today" : ""}`;
+        day.innerHTML = `
+          <header>
+            <span class="user-calendar-day-number"></span>
+            <button class="user-calendar-add" type="button" aria-label="Adicionar evento neste dia" title="Adicionar evento neste dia">+</button>
+          </header>
+          <div class="user-calendar-events"></div>
+        `;
+        day.querySelector(".user-calendar-day-number").textContent = date.getDate();
+        day.querySelector(".user-calendar-add").addEventListener("click", () => openCalendarEventModal(null, dateKey));
+
+        const eventsContainer = day.querySelector(".user-calendar-events");
+        getCalendarEventsForDate(date).forEach((event) => {
+          const button = document.createElement("button");
+          button.className = "user-calendar-event";
+          button.type = "button";
+          button.title = `${event.title}${event.description ? ` - ${event.description}` : ""}`;
+          button.innerHTML = `<strong></strong><span></span>`;
+          button.querySelector("strong").textContent = event.title;
+          button.querySelector("span").textContent = `${event.time || "Sem horário"} · ${getCalendarEventRepeatLabel(event.repeat)}`;
+          button.addEventListener("click", () => openCalendarEventModal(event, dateKey));
+          eventsContainer.appendChild(button);
+        });
+
+        userCalendar.appendChild(day);
+      }
+    }
+
+    function openCalendarEventModal(event = null, dateKey = getDateKey(new Date())) {
+      editingCalendarEventId = event?.id || null;
+      const draft = normalizeCalendarEvent(event || { date: dateKey });
+      calendarEventModalTitle.textContent = editingCalendarEventId ? "Editar evento" : "Adicionar evento";
+      deleteCalendarEventButton.style.display = editingCalendarEventId ? "inline-flex" : "none";
+      calendarEventTitle.value = editingCalendarEventId ? draft.title : "";
+      calendarEventDate.value = draft.date;
+      calendarEventTime.value = draft.time;
+      calendarEventRepeat.value = draft.repeat;
+      calendarEventDescription.value = draft.description;
+      calendarEventModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      calendarEventTitle.focus();
+    }
+
+    function closeCalendarEventModal() {
+      calendarEventModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      editingCalendarEventId = null;
+      calendarEventForm.reset();
+    }
+
+    function getCalendarEventFromForm() {
+      const existing = state.calendarEvents.find((event) => event.id === editingCalendarEventId);
+      return normalizeCalendarEvent({
+        id: editingCalendarEventId || undefined,
+        title: calendarEventTitle.value,
+        date: calendarEventDate.value,
+        time: calendarEventTime.value,
+        repeat: calendarEventRepeat.value,
+        description: calendarEventDescription.value,
+        createdAt: existing?.createdAt || Date.now()
+      });
+    }
+
+    function shiftUserCalendarMonth(delta) {
+      state.calendarView = normalizeCalendarView(state.calendarView);
+      const next = new Date(state.calendarView.year, state.calendarView.month + delta, 1);
+      state.calendarView = { year: next.getFullYear(), month: next.getMonth() };
+      saveState();
+      renderUserCalendar();
+    }
+
     function render() {
       document.body.classList.toggle("routine-tab-active", document.querySelector('.tab-panel.active')?.dataset.panel === "routine");
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
@@ -4406,7 +5847,10 @@
       toggleSidebar.title = state.collapsed ? "Expandir menu" : "Recolher menu";
       renderList();
       renderCards();
+      renderTodaySummary();
+      renderTaskScheduleChoices();
       renderRoutineSections();
+      renderUserCalendar();
       renderQuests();
       renderStats();
     }
@@ -4419,6 +5863,8 @@
         panel.classList.toggle("active", panel.dataset.panel === tabName);
       });
       document.body.classList.toggle("routine-tab-active", tabName === "routine");
+      if (tabName !== "routine") setNoteTargetMode(false);
+      if (tabName === "routine") startTodaySummaryAutoHide();
     }
 
     function exportJson() {
@@ -4454,13 +5900,18 @@
             collapsed: Boolean(incoming.collapsed),
             sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
             selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
+            selectedCharacterIds: Array.isArray(incoming.selectedCharacterIds) ? incoming.selectedCharacterIds.map(String) : [],
             characters: normalizeCharacters(incoming.characters),
             routineTasks: mergeRoutineTasks(incoming.routineTasks),
             routineCompletions: incoming.routineCompletions && typeof incoming.routineCompletions === "object" ? incoming.routineCompletions : {},
             routineNotes: incoming.routineNotes && typeof incoming.routineNotes === "object" ? incoming.routineNotes : {},
+            routineTaskCollapsed: incoming.routineTaskCollapsed && typeof incoming.routineTaskCollapsed === "object" ? incoming.routineTaskCollapsed : {},
             routineSectionLayout: normalizeRoutineSectionLayout(incoming.routineSectionLayout),
+            calendarEvents: normalizeCalendarEvents(incoming.calendarEvents),
+            calendarView: normalizeCalendarView(incoming.calendarView),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
+            todaySummaryCollapsed: Boolean(incoming.todaySummaryCollapsed),
             quests: normalizeQuests(incoming.quests),
             questProgress: incoming.questProgress && typeof incoming.questProgress === "object" ? incoming.questProgress : {},
             selectedQuestId: incoming.selectedQuestId || null,
@@ -4523,6 +5974,35 @@
     });
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
     removeRoutineTaskButton.addEventListener("click", chooseRoutineTaskToRemove);
+    calendarSummaryToggle.addEventListener("click", () => {
+      window.clearTimeout(todaySummaryAutoHideTimer);
+      setTodaySummaryCollapsed(!state.todaySummaryCollapsed);
+    });
+    scheduleTaskButton.addEventListener("click", () => {
+      setTaskScheduleOpen(!taskScheduleFields.classList.contains("open"));
+    });
+    taskScheduleTask.addEventListener("change", refreshTaskScheduleFields);
+    taskScheduleCharacter.addEventListener("change", refreshTaskScheduleFields);
+    saveScheduledTaskButton.addEventListener("click", saveScheduledTask);
+    clearScheduledTaskButton.addEventListener("click", clearScheduledTask);
+    addCalendarEventButton.addEventListener("click", () => openCalendarEventModal());
+    previousUserCalendarMonth.addEventListener("click", () => shiftUserCalendarMonth(-1));
+    nextUserCalendarMonth.addEventListener("click", () => shiftUserCalendarMonth(1));
+    todayUserCalendarMonth.addEventListener("click", () => {
+      const today = new Date();
+      state.calendarView = { year: today.getFullYear(), month: today.getMonth() };
+      saveState();
+      renderUserCalendar();
+    });
+    closeCalendarEventModalButton.addEventListener("click", closeCalendarEventModal);
+    deleteCalendarEventButton.addEventListener("click", () => {
+      const event = state.calendarEvents.find((item) => item.id === editingCalendarEventId);
+      if (!event || !confirm(`Remover ${event.title}?`)) return;
+      state.calendarEvents = state.calendarEvents.filter((item) => item.id !== editingCalendarEventId);
+      saveState();
+      closeCalendarEventModal();
+      render();
+    });
     editTaskCharactersButton.addEventListener("click", () => {
       const selectedCharacters = [...taskCharacterGrid.querySelectorAll("input:checked")].map((input) => input.value);
       renderTaskCharacterChoices(selectedCharacters);
@@ -4566,7 +6046,7 @@
       closeQuestModal();
       render();
     });
-    addCharacterNoteButton.addEventListener("click", () => openNoteModal(selectedRoutineNoteTaskId, state.selectedId));
+    addCharacterNoteButton.addEventListener("click", () => setNoteTargetMode(!noteTargetMode));
     noteCharacterSelect.addEventListener("change", refreshCharacterNoteText);
     characterNoteText.addEventListener("input", () => {
       renderCopyableText(characterNotePreview, characterNoteText.value);
@@ -4602,6 +6082,7 @@
 
     noteForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (noteViewOnly) return;
       const characterId = noteCharacterSelect.value;
       saveCharacterNote(selectedRoutineNoteTaskId, characterId, characterNoteText.value);
       closeNoteModal();
@@ -4637,6 +6118,25 @@
       render();
     });
 
+    calendarEventForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const calendarEvent = getCalendarEventFromForm();
+      if (!calendarEvent.title) return;
+      if (editingCalendarEventId) {
+        state.calendarEvents = state.calendarEvents.map((item) => item.id === editingCalendarEventId ? calendarEvent : item);
+      } else {
+        state.calendarEvents.push(calendarEvent);
+      }
+      state.calendarEvents = normalizeCalendarEvents(state.calendarEvents);
+      state.calendarView = {
+        year: parseDateKey(calendarEvent.date).getFullYear(),
+        month: parseDateKey(calendarEvent.date).getMonth()
+      };
+      saveState();
+      closeCalendarEventModal();
+      render();
+    });
+
     questForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const quest = getQuestFromForm();
@@ -4656,6 +6156,8 @@
     loadState();
     state.routineTasks = mergeRoutineTasks(state.routineTasks);
     state.quests = normalizeQuests(state.quests);
+    state.calendarEvents = normalizeCalendarEvents(state.calendarEvents);
+    state.calendarView = normalizeCalendarView(state.calendarView);
     if (state.selectedQuestId && !state.quests.some((quest) => quest.id === state.selectedQuestId)) {
       state.selectedQuestId = null;
       state.selectedQuestCharacterId = null;
@@ -4663,6 +6165,11 @@
     if (!state.selectedId && state.characters.length) {
       state.selectedId = state.characters[0].id;
     }
+    state.selectedCharacterIds = getSelectedCharacterIds();
+    if (!state.selectedCharacterIds.length && state.selectedId) {
+      state.selectedCharacterIds = [state.selectedId];
+    }
+    lastSelectedCharacterId = state.selectedCharacterIds.at(-1) || state.selectedId;
     saveState();
     render();
     setInterval(render, 60000);
