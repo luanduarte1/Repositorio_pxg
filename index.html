@@ -2537,7 +2537,7 @@
 
     .todo-toolbar {
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(170px, .45fr) auto;
+      grid-template-columns: minmax(180px, 1fr) minmax(170px, .45fr) auto auto;
       align-items: end;
       gap: 10px;
       border: 1px solid var(--line);
@@ -2835,6 +2835,7 @@
               <span aria-hidden="true">+</span>
               <span>Adicionar</span>
             </button>
+            <button class="secondary-button" id="openTodoAlwaysOnTopButton" type="button">Sempre no topo</button>
           </form>
           <div class="todo-list" id="todoList" aria-label="Tarefas salvas"></div>
         </div>
@@ -2883,7 +2884,7 @@
           <strong id="settingsModalTitle">Configuração</strong>
           <span>Backup e restauração dos dados do aplicativo</span>
         </div>
-        <button class="icon-button" id="closeSettingsModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">Ã—</button>
+        <button class="icon-button" id="closeSettingsModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">&times;</button>
       </div>
       <div class="modal-form">
         <div class="settings-actions">
@@ -3319,6 +3320,7 @@
     const todoForm = document.querySelector("#todoForm");
     const todoText = document.querySelector("#todoText");
     const todoCharacter = document.querySelector("#todoCharacter");
+    const openTodoAlwaysOnTopButton = document.querySelector("#openTodoAlwaysOnTopButton");
     const todoList = document.querySelector("#todoList");
 
     const clanOptions = ["Volcanic", "Naturia", "Gardestrike", "Malefic", "Iron Hard", "Wingeon", "Raibolt", "Psycraft", "Orebound", "Seavell"];
@@ -3370,6 +3372,7 @@
       calendarEvents: [],
       calendarView: { year: new Date().getFullYear(), month: new Date().getMonth() },
       todoTasks: [],
+      todoAlwaysOnTopOpen: false,
       alwaysOnTopTaskId: "",
       tower7: {},
       showRoutineOnCharacters: false,
@@ -4173,6 +4176,7 @@
           calendarEvents: normalizeCalendarEvents(parsed.calendarEvents),
           calendarView: normalizeCalendarView(parsed.calendarView),
           todoTasks: normalizeTodoTasks(parsed.todoTasks),
+          todoAlwaysOnTopOpen: Boolean(parsed.todoAlwaysOnTopOpen),
           alwaysOnTopTaskId: String(parsed.alwaysOnTopTaskId || ""),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
@@ -4615,6 +4619,12 @@
       renderTodoCharacterOptions();
       todoList.innerHTML = "";
       state.todoTasks = normalizeTodoTasks(state.todoTasks);
+      if (!state.todoTasks.length && state.todoAlwaysOnTopOpen) {
+        state.todoAlwaysOnTopOpen = false;
+        saveState();
+      }
+      openTodoAlwaysOnTopButton.disabled = !state.todoTasks.length;
+      openTodoAlwaysOnTopButton.textContent = state.todoAlwaysOnTopOpen ? "Atualizar topo" : "Sempre no topo";
 
       if (!state.todoTasks.length) {
         const empty = document.createElement("div");
@@ -4636,11 +4646,11 @@
           row.className = `todo-row${task.done ? " done" : ""}`;
           row.dataset.todoId = task.id;
           row.innerHTML = `
-            <button class="icon-button todo-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">âœ¥</button>
+            <button class="icon-button todo-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">&#10021;</button>
             <input type="checkbox" aria-label="Marcar tarefa">
             <span class="todo-text"></span>
             <span class="todo-character"></span>
-            <button class="icon-button" type="button" aria-label="Remover tarefa" title="Remover tarefa">×</button>
+            <button class="icon-button todo-remove-button" type="button" aria-label="Remover tarefa" title="Remover tarefa">&times;</button>
           `;
           const checkbox = row.querySelector("input");
           checkbox.checked = task.done;
@@ -4648,15 +4658,17 @@
             state.todoTasks = state.todoTasks.map((item) => item.id === task.id ? { ...item, done: checkbox.checked } : item);
             saveState();
             renderTodoList();
+            renderAlwaysOnTopPanel();
           });
           row.querySelector(".todo-text").textContent = task.text;
           row.querySelector(".todo-text").title = task.text;
           row.querySelector(".todo-character").textContent = character ? character.name : "Personagem removido";
           row.querySelector(".todo-character").title = row.querySelector(".todo-character").textContent;
-          row.querySelector("button").addEventListener("click", () => {
+          row.querySelector(".todo-remove-button").addEventListener("click", () => {
             state.todoTasks = state.todoTasks.filter((item) => item.id !== task.id);
             saveState();
             renderTodoList();
+            renderAlwaysOnTopPanel();
           });
           decorateTodoRow(row);
           todoList.appendChild(row);
@@ -4792,7 +4804,64 @@
       return wrapper;
     }
 
+    function buildTodoAlwaysOnTopContent() {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "font-family: Arial, sans-serif; background:#11161c; color:#f5f7fb; min-height:100%; padding:14px;";
+      const title = document.createElement("h2");
+      title.textContent = "Lista de Tarefas";
+      title.style.cssText = "font-size:18px; margin:0 0 8px;";
+      const meta = document.createElement("p");
+      const pendingCount = state.todoTasks.filter((task) => !task.done).length;
+      meta.textContent = `${pendingCount}/${state.todoTasks.length} pendentes`;
+      meta.style.cssText = "color:#9fb0c2; font-size:12px; margin:0 0 12px;";
+      const listEl = document.createElement("div");
+      listEl.style.cssText = "display:grid; gap:8px;";
+      getOrderedTodoTasks().forEach((task) => {
+        const character = state.characters.find((item) => item.id === task.characterId);
+        const row = document.createElement("div");
+        row.style.cssText = "display:grid; gap:4px; border:1px solid #2b3542; border-radius:8px; padding:8px; font-size:13px;";
+        const text = document.createElement("strong");
+        text.textContent = `${task.done ? "[OK] " : ""}${task.text}`;
+        text.style.cssText = task.done ? "text-decoration:line-through; color:#9fb0c2;" : "color:#f5f7fb;";
+        const owner = document.createElement("span");
+        owner.textContent = character ? character.name : "Personagem removido";
+        owner.style.cssText = "color:#9fb0c2; font-size:12px;";
+        row.append(text, owner);
+        listEl.appendChild(row);
+      });
+      if (!listEl.children.length) {
+        const empty = document.createElement("div");
+        empty.textContent = "Nenhuma tarefa salva.";
+        empty.style.cssText = "color:#9fb0c2; font-size:13px;";
+        listEl.appendChild(empty);
+      }
+      wrapper.append(title, meta, listEl);
+      return wrapper;
+    }
+
     function renderAlwaysOnTopPanel() {
+      if (state.todoAlwaysOnTopOpen) {
+        alwaysOnTopPanel.classList.toggle("open", Boolean(state.todoTasks.length));
+        if (!state.todoTasks.length) return;
+        alwaysOnTopTitle.textContent = "Lista de Tarefas";
+        const pendingCount = state.todoTasks.filter((task) => !task.done).length;
+        alwaysOnTopMeta.textContent = `${pendingCount}/${state.todoTasks.length} pendentes`;
+        alwaysOnTopCharacters.innerHTML = "";
+        getOrderedTodoTasks().forEach((task) => {
+          const character = state.characters.find((item) => item.id === task.characterId);
+          const row = document.createElement("div");
+          row.className = "always-on-top-character";
+          row.innerHTML = "<strong></strong><span></span>";
+          row.querySelector("strong").textContent = task.text;
+          row.querySelector("span").textContent = character ? character.name : "Personagem removido";
+          if (task.done) {
+            row.classList.add("done");
+            row.querySelector("strong").style.textDecoration = "line-through";
+          }
+          alwaysOnTopCharacters.appendChild(row);
+        });
+        return;
+      }
       const task = state.routineTasks.find((item) => item.id === state.alwaysOnTopTaskId);
       alwaysOnTopPanel.classList.toggle("open", Boolean(task));
       if (!task) return;
@@ -4819,6 +4888,16 @@
     }
 
     async function openRoutinePictureInPicture() {
+      if (state.todoAlwaysOnTopOpen) {
+        if (!("documentPictureInPicture" in window)) {
+          alert("Seu navegador nÃ£o permite uma janela Picture-in-Picture para este app. Use o painel flutuante dentro da aba Lista de Tarefas.");
+          return;
+        }
+        const pipWindow = await window.documentPictureInPicture.requestWindow({ width: 360, height: 480 });
+        pipWindow.document.body.innerHTML = "";
+        pipWindow.document.body.appendChild(buildTodoAlwaysOnTopContent());
+        return;
+      }
       const task = state.routineTasks.find((item) => item.id === state.alwaysOnTopTaskId);
       if (!task) return;
       if (!("documentPictureInPicture" in window)) {
@@ -6479,6 +6558,7 @@
             calendarEvents: normalizeCalendarEvents(incoming.calendarEvents),
             calendarView: normalizeCalendarView(incoming.calendarView),
             todoTasks: normalizeTodoTasks(incoming.todoTasks),
+            todoAlwaysOnTopOpen: Boolean(incoming.todoAlwaysOnTopOpen),
             alwaysOnTopTaskId: String(incoming.alwaysOnTopTaskId || ""),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
@@ -6507,6 +6587,14 @@
     function closeSettingsModal() {
       settingsModalBackdrop.classList.remove("open");
       document.body.style.overflow = "";
+    }
+
+    function closeAlwaysOnTopPanel() {
+      state.alwaysOnTopTaskId = "";
+      state.todoAlwaysOnTopOpen = false;
+      saveState();
+      renderAlwaysOnTopPanel();
+      renderTodoList();
     }
 
     addCharacterButton.addEventListener("click", () => openModal());
@@ -6569,6 +6657,7 @@
       event.preventDefault();
       persistTodoOrder();
       renderTodoList();
+      renderAlwaysOnTopPanel();
     });
     tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
@@ -6584,19 +6673,26 @@
     });
     alwaysOnTopTaskSelect.addEventListener("change", () => {
       state.alwaysOnTopTaskId = alwaysOnTopTaskSelect.value;
+      state.todoAlwaysOnTopOpen = false;
       saveState();
       renderAlwaysOnTopPanel();
+      renderTodoList();
     });
     openAlwaysOnTopButton.addEventListener("click", () => {
       state.alwaysOnTopTaskId = alwaysOnTopTaskSelect.value;
+      state.todoAlwaysOnTopOpen = false;
       saveState();
       renderAlwaysOnTopPanel();
+      renderTodoList();
     });
-    closeAlwaysOnTopButton.addEventListener("click", () => {
+    openTodoAlwaysOnTopButton.addEventListener("click", () => {
+      state.todoAlwaysOnTopOpen = true;
       state.alwaysOnTopTaskId = "";
       saveState();
       renderAlwaysOnTopPanel();
+      renderTodoList();
     });
+    closeAlwaysOnTopButton.addEventListener("click", closeAlwaysOnTopPanel);
     openPictureInPictureButton.addEventListener("click", () => {
       openRoutinePictureInPicture().catch(() => {
         alert("Não foi possível abrir o Picture-in-Picture neste navegador.");
@@ -6654,6 +6750,7 @@
       saveState();
       todoForm.reset();
       renderTodoList();
+      renderAlwaysOnTopPanel();
       todoText.focus();
     });
 
