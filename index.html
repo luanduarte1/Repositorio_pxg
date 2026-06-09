@@ -325,6 +325,7 @@
     }
 
     .app.sidebar-collapsed .brand-copy,
+    .app.sidebar-collapsed .sidebar-bulk-actions,
     .app.sidebar-collapsed .character-list,
     .app.sidebar-collapsed .nav-text,
     .app.sidebar-collapsed .sidebar-actions,
@@ -337,6 +338,7 @@
       display: none;
     }
 
+    .app.sidebar-collapsed .sidebar-bulk-actions,
     .app.sidebar-collapsed .character-list,
     .app.sidebar-collapsed .sidebar-actions,
     .app.sidebar-collapsed .resize-handle {
@@ -372,6 +374,10 @@
       display: grid;
       gap: 10px;
       margin-top: auto;
+      transition: opacity .18s ease;
+    }
+
+    .sidebar-bulk-actions {
       transition: opacity .18s ease;
     }
 
@@ -2519,6 +2525,11 @@
       background: rgba(238, 111, 117, .2);
     }
 
+    .settings-actions {
+      display: grid;
+      gap: 10px;
+    }
+
     .todo-page {
       display: grid;
       gap: 12px;
@@ -2542,7 +2553,7 @@
 
     .todo-row {
       display: grid;
-      grid-template-columns: 24px minmax(0, 1fr) minmax(140px, .38fr) 36px;
+      grid-template-columns: 32px 24px minmax(0, 1fr) minmax(140px, .38fr) 36px;
       align-items: center;
       gap: 10px;
       min-height: 44px;
@@ -2550,6 +2561,21 @@
       border-radius: 8px;
       background: rgba(17, 22, 28, .58);
       padding: 6px 8px;
+    }
+
+    .todo-row.dragging {
+      opacity: .45;
+    }
+
+    .todo-drag-handle {
+      width: 32px;
+      min-width: 32px;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .todo-drag-handle:active {
+      cursor: grabbing;
     }
 
     .todo-row.done {
@@ -2712,6 +2738,10 @@
         </button>
       </div>
 
+      <div class="sidebar-bulk-actions">
+        <button class="secondary-button" id="selectAllCharactersButton" type="button">Selecionar todos</button>
+      </div>
+
       <nav class="character-list" id="characterList" aria-label="Lista de personagens"></nav>
 
       <div class="sidebar-actions">
@@ -2725,11 +2755,10 @@
             <span>Editar</span>
           </button>
         </div>
-        <div class="json-actions">
-          <button class="secondary-button" id="exportJsonButton" type="button">Exportar JSON</button>
-          <button class="secondary-button" id="importJsonButton" type="button">Importar JSON</button>
-        </div>
-        <input id="importJsonInput" type="file" accept="application/json,.json" hidden>
+        <button class="secondary-button" id="openSettingsButton" type="button">
+          <span aria-hidden="true">&#9881;</span>
+          <span>Configuração</span>
+        </button>
       </div>
     </aside>
 
@@ -2845,6 +2874,25 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="character-modal settings-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="settingsModalTitle">Configuração</strong>
+          <span>Backup e restauração dos dados do aplicativo</span>
+        </div>
+        <button class="icon-button" id="closeSettingsModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">Ã—</button>
+      </div>
+      <div class="modal-form">
+        <div class="settings-actions">
+          <button class="secondary-button" id="exportJsonButton" type="button">Exportar JSON</button>
+          <button class="secondary-button" id="importJsonButton" type="button">Importar JSON</button>
+        </div>
+        <input id="importJsonInput" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
   </div>
 
   <div class="modal-backdrop" id="calendarEventModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="calendarEventModalTitle">
@@ -3177,6 +3225,10 @@
     const routineSections = document.querySelector("#routineSections");
     const addRoutineTaskButton = document.querySelector("#addRoutineTaskButton");
     const removeRoutineTaskButton = document.querySelector("#removeRoutineTaskButton");
+    const selectAllCharactersButton = document.querySelector("#selectAllCharactersButton");
+    const openSettingsButton = document.querySelector("#openSettingsButton");
+    const settingsModalBackdrop = document.querySelector("#settingsModalBackdrop");
+    const closeSettingsModalButton = document.querySelector("#closeSettingsModalButton");
     const addQuestButton = document.querySelector("#addQuestButton");
     const questLayout = document.querySelector("#questLayout");
     const questList = document.querySelector("#questList");
@@ -3396,12 +3448,13 @@
     function normalizeTodoTasks(tasks = []) {
       return Array.isArray(tasks)
         ? tasks
-            .map((task) => ({
+            .map((task, index) => ({
               id: task.id || `todo:${Date.now()}:${Math.random().toString(16).slice(2)}`,
               text: String(task.text || task.title || "").trim(),
               characterId: String(task.characterId || ""),
               done: Boolean(task.done),
-              createdAt: task.createdAt || Date.now()
+              createdAt: task.createdAt || Date.now(),
+              order: Number.isFinite(Number(task.order)) ? Number(task.order) : index
             }))
             .filter((task) => task.text)
         : [];
@@ -4314,13 +4367,27 @@
       document.querySelector(`[data-card-id="${id}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    function toggleAllCharactersSelection() {
+      const orderedIds = getOrderedCharacters().map((character) => character.id);
+      const selectedIds = getSelectedCharacterIds();
+      const shouldClear = orderedIds.length > 0 && orderedIds.every((id) => selectedIds.includes(id));
+      state.selectedCharacterIds = shouldClear ? [] : orderedIds;
+      state.selectedId = shouldClear ? null : state.selectedCharacterIds[0] || null;
+      lastSelectedCharacterId = state.selectedCharacterIds.at(-1) || state.selectedId;
+      saveState();
+      render();
+    }
+
     function renderList() {
       list.innerHTML = "";
 
       const orderedCharacters = getOrderedCharacters();
+      const selectedIds = getSelectedCharacterIds();
+      const allSelected = orderedCharacters.length > 0 && orderedCharacters.every((character) => selectedIds.includes(character.id));
+      selectAllCharactersButton.textContent = allSelected ? "Limpar seleção" : "Selecionar todos";
+      selectAllCharactersButton.disabled = !orderedCharacters.length;
 
       orderedCharacters.forEach((character) => {
-        const selectedIds = getSelectedCharacterIds();
         const item = document.createElement("div");
         item.className = `nav-card${selectedIds.includes(character.id) ? " active" : ""}`;
         item.title = character.name;
@@ -4516,6 +4583,34 @@
       todoForm.querySelector("button").disabled = !state.characters.length;
     }
 
+    function getOrderedTodoTasks() {
+      return normalizeTodoTasks(state.todoTasks)
+        .slice()
+        .sort((left, right) => left.order - right.order || right.createdAt - left.createdAt);
+    }
+
+    function persistTodoOrder() {
+      const orderById = new Map([...todoList.querySelectorAll(".todo-row")].map((row, index) => [row.dataset.todoId, index]));
+      state.todoTasks = state.todoTasks.map((task) => ({
+        ...task,
+        order: orderById.has(task.id) ? orderById.get(task.id) : task.order
+      }));
+      saveState();
+    }
+
+    function decorateTodoRow(row) {
+      const handle = row.querySelector(".todo-drag-handle");
+      if (!handle) return;
+      handle.draggable = true;
+      handle.addEventListener("dragstart", (event) => {
+        event.dataTransfer?.setData("text/plain", row.dataset.todoId || "");
+        row.classList.add("dragging");
+      });
+      handle.addEventListener("dragend", () => {
+        row.classList.remove("dragging");
+      });
+    }
+
     function renderTodoList() {
       renderTodoCharacterOptions();
       todoList.innerHTML = "";
@@ -4534,14 +4629,14 @@
         return;
       }
 
-      state.todoTasks
-        .slice()
-        .sort((left, right) => Number(left.done) - Number(right.done) || right.createdAt - left.createdAt)
+      getOrderedTodoTasks()
         .forEach((task) => {
           const character = state.characters.find((item) => item.id === task.characterId);
           const row = document.createElement("div");
           row.className = `todo-row${task.done ? " done" : ""}`;
+          row.dataset.todoId = task.id;
           row.innerHTML = `
+            <button class="icon-button todo-drag-handle" type="button" aria-label="Mover tarefa" title="Mover tarefa">âœ¥</button>
             <input type="checkbox" aria-label="Marcar tarefa">
             <span class="todo-text"></span>
             <span class="todo-character"></span>
@@ -4563,6 +4658,7 @@
             saveState();
             renderTodoList();
           });
+          decorateTodoRow(row);
           todoList.appendChild(row);
         });
     }
@@ -6403,7 +6499,20 @@
       reader.readAsText(file);
     }
 
+    function openSettingsModal() {
+      settingsModalBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSettingsModal() {
+      settingsModalBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
     addCharacterButton.addEventListener("click", () => openModal());
+    selectAllCharactersButton.addEventListener("click", toggleAllCharactersSelection);
+    openSettingsButton.addEventListener("click", openSettingsModal);
+    closeSettingsModalButton.addEventListener("click", closeSettingsModal);
 
     editSelectedButton.addEventListener("click", () => {
       const character = state.characters.find((item) => item.id === state.selectedId);
@@ -6444,6 +6553,23 @@
     exportJsonButton.addEventListener("click", exportJson);
     importJsonButton.addEventListener("click", () => importJsonInput.click());
     importJsonInput.addEventListener("change", () => importJson(importJsonInput.files[0]));
+    todoList.addEventListener("dragover", (event) => {
+      const dragging = todoList.querySelector(".todo-row.dragging");
+      if (!dragging) return;
+      event.preventDefault();
+      const target = getDragDropTarget(todoList, ".todo-row", event.clientY);
+      if (target) {
+        todoList.insertBefore(dragging, target);
+      } else {
+        todoList.appendChild(dragging);
+      }
+    });
+    todoList.addEventListener("drop", (event) => {
+      if (!todoList.querySelector(".todo-row.dragging")) return;
+      event.preventDefault();
+      persistTodoOrder();
+      renderTodoList();
+    });
     tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
@@ -6517,11 +6643,13 @@
       const text = todoText.value.trim();
       const characterId = todoCharacter.value;
       if (!text || !characterId) return;
+      const firstOrder = Math.min(0, ...state.todoTasks.map((task) => Number(task.order) || 0));
       state.todoTasks.unshift(normalizeTodoTasks([{
         text,
         characterId,
         done: false,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        order: firstOrder - 1
       }])[0]);
       saveState();
       todoForm.reset();
