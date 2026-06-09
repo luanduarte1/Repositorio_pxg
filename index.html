@@ -2519,6 +2519,67 @@
       background: rgba(238, 111, 117, .2);
     }
 
+    .todo-page {
+      display: grid;
+      gap: 12px;
+    }
+
+    .todo-toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(170px, .45fr) auto;
+      align-items: end;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 28, 34, .92);
+      padding: 12px;
+    }
+
+    .todo-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .todo-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr) minmax(140px, .38fr) 36px;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .58);
+      padding: 6px 8px;
+    }
+
+    .todo-row.done {
+      opacity: .62;
+    }
+
+    .todo-row.done .todo-text {
+      text-decoration: line-through;
+    }
+
+    .todo-text,
+    .todo-character {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .todo-text {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .todo-character {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
     @media (max-width: 860px) {
       .app,
       .app.sidebar-collapsed {
@@ -2584,6 +2645,15 @@
 
       .calendar-scheduler {
         grid-template-columns: 1fr;
+      }
+
+      .todo-toolbar,
+      .todo-row {
+        grid-template-columns: 1fr;
+      }
+
+      .todo-character {
+        text-align: left;
       }
 
       .characters-layout {
@@ -2667,6 +2737,7 @@
       <nav class="tabs" aria-label="Seções do painel">
         <button class="tab-button active" type="button" data-tab="characters">Personagens</button>
         <button class="tab-button" type="button" data-tab="routine">Rotina</button>
+        <button class="tab-button" type="button" data-tab="todo">Lista de Tarefas</button>
         <button class="tab-button" type="button" data-tab="calendar">Calendário</button>
         <button class="tab-button" type="button" data-tab="quests">Quests</button>
       </nav>
@@ -2718,6 +2789,26 @@
           </button>
         </div>
         <div class="routine-sections" id="routineSections"></div>
+      </section>
+
+      <section class="tab-panel" data-panel="todo" aria-label="Lista de Tarefas">
+        <div class="todo-page">
+          <form class="todo-toolbar" id="todoForm">
+            <label class="field">
+              <span>Tarefa</span>
+              <input id="todoText" type="text" maxlength="90" placeholder="Escreva uma tarefa curta" required>
+            </label>
+            <label class="field">
+              <span>Personagem</span>
+              <select id="todoCharacter" required></select>
+            </label>
+            <button class="primary-button" type="submit">
+              <span aria-hidden="true">+</span>
+              <span>Adicionar</span>
+            </button>
+          </form>
+          <div class="todo-list" id="todoList" aria-label="Tarefas salvas"></div>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="calendar" aria-label="Calendário">
@@ -3173,6 +3264,10 @@
     const alwaysOnTopCharacters = document.querySelector("#alwaysOnTopCharacters");
     const closeAlwaysOnTopButton = document.querySelector("#closeAlwaysOnTopButton");
     const openPictureInPictureButton = document.querySelector("#openPictureInPictureButton");
+    const todoForm = document.querySelector("#todoForm");
+    const todoText = document.querySelector("#todoText");
+    const todoCharacter = document.querySelector("#todoCharacter");
+    const todoList = document.querySelector("#todoList");
 
     const clanOptions = ["Volcanic", "Naturia", "Gardestrike", "Malefic", "Iron Hard", "Wingeon", "Raibolt", "Psycraft", "Orebound", "Seavell"];
     const clanIcons = {
@@ -3222,6 +3317,7 @@
       routineSectionLayout: {},
       calendarEvents: [],
       calendarView: { year: new Date().getFullYear(), month: new Date().getMonth() },
+      todoTasks: [],
       alwaysOnTopTaskId: "",
       tower7: {},
       showRoutineOnCharacters: false,
@@ -3294,6 +3390,20 @@
               description: String(item.description || item.value || "").trim()
             }))
             .filter((item) => item.name || item.description)
+        : [];
+    }
+
+    function normalizeTodoTasks(tasks = []) {
+      return Array.isArray(tasks)
+        ? tasks
+            .map((task) => ({
+              id: task.id || `todo:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+              text: String(task.text || task.title || "").trim(),
+              characterId: String(task.characterId || ""),
+              done: Boolean(task.done),
+              createdAt: task.createdAt || Date.now()
+            }))
+            .filter((task) => task.text)
         : [];
     }
 
@@ -4009,6 +4119,7 @@
           routineSectionLayout: normalizeRoutineSectionLayout(parsed.routineSectionLayout),
           calendarEvents: normalizeCalendarEvents(parsed.calendarEvents),
           calendarView: normalizeCalendarView(parsed.calendarView),
+          todoTasks: normalizeTodoTasks(parsed.todoTasks),
           alwaysOnTopTaskId: String(parsed.alwaysOnTopTaskId || ""),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
@@ -4387,6 +4498,73 @@
 
     function renderStats() {
       editSelectedButton.disabled = !state.selectedId;
+    }
+
+    function renderTodoCharacterOptions() {
+      const selectedId = todoCharacter.value || state.selectedId;
+      todoCharacter.innerHTML = "";
+      getOrderedCharacters().forEach((character) => {
+        todoCharacter.add(new Option(character.name, character.id, false, character.id === selectedId));
+      });
+      if (!state.characters.length) {
+        todoCharacter.add(new Option("Crie um personagem primeiro", ""));
+      }
+      todoCharacter.value = state.characters.some((character) => character.id === selectedId)
+        ? selectedId
+        : state.characters[0]?.id || "";
+      todoCharacter.disabled = !state.characters.length;
+      todoForm.querySelector("button").disabled = !state.characters.length;
+    }
+
+    function renderTodoList() {
+      renderTodoCharacterOptions();
+      todoList.innerHTML = "";
+      state.todoTasks = normalizeTodoTasks(state.todoTasks);
+
+      if (!state.todoTasks.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.innerHTML = `
+          <div>
+            <strong>Nenhuma tarefa salva</strong>
+            <span>Crie uma tarefa curta e escolha o personagem destinado.</span>
+          </div>
+        `;
+        todoList.appendChild(empty);
+        return;
+      }
+
+      state.todoTasks
+        .slice()
+        .sort((left, right) => Number(left.done) - Number(right.done) || right.createdAt - left.createdAt)
+        .forEach((task) => {
+          const character = state.characters.find((item) => item.id === task.characterId);
+          const row = document.createElement("div");
+          row.className = `todo-row${task.done ? " done" : ""}`;
+          row.innerHTML = `
+            <input type="checkbox" aria-label="Marcar tarefa">
+            <span class="todo-text"></span>
+            <span class="todo-character"></span>
+            <button class="icon-button" type="button" aria-label="Remover tarefa" title="Remover tarefa">×</button>
+          `;
+          const checkbox = row.querySelector("input");
+          checkbox.checked = task.done;
+          checkbox.addEventListener("change", () => {
+            state.todoTasks = state.todoTasks.map((item) => item.id === task.id ? { ...item, done: checkbox.checked } : item);
+            saveState();
+            renderTodoList();
+          });
+          row.querySelector(".todo-text").textContent = task.text;
+          row.querySelector(".todo-text").title = task.text;
+          row.querySelector(".todo-character").textContent = character ? character.name : "Personagem removido";
+          row.querySelector(".todo-character").title = row.querySelector(".todo-character").textContent;
+          row.querySelector("button").addEventListener("click", () => {
+            state.todoTasks = state.todoTasks.filter((item) => item.id !== task.id);
+            saveState();
+            renderTodoList();
+          });
+          todoList.appendChild(row);
+        });
     }
 
     function setTodaySummaryCollapsed(collapsed, shouldSave = true) {
@@ -6143,6 +6321,7 @@
       renderTaskScheduleChoices();
       renderAlwaysOnTopChoices();
       renderRoutineSections();
+      renderTodoList();
       renderUserCalendar();
       renderQuests();
       renderAlwaysOnTopPanel();
@@ -6203,6 +6382,7 @@
             routineSectionLayout: normalizeRoutineSectionLayout(incoming.routineSectionLayout),
             calendarEvents: normalizeCalendarEvents(incoming.calendarEvents),
             calendarView: normalizeCalendarView(incoming.calendarView),
+            todoTasks: normalizeTodoTasks(incoming.todoTasks),
             alwaysOnTopTaskId: String(incoming.alwaysOnTopTaskId || ""),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
@@ -6331,6 +6511,22 @@
     addCustomItemButton.addEventListener("click", () => {
       customItemsEditor.appendChild(createCustomItemEditorRow());
       customItemsEditor.querySelector(".custom-item-row:last-child .custom-item-name")?.focus();
+    });
+    todoForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = todoText.value.trim();
+      const characterId = todoCharacter.value;
+      if (!text || !characterId) return;
+      state.todoTasks.unshift(normalizeTodoTasks([{
+        text,
+        characterId,
+        done: false,
+        createdAt: Date.now()
+      }])[0]);
+      saveState();
+      todoForm.reset();
+      renderTodoList();
+      todoText.focus();
     });
 
     profession.addEventListener("change", () => refreshSpecializations());
@@ -6477,6 +6673,7 @@
     state.quests = normalizeQuests(state.quests);
     state.calendarEvents = normalizeCalendarEvents(state.calendarEvents);
     state.calendarView = normalizeCalendarView(state.calendarView);
+    state.todoTasks = normalizeTodoTasks(state.todoTasks);
     if (state.selectedQuestId && !state.quests.some((quest) => quest.id === state.selectedQuestId)) {
       state.selectedQuestId = null;
       state.selectedQuestCharacterId = null;
