@@ -1026,13 +1026,18 @@
     .always-on-top-character {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 8px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(10, 14, 18, .44);
       padding: 7px 9px;
       font-size: 12px;
+    }
+
+    .always-on-top-character strong {
+      min-width: 0;
+      flex: 1;
     }
 
     .clan-preview {
@@ -4615,6 +4620,13 @@
       });
     }
 
+    function setTodoTaskDone(taskId, done) {
+      state.todoTasks = state.todoTasks.map((item) => item.id === taskId ? { ...item, done } : item);
+      saveState();
+      renderTodoList();
+      renderAlwaysOnTopPanel();
+    }
+
     function renderTodoList() {
       renderTodoCharacterOptions();
       todoList.innerHTML = "";
@@ -4655,10 +4667,7 @@
           const checkbox = row.querySelector("input");
           checkbox.checked = task.done;
           checkbox.addEventListener("change", () => {
-            state.todoTasks = state.todoTasks.map((item) => item.id === task.id ? { ...item, done: checkbox.checked } : item);
-            saveState();
-            renderTodoList();
-            renderAlwaysOnTopPanel();
+            setTodoTaskDone(task.id, checkbox.checked);
           });
           row.querySelector(".todo-text").textContent = task.text;
           row.querySelector(".todo-text").title = task.text;
@@ -4818,15 +4827,19 @@
       listEl.style.cssText = "display:grid; gap:8px;";
       getOrderedTodoTasks().forEach((task) => {
         const character = state.characters.find((item) => item.id === task.characterId);
-        const row = document.createElement("div");
-        row.style.cssText = "display:grid; gap:4px; border:1px solid #2b3542; border-radius:8px; padding:8px; font-size:13px;";
+        const row = document.createElement("label");
+        row.style.cssText = "display:grid; grid-template-columns:20px minmax(0,1fr); gap:4px 8px; align-items:center; border:1px solid #2b3542; border-radius:8px; padding:8px; font-size:13px;";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.done;
+        checkbox.addEventListener("change", () => setTodoTaskDone(task.id, checkbox.checked));
         const text = document.createElement("strong");
         text.textContent = `${task.done ? "[OK] " : ""}${task.text}`;
         text.style.cssText = task.done ? "text-decoration:line-through; color:#9fb0c2;" : "color:#f5f7fb;";
         const owner = document.createElement("span");
         owner.textContent = character ? character.name : "Personagem removido";
-        owner.style.cssText = "color:#9fb0c2; font-size:12px;";
-        row.append(text, owner);
+        owner.style.cssText = "grid-column:2; color:#9fb0c2; font-size:12px;";
+        row.append(checkbox, text, owner);
         listEl.appendChild(row);
       });
       if (!listEl.children.length) {
@@ -4849,16 +4862,19 @@
         alwaysOnTopCharacters.innerHTML = "";
         getOrderedTodoTasks().forEach((task) => {
           const character = state.characters.find((item) => item.id === task.characterId);
-          const row = document.createElement("div");
-          row.className = "always-on-top-character";
-          row.innerHTML = "<strong></strong><span></span>";
-          row.querySelector("strong").textContent = task.text;
-          row.querySelector("span").textContent = character ? character.name : "Personagem removido";
+          const label = document.createElement("label");
+          label.className = "always-on-top-character";
+          label.innerHTML = '<input type="checkbox"><strong></strong><span></span>';
+          const checkbox = label.querySelector("input");
+          checkbox.checked = task.done;
+          checkbox.addEventListener("change", () => setTodoTaskDone(task.id, checkbox.checked));
+          label.querySelector("strong").textContent = task.text;
+          label.querySelector("span").textContent = character ? character.name : "Personagem removido";
           if (task.done) {
-            row.classList.add("done");
-            row.querySelector("strong").style.textDecoration = "line-through";
+            label.classList.add("done");
+            label.querySelector("strong").style.textDecoration = "line-through";
           }
-          alwaysOnTopCharacters.appendChild(row);
+          alwaysOnTopCharacters.appendChild(label);
         });
         return;
       }
