@@ -886,6 +886,14 @@
       padding: 16px 18px 18px;
     }
 
+    .card-section-divider {
+      width: 100%;
+      height: 1px;
+      border: 0;
+      background: rgba(255, 255, 255, .12);
+      margin: 3px 0;
+    }
+
     .fact {
       display: grid;
       grid-template-columns: minmax(78px, 96px) minmax(0, 1fr);
@@ -925,6 +933,100 @@
 
     .fact strong .clan-inline {
       justify-content: flex-end;
+    }
+
+    .custom-items-editor {
+      display: grid;
+      gap: 8px;
+    }
+
+    .custom-item-row {
+      display: grid;
+      grid-template-columns: minmax(120px, .42fr) minmax(0, 1fr) 42px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .custom-item-row .field {
+      gap: 5px;
+    }
+
+    .always-on-top-panel {
+      position: fixed;
+      right: 24px;
+      bottom: 90px;
+      z-index: 7;
+      width: min(360px, calc(100vw - 32px));
+      display: none;
+      border: 1px solid rgba(232, 193, 92, .42);
+      border-radius: 8px;
+      background: rgba(17, 22, 28, .96);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .always-on-top-panel.open {
+      display: grid;
+    }
+
+    .always-on-top-panel header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(232, 193, 92, .1);
+      padding: 10px 12px;
+    }
+
+    .always-on-top-panel strong {
+      min-width: 0;
+      overflow: hidden;
+      color: #f4dfad;
+      font-size: 14px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .always-on-top-panel .mini-button {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .58);
+      color: var(--text);
+    }
+
+    .always-on-top-body {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .always-on-top-body span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .always-on-top-characters {
+      display: grid;
+      gap: 6px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .always-on-top-character {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 18, .44);
+      padding: 7px 9px;
+      font-size: 12px;
     }
 
     .clan-preview {
@@ -2609,6 +2711,8 @@
             <span>Adicionar Tarefa</span>
           </button>
           <button class="secondary-button" id="scheduleTaskButton" type="button" aria-expanded="false">Programar tarefa</button>
+          <select id="alwaysOnTopTaskSelect" aria-label="Tarefa destacada"></select>
+          <button class="secondary-button" id="openAlwaysOnTopButton" type="button">Sempre no topo</button>
           <button class="danger-button" id="removeRoutineTaskButton" type="button">
             <span>Remover Tarefa</span>
           </button>
@@ -2743,6 +2847,14 @@
             <input id="professionLevel" type="number" min="1" max="120" step="1">
           </label>
         </div>
+
+        <hr class="card-section-divider">
+
+        <label class="field">
+          <span>Itens específicos</span>
+          <div class="custom-items-editor" id="customItemsEditor"></div>
+        </label>
+        <button class="secondary-button" id="addCustomItemButton" type="button">Adicionar item</button>
 
         <div class="modal-actions">
           <button class="danger-button" id="deleteFromModalButton" type="button">Remover</button>
@@ -2886,6 +2998,20 @@
       </form>
     </div>
   </div>
+
+  <aside class="always-on-top-panel" id="alwaysOnTopPanel" aria-label="Tarefa destacada">
+    <header>
+      <strong id="alwaysOnTopTitle">Tarefa</strong>
+      <div>
+        <button class="mini-button" id="openPictureInPictureButton" type="button" title="Abrir em Picture-in-Picture">⇱</button>
+        <button class="mini-button" id="closeAlwaysOnTopButton" type="button" title="Fechar">×</button>
+      </div>
+    </header>
+    <div class="always-on-top-body">
+      <span id="alwaysOnTopMeta"></span>
+      <div class="always-on-top-characters" id="alwaysOnTopCharacters"></div>
+    </div>
+  </aside>
 
   <button class="floating-note-button" id="addCharacterNoteButton" type="button" aria-label="Editar texto de personagem" title="Editar texto de personagem" aria-pressed="false">
     <span aria-hidden="true">✎</span>
@@ -3037,6 +3163,16 @@
     const profession = document.querySelector("#profession");
     const specialization = document.querySelector("#specialization");
     const professionLevel = document.querySelector("#professionLevel");
+    const customItemsEditor = document.querySelector("#customItemsEditor");
+    const addCustomItemButton = document.querySelector("#addCustomItemButton");
+    const alwaysOnTopTaskSelect = document.querySelector("#alwaysOnTopTaskSelect");
+    const openAlwaysOnTopButton = document.querySelector("#openAlwaysOnTopButton");
+    const alwaysOnTopPanel = document.querySelector("#alwaysOnTopPanel");
+    const alwaysOnTopTitle = document.querySelector("#alwaysOnTopTitle");
+    const alwaysOnTopMeta = document.querySelector("#alwaysOnTopMeta");
+    const alwaysOnTopCharacters = document.querySelector("#alwaysOnTopCharacters");
+    const closeAlwaysOnTopButton = document.querySelector("#closeAlwaysOnTopButton");
+    const openPictureInPictureButton = document.querySelector("#openPictureInPictureButton");
 
     const clanOptions = ["Volcanic", "Naturia", "Gardestrike", "Malefic", "Iron Hard", "Wingeon", "Raibolt", "Psycraft", "Orebound", "Seavell"];
     const clanIcons = {
@@ -3086,6 +3222,7 @@
       routineSectionLayout: {},
       calendarEvents: [],
       calendarView: { year: new Date().getFullYear(), month: new Date().getMonth() },
+      alwaysOnTopTaskId: "",
       tower7: {},
       showRoutineOnCharacters: false,
       todaySummaryCollapsed: false,
@@ -3146,6 +3283,18 @@
       const year = Number.isFinite(Number(view.year)) ? Number(view.year) : today.getFullYear();
       const month = Number.isFinite(Number(view.month)) ? clampNumber(Number(view.month), 0, 11) : today.getMonth();
       return { year, month };
+    }
+
+    function normalizeCharacterItems(items = []) {
+      return Array.isArray(items)
+        ? items
+            .map((item) => ({
+              id: item.id || `item:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+              name: String(item.name || item.label || "").trim(),
+              description: String(item.description || item.value || "").trim()
+            }))
+            .filter((item) => item.name || item.description)
+        : [];
     }
 
     function normalizeScheduledAt(value) {
@@ -3835,6 +3984,7 @@
         specialization: spec,
         professionLevel: clampNumber(character.professionLevel, 1, 120),
         note: String(character.note || ""),
+        customItems: normalizeCharacterItems(character.customItems),
         order: Number.isFinite(Number(character.order)) ? Number(character.order) : null,
         createdAt: character.createdAt || Date.now()
       };
@@ -3859,6 +4009,7 @@
           routineSectionLayout: normalizeRoutineSectionLayout(parsed.routineSectionLayout),
           calendarEvents: normalizeCalendarEvents(parsed.calendarEvents),
           calendarView: normalizeCalendarView(parsed.calendarView),
+          alwaysOnTopTaskId: String(parsed.alwaysOnTopTaskId || ""),
           tower7: normalizeTower7(parsed.tower7),
           showRoutineOnCharacters: Boolean(parsed.showRoutineOnCharacters),
           todaySummaryCollapsed: Boolean(parsed.todaySummaryCollapsed),
@@ -3887,6 +4038,7 @@
         profession: profession.value,
         specialization: specialization.value,
         professionLevel: professionLevel.value,
+        customItems: getCustomItemsFromEditor(),
         note: existing?.note || "",
         order: existing?.order ?? getNextOrder(),
         createdAt: existing?.createdAt || Date.now()
@@ -3908,6 +4060,42 @@
       specialization.disabled = !profession.value;
     }
 
+    function createCustomItemEditorRow(item = {}) {
+      const row = document.createElement("div");
+      row.className = "custom-item-row";
+      row.dataset.itemId = item.id || `item:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+      row.innerHTML = `
+        <label class="field">
+          <span>Item</span>
+          <input class="custom-item-name" type="text" maxlength="40" placeholder="Ex: Boost">
+        </label>
+        <label class="field">
+          <span>Descrição</span>
+          <input class="custom-item-description" type="text" maxlength="90" placeholder="Descrição do item">
+        </label>
+        <button class="icon-button" type="button" aria-label="Remover item" title="Remover item">×</button>
+      `;
+      row.querySelector(".custom-item-name").value = item.name || "";
+      row.querySelector(".custom-item-description").value = item.description || "";
+      row.querySelector("button").addEventListener("click", () => row.remove());
+      return row;
+    }
+
+    function renderCustomItemEditors(items = []) {
+      customItemsEditor.innerHTML = "";
+      normalizeCharacterItems(items).forEach((item) => {
+        customItemsEditor.appendChild(createCustomItemEditorRow(item));
+      });
+    }
+
+    function getCustomItemsFromEditor() {
+      return [...customItemsEditor.querySelectorAll(".custom-item-row")].map((row) => ({
+        id: row.dataset.itemId,
+        name: row.querySelector(".custom-item-name").value,
+        description: row.querySelector(".custom-item-description").value
+      }));
+    }
+
     function openModal(character = null) {
       editingId = character?.id || null;
       modalTitle.textContent = editingId ? "Editar personagem" : "Adicionar personagem";
@@ -3922,6 +4110,7 @@
       setSelectOptions(profession, professionOptions, draft.profession);
       renderClanPreview(characterClan.value);
       refreshSpecializations(draft.specialization);
+      renderCustomItemEditors(draft.customItems);
 
       modalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
@@ -3933,6 +4122,7 @@
       document.body.style.overflow = "";
       editingId = null;
       characterForm.reset();
+      customItemsEditor.innerHTML = "";
     }
 
     function removeCharacter(id) {
@@ -4134,6 +4324,19 @@
           }
           factsContainer.appendChild(row);
         });
+        const customItems = normalizeCharacterItems(character.customItems);
+        if (customItems.length) {
+          factsContainer.appendChild(document.createElement("hr")).className = "card-section-divider";
+          customItems.forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "fact";
+            row.title = item.name || "Item";
+            row.innerHTML = `<span></span><strong></strong>`;
+            row.querySelector("span").textContent = item.name || "Item";
+            row.querySelector("strong").textContent = item.description || "-";
+            factsContainer.appendChild(row);
+          });
+        }
         const dragButton = card.querySelector(".drag-button");
         dragButton.addEventListener("pointerdown", () => {
           card.draggable = true;
@@ -4263,6 +4466,94 @@
       if (!tasks.length) taskScheduleTask.add(new Option("Nenhuma tarefa visível", ""));
       taskScheduleTask.value = tasks.some((task) => task.id === selectedId) ? selectedId : tasks[0]?.id || "";
       refreshTaskScheduleFields();
+    }
+
+    function renderAlwaysOnTopChoices() {
+      if (!alwaysOnTopTaskSelect) return;
+      const selectedId = alwaysOnTopTaskSelect.value || state.alwaysOnTopTaskId;
+      alwaysOnTopTaskSelect.innerHTML = "";
+      const tasks = state.routineTasks
+        .filter((task) => task.name)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      tasks.forEach((task) => {
+        alwaysOnTopTaskSelect.add(new Option(`${task.name} (${routineKinds[task.kind]?.title || "Rotina"})`, task.id));
+      });
+      if (!tasks.length) alwaysOnTopTaskSelect.add(new Option("Nenhuma tarefa criada", ""));
+      alwaysOnTopTaskSelect.value = tasks.some((task) => task.id === selectedId) ? selectedId : tasks[0]?.id || "";
+      openAlwaysOnTopButton.disabled = !alwaysOnTopTaskSelect.value;
+    }
+
+    function getRoutineTaskCharacters(task) {
+      if (!task) return [];
+      return getFilteredOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task));
+    }
+
+    function buildAlwaysOnTopContent(task) {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "font-family: Arial, sans-serif; background:#11161c; color:#f5f7fb; min-height:100%; padding:14px;";
+      const title = document.createElement("h2");
+      title.textContent = task?.name || "Tarefa";
+      title.style.cssText = "font-size:18px; margin:0 0 8px;";
+      const meta = document.createElement("p");
+      meta.textContent = task ? `${routineKinds[task.kind]?.title || "Rotina"} · ${getTaskResetLabel(task)}` : "";
+      meta.style.cssText = "color:#9fb0c2; font-size:12px; margin:0 0 12px;";
+      const listEl = document.createElement("div");
+      listEl.style.cssText = "display:grid; gap:8px;";
+      getRoutineTaskCharacters(task).forEach((character) => {
+        const done = task.specialType === "tower7"
+          ? Boolean(getTowerTaskState(task.id).checks[character.id]?.dungeon)
+          : Boolean(getCompletion(task.id, character.id));
+        const row = document.createElement("div");
+        row.textContent = `${character.name} - ${done ? "Concluída" : "Liberada"}`;
+        row.style.cssText = "border:1px solid #2b3542; border-radius:8px; padding:8px; font-size:13px;";
+        listEl.appendChild(row);
+      });
+      if (!listEl.children.length) {
+        const empty = document.createElement("div");
+        empty.textContent = "Nenhum personagem elegível.";
+        empty.style.cssText = "color:#9fb0c2; font-size:13px;";
+        listEl.appendChild(empty);
+      }
+      wrapper.append(title, meta, listEl);
+      return wrapper;
+    }
+
+    function renderAlwaysOnTopPanel() {
+      const task = state.routineTasks.find((item) => item.id === state.alwaysOnTopTaskId);
+      alwaysOnTopPanel.classList.toggle("open", Boolean(task));
+      if (!task) return;
+      alwaysOnTopTitle.textContent = task.name;
+      alwaysOnTopMeta.textContent = `${routineKinds[task.kind]?.title || "Rotina"} · ${getTaskResetLabel(task)}`;
+      alwaysOnTopCharacters.innerHTML = "";
+      const characters = getRoutineTaskCharacters(task);
+      characters.forEach((character) => {
+        const done = task.specialType === "tower7"
+          ? Boolean(getTowerTaskState(task.id).checks[character.id]?.dungeon)
+          : Boolean(getCompletion(task.id, character.id));
+        const row = document.createElement("div");
+        row.className = "always-on-top-character";
+        row.innerHTML = "<strong></strong><span></span>";
+        row.querySelector("strong").appendChild(buildCharacterNameInline(character));
+        row.querySelector("span").textContent = done ? "Concluída" : "Liberada";
+        alwaysOnTopCharacters.appendChild(row);
+      });
+      if (!characters.length) {
+        const empty = document.createElement("span");
+        empty.textContent = "Nenhum personagem elegível.";
+        alwaysOnTopCharacters.appendChild(empty);
+      }
+    }
+
+    async function openRoutinePictureInPicture() {
+      const task = state.routineTasks.find((item) => item.id === state.alwaysOnTopTaskId);
+      if (!task) return;
+      if (!("documentPictureInPicture" in window)) {
+        alert("Seu navegador não permite uma janela Picture-in-Picture para este app. Use o painel flutuante dentro da aba Rotinas.");
+        return;
+      }
+      const pipWindow = await window.documentPictureInPicture.requestWindow({ width: 360, height: 480 });
+      pipWindow.document.body.innerHTML = "";
+      pipWindow.document.body.appendChild(buildAlwaysOnTopContent(task));
     }
 
     function refreshTaskScheduleFields() {
@@ -4402,6 +4693,7 @@
       });
       if (state.tower7?.[taskId]) delete state.tower7[taskId];
       if (state.routineTaskCollapsed?.[taskId] !== undefined) delete state.routineTaskCollapsed[taskId];
+      if (state.alwaysOnTopTaskId === taskId) state.alwaysOnTopTaskId = "";
       saveState();
       render();
       return true;
@@ -5849,9 +6141,11 @@
       renderCards();
       renderTodaySummary();
       renderTaskScheduleChoices();
+      renderAlwaysOnTopChoices();
       renderRoutineSections();
       renderUserCalendar();
       renderQuests();
+      renderAlwaysOnTopPanel();
       renderStats();
     }
 
@@ -5909,6 +6203,7 @@
             routineSectionLayout: normalizeRoutineSectionLayout(incoming.routineSectionLayout),
             calendarEvents: normalizeCalendarEvents(incoming.calendarEvents),
             calendarView: normalizeCalendarView(incoming.calendarView),
+            alwaysOnTopTaskId: String(incoming.alwaysOnTopTaskId || ""),
             tower7: normalizeTower7(incoming.tower7),
             showRoutineOnCharacters: Boolean(incoming.showRoutineOnCharacters),
             todaySummaryCollapsed: Boolean(incoming.todaySummaryCollapsed),
@@ -5981,6 +6276,26 @@
     scheduleTaskButton.addEventListener("click", () => {
       setTaskScheduleOpen(!taskScheduleFields.classList.contains("open"));
     });
+    alwaysOnTopTaskSelect.addEventListener("change", () => {
+      state.alwaysOnTopTaskId = alwaysOnTopTaskSelect.value;
+      saveState();
+      renderAlwaysOnTopPanel();
+    });
+    openAlwaysOnTopButton.addEventListener("click", () => {
+      state.alwaysOnTopTaskId = alwaysOnTopTaskSelect.value;
+      saveState();
+      renderAlwaysOnTopPanel();
+    });
+    closeAlwaysOnTopButton.addEventListener("click", () => {
+      state.alwaysOnTopTaskId = "";
+      saveState();
+      renderAlwaysOnTopPanel();
+    });
+    openPictureInPictureButton.addEventListener("click", () => {
+      openRoutinePictureInPicture().catch(() => {
+        alert("Não foi possível abrir o Picture-in-Picture neste navegador.");
+      });
+    });
     taskScheduleTask.addEventListener("change", refreshTaskScheduleFields);
     taskScheduleCharacter.addEventListener("change", refreshTaskScheduleFields);
     saveScheduledTaskButton.addEventListener("click", saveScheduledTask);
@@ -6012,6 +6327,10 @@
     addQuestButton.addEventListener("click", () => openQuestModal());
     addQuestSectionButton.addEventListener("click", () => {
       questSectionEditors.appendChild(createQuestSectionEditor({ title: `Seção ${questSectionEditors.children.length + 1}` }));
+    });
+    addCustomItemButton.addEventListener("click", () => {
+      customItemsEditor.appendChild(createCustomItemEditorRow());
+      customItemsEditor.querySelector(".custom-item-row:last-child .custom-item-name")?.focus();
     });
 
     profession.addEventListener("change", () => refreshSpecializations());
