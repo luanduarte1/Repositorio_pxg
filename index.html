@@ -3148,8 +3148,9 @@
     <header>
       <strong id="alwaysOnTopTitle">Tarefa</strong>
       <div>
-        <button class="mini-button" id="openPictureInPictureButton" type="button" title="Abrir em Picture-in-Picture">⇱</button>
-        <button class="mini-button" id="closeAlwaysOnTopButton" type="button" title="Fechar">×</button>
+        <button class="mini-button" id="refreshAlwaysOnTopButton" type="button" title="Atualizar lista">&#8635;</button>
+        <button class="mini-button" id="openPictureInPictureButton" type="button" title="Abrir em Picture-in-Picture">&#8599;</button>
+        <button class="mini-button" id="closeAlwaysOnTopButton" type="button" title="Fechar">&times;</button>
       </div>
     </header>
     <div class="always-on-top-body">
@@ -3320,6 +3321,7 @@
     const alwaysOnTopTitle = document.querySelector("#alwaysOnTopTitle");
     const alwaysOnTopMeta = document.querySelector("#alwaysOnTopMeta");
     const alwaysOnTopCharacters = document.querySelector("#alwaysOnTopCharacters");
+    const refreshAlwaysOnTopButton = document.querySelector("#refreshAlwaysOnTopButton");
     const closeAlwaysOnTopButton = document.querySelector("#closeAlwaysOnTopButton");
     const openPictureInPictureButton = document.querySelector("#openPictureInPictureButton");
     const todoForm = document.querySelector("#todoForm");
@@ -6613,6 +6615,12 @@
       renderTodoList();
     }
 
+    function refreshAlwaysOnTopPanel() {
+      if (state.todoAlwaysOnTopOpen) renderTodoList();
+      renderAlwaysOnTopChoices();
+      renderAlwaysOnTopPanel();
+    }
+
     addCharacterButton.addEventListener("click", () => openModal());
     selectAllCharactersButton.addEventListener("click", toggleAllCharactersSelection);
     openSettingsButton.addEventListener("click", openSettingsModal);
@@ -6708,6 +6716,7 @@
       renderAlwaysOnTopPanel();
       renderTodoList();
     });
+    refreshAlwaysOnTopButton.addEventListener("click", refreshAlwaysOnTopPanel);
     closeAlwaysOnTopButton.addEventListener("click", closeAlwaysOnTopPanel);
     openPictureInPictureButton.addEventListener("click", () => {
       openRoutinePictureInPicture().catch(() => {
