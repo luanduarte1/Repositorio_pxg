@@ -62,7 +62,7 @@
     }
 
     .app.sidebar-collapsed {
-      grid-template-columns: 76px minmax(0, 1fr);
+      grid-template-columns: 0 minmax(0, 1fr);
     }
 
     .sidebar {
@@ -77,6 +77,7 @@
       background: rgba(17, 22, 28, .96);
       backdrop-filter: blur(18px);
       overflow: hidden;
+      transition: padding .22s ease, border-color .22s ease, visibility .22s ease;
     }
 
     .resize-handle {
@@ -164,18 +165,6 @@
       transform: translateY(-1px);
       border-color: rgba(89, 195, 166, .55);
       background: #24313a;
-    }
-
-    .sidebar-toggle {
-      margin-left: auto;
-    }
-
-    .app.sidebar-collapsed .sidebar-toggle .collapse-icon {
-      transform: rotate(180deg);
-    }
-
-    .collapse-icon {
-      transition: transform .2s ease;
     }
 
     .character-list {
@@ -325,10 +314,9 @@
     }
 
     .app.sidebar-collapsed .brand-copy,
-    .app.sidebar-collapsed .sidebar-bulk-actions,
+    .app.sidebar-collapsed .sidebar-toolbar,
     .app.sidebar-collapsed .character-list,
     .app.sidebar-collapsed .nav-text,
-    .app.sidebar-collapsed .sidebar-actions,
     .app.sidebar-collapsed .level-controls {
       opacity: 0;
       pointer-events: none;
@@ -338,54 +326,86 @@
       display: none;
     }
 
-    .app.sidebar-collapsed .sidebar-bulk-actions,
+    .app.sidebar-collapsed .sidebar-toolbar,
     .app.sidebar-collapsed .character-list,
-    .app.sidebar-collapsed .sidebar-actions,
     .app.sidebar-collapsed .resize-handle {
       display: none;
     }
 
-    .app.sidebar-collapsed .brand-row {
-      display: grid;
-      justify-items: center;
-      gap: 8px;
-    }
-
-    .app.sidebar-collapsed .sidebar-toggle {
-      margin-left: 0;
-    }
-
     .app.sidebar-collapsed .sidebar {
-      padding-inline: 16px;
+      padding: 0;
       gap: 0;
+      border-right-color: transparent;
+      visibility: hidden;
     }
 
-    .app.sidebar-collapsed .nav-card {
-      grid-template-columns: 1fr;
-      justify-content: center;
-      padding: 8px 2px;
-    }
-
-    .app.sidebar-collapsed .nav-card-main {
-      grid-template-columns: 1fr;
-    }
-
-    .sidebar-actions {
+    .sidebar-toolbar {
       display: grid;
-      gap: 10px;
-      margin-top: auto;
+      grid-template-columns: minmax(0, 1fr) repeat(3, 42px);
+      gap: 7px;
       transition: opacity .18s ease;
     }
 
-    .sidebar-bulk-actions {
-      transition: opacity .18s ease;
+    .sidebar-toolbar .secondary-button {
+      min-width: 0;
+      padding-inline: 10px;
     }
 
-    .sidebar-action-pair,
-    .json-actions {
+    .sidebar-toolbar .icon-button {
+      width: 42px;
+      height: 44px;
+    }
+
+    .sidebar-toolbar .icon-button span {
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sidebar-reveal-button {
+      position: fixed;
+      left: 8px;
+      top: 50%;
+      z-index: 9;
+      width: 42px;
+      height: 74px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(232, 193, 92, .52);
+      border-radius: 0 8px 8px 0;
+      background: rgba(17, 22, 28, .96);
+      color: #f4dfad;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-50%);
+      transition: opacity .18s ease, border-color .18s ease;
+    }
+
+    .app.sidebar-collapsed .sidebar-reveal-button {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-reveal-progress {
+      position: absolute;
+      inset: 0;
+      background: rgba(232, 193, 92, .34);
+      transform: scaleX(0);
+      transform-origin: left center;
+    }
+
+    .sidebar-reveal-button.charging .sidebar-reveal-progress {
+      transform: scaleX(1);
+      transition: transform 2s linear;
+    }
+
+    .sidebar-reveal-arrow {
+      position: relative;
+      z-index: 1;
+      font-size: 30px;
+      line-height: 1;
     }
 
     main {
@@ -770,6 +790,7 @@
 
     .calendar-scheduler.open {
       display: grid;
+      margin-bottom: 12px;
     }
 
     .calendar-scheduler .field {
@@ -834,10 +855,15 @@
 
     .card-title {
       min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .card-title strong {
       display: block;
+      min-width: 0;
+      flex: 1;
       overflow: hidden;
       color: var(--text);
       font-size: 19px;
@@ -925,6 +951,25 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .routine-alert-button {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(238, 111, 117, .62);
+      border-radius: 50%;
+      background: rgba(238, 111, 117, .14);
+      color: #ffb0b4;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .routine-alert-button:hover {
+      border-color: #ff9ca0;
+      background: rgba(238, 111, 117, .24);
     }
 
     .fact strong {
@@ -1989,27 +2034,6 @@
       text-align: left;
     }
 
-    .routine-badge {
-      display: inline-flex;
-      align-items: center;
-      width: max-content;
-      margin-top: 8px;
-      border: 1px solid rgba(238, 111, 117, .5);
-      border-radius: 999px;
-      background: rgba(238, 111, 117, .12);
-      color: #ffb0b4;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 850;
-    }
-
-    .routine-badge-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
     .checkbox-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2078,6 +2102,27 @@
       border-radius: 8px;
       background: var(--panel);
       box-shadow: var(--shadow);
+    }
+
+    .routine-alert-modal {
+      width: min(390px, 100%);
+    }
+
+    .routine-alert-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .routine-alert-list li {
+      border: 1px solid rgba(238, 111, 117, .3);
+      border-radius: 8px;
+      background: rgba(238, 111, 117, .08);
+      color: var(--text);
+      padding: 10px 12px;
+      line-height: 1.35;
     }
 
     .modal-header {
@@ -2629,7 +2674,8 @@
       }
 
       .app.sidebar-collapsed .sidebar {
-        height: 126px;
+        height: 0;
+        min-height: 0;
       }
 
       .character-list {
@@ -2665,7 +2711,6 @@
       .modal-actions,
       .form-grid,
       .form-grid.three,
-      .sidebar-action-pair,
       .json-actions {
         grid-template-columns: 1fr;
       }
@@ -2738,34 +2783,27 @@
           <strong>Organização PxG</strong>
           <span>PokeXGames</span>
         </div>
-        <button class="icon-button sidebar-toggle" id="toggleSidebar" type="button" aria-label="Recolher menu" title="Recolher menu">
-          <span class="collapse-icon" aria-hidden="true">‹</span>
-        </button>
       </div>
 
-      <div class="sidebar-bulk-actions">
+      <div class="sidebar-toolbar">
         <button class="secondary-button" id="selectAllCharactersButton" type="button">Selecionar todos</button>
+        <button class="icon-button" id="addCharacterButton" type="button" aria-label="Adicionar personagem" title="Adicionar personagem">
+          <span aria-hidden="true">+</span>
+        </button>
+        <button class="icon-button" id="editSelectedButton" type="button" aria-label="Editar personagem" title="Editar personagem">
+          <span aria-hidden="true">&#9998;</span>
+        </button>
+        <button class="icon-button" id="openSettingsButton" type="button" aria-label="Configuração" title="Configuração">
+          <span aria-hidden="true">&#9881;</span>
+        </button>
       </div>
 
       <nav class="character-list" id="characterList" aria-label="Lista de personagens"></nav>
-
-      <div class="sidebar-actions">
-        <div class="sidebar-action-pair">
-          <button class="primary-button" id="addCharacterButton" type="button">
-            <span aria-hidden="true">+</span>
-            <span>Adicionar</span>
-          </button>
-          <button class="secondary-button" id="editSelectedButton" type="button">
-            <span aria-hidden="true">✎</span>
-            <span>Editar</span>
-          </button>
-        </div>
-        <button class="secondary-button" id="openSettingsButton" type="button">
-          <span aria-hidden="true">&#9881;</span>
-          <span>Configuração</span>
-        </button>
-      </div>
     </aside>
+    <button class="sidebar-reveal-button" id="sidebarRevealButton" type="button" aria-label="Manter o cursor por 2 segundos para abrir o menu" title="Manter o cursor por 2 segundos para abrir o menu">
+      <span class="sidebar-reveal-progress" aria-hidden="true"></span>
+      <span class="sidebar-reveal-arrow" aria-hidden="true">&#8250;</span>
+    </button>
 
     <main>
       <nav class="tabs" aria-label="Seções do painel">
@@ -2783,33 +2821,26 @@
       </section>
 
       <section class="tab-panel" data-panel="routine" aria-label="Rotina">
-        <section class="routine-release-panel" aria-label="Próximas liberações importantes">
-          <button class="calendar-summary-toggle" id="calendarSummaryToggle" type="button" aria-label="Ocultar próximas liberações" title="Ocultar próximas liberações">v</button>
-          <section class="today-summary" id="todaySummary" aria-label="Próximas liberações importantes">
-            <strong>Próximas tarefas importantes livres:</strong>
-            <div class="today-summary-list" id="todaySummaryList"></div>
-          </section>
-          <div class="calendar-scheduler" id="taskScheduleFields">
-            <label class="field">
-              <span>Tarefa</span>
-              <select id="taskScheduleTask"></select>
-            </label>
-            <label class="field">
-              <span>Personagem</span>
-              <select id="taskScheduleCharacter"></select>
-            </label>
-            <label class="field">
-              <span>Dia programado</span>
-              <input id="taskScheduledDate" type="date">
-            </label>
-            <label class="field">
-              <span>Horário</span>
-              <input id="taskScheduledTime" type="time">
-            </label>
-            <button class="primary-button" id="saveScheduledTaskButton" type="button">Salvar</button>
-            <button class="secondary-button" id="clearScheduledTaskButton" type="button">Limpar</button>
-          </div>
-        </section>
+        <div class="calendar-scheduler" id="taskScheduleFields">
+          <label class="field">
+            <span>Tarefa</span>
+            <select id="taskScheduleTask"></select>
+          </label>
+          <label class="field">
+            <span>Personagem</span>
+            <select id="taskScheduleCharacter"></select>
+          </label>
+          <label class="field">
+            <span>Dia programado</span>
+            <input id="taskScheduledDate" type="date">
+          </label>
+          <label class="field">
+            <span>Horário</span>
+            <input id="taskScheduledTime" type="time">
+          </label>
+          <button class="primary-button" id="saveScheduledTaskButton" type="button">Salvar</button>
+          <button class="secondary-button" id="clearScheduledTaskButton" type="button">Limpar</button>
+        </div>
         <div class="routine-toolbar">
           <button class="primary-button" id="addRoutineTaskButton" type="button">
             <span aria-hidden="true">+</span>
@@ -2880,6 +2911,21 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="routineAlertBackdrop" role="dialog" aria-modal="true" aria-labelledby="routineAlertTitle">
+    <div class="character-modal routine-alert-modal">
+      <div class="modal-header">
+        <div>
+          <strong id="routineAlertTitle">Tarefas a fazer</strong>
+          <span id="routineAlertCharacter"></span>
+        </div>
+        <button class="icon-button" id="closeRoutineAlertButton" type="button" aria-label="Fechar janela" title="Fechar janela">&times;</button>
+      </div>
+      <div class="modal-form">
+        <ul class="routine-alert-list" id="routineAlertList"></ul>
+      </div>
+    </div>
   </div>
 
   <div class="modal-backdrop" id="settingsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
@@ -3289,7 +3335,8 @@
     const makeNoteCopyButton = document.querySelector("#makeNoteCopyButton");
     const clearCharacterNoteButton = document.querySelector("#clearCharacterNoteButton");
     const removeCharacterNoteButton = document.querySelector("#removeCharacterNoteButton");
-    const toggleSidebar = document.querySelector("#toggleSidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarRevealButton = document.querySelector("#sidebarRevealButton");
     const resizeHandle = document.querySelector("#resizeHandle");
     const emptyTemplate = document.querySelector("#emptyTemplate");
     const addCharacterButton = document.querySelector("#addCharacterButton");
@@ -3302,6 +3349,10 @@
     const todaySummary = document.querySelector("#todaySummary");
     const todaySummaryList = document.querySelector("#todaySummaryList");
     const calendarSummaryToggle = document.querySelector("#calendarSummaryToggle");
+    const routineAlertBackdrop = document.querySelector("#routineAlertBackdrop");
+    const routineAlertCharacter = document.querySelector("#routineAlertCharacter");
+    const routineAlertList = document.querySelector("#routineAlertList");
+    const closeRoutineAlertButton = document.querySelector("#closeRoutineAlertButton");
     const closeModalButton = document.querySelector("#closeModalButton");
     const deleteFromModalButton = document.querySelector("#deleteFromModalButton");
     const characterForm = document.querySelector("#characterForm");
@@ -3366,7 +3417,7 @@
     };
 
     let state = {
-      collapsed: false,
+      collapsed: true,
       sidebarWidth: 292,
       selectedId: null,
       selectedCharacterIds: [],
@@ -3401,6 +3452,8 @@
     let expandedQuestId = null;
     let completedQuestMenuId = null;
     let todaySummaryAutoHideTimer = null;
+    let sidebarRevealTimer = null;
+    let sidebarHideTimer = null;
 
     function clampNumber(value, min, max) {
       if (value === "" || value === null || value === undefined) return null;
@@ -4447,6 +4500,24 @@
       });
     }
 
+    function openRoutineAlert(character, taskNames) {
+      routineAlertCharacter.textContent = character.name;
+      routineAlertList.innerHTML = "";
+      taskNames.forEach((name) => {
+        const item = document.createElement("li");
+        item.textContent = name;
+        routineAlertList.appendChild(item);
+      });
+      routineAlertBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeRoutineAlert() {
+      routineAlertBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      routineAlertList.innerHTML = "";
+    }
+
     function renderCards() {
       grid.innerHTML = "";
 
@@ -4489,15 +4560,14 @@
         card.querySelector(".card-title strong").appendChild(buildCharacterNameInline(character));
         const availableRoutineNames = getAvailableRoutineNames(character);
         if (availableRoutineNames.length) {
-          const badgeList = document.createElement("div");
-          badgeList.className = "routine-badge-list";
-          availableRoutineNames.forEach((name) => {
-            const badge = document.createElement("span");
-            badge.className = "routine-badge";
-            badge.textContent = name;
-            badgeList.appendChild(badge);
-          });
-          card.querySelector(".card-title").appendChild(badgeList);
+          const alertButton = document.createElement("button");
+          alertButton.className = "routine-alert-button";
+          alertButton.type = "button";
+          alertButton.textContent = "!";
+          alertButton.title = `${availableRoutineNames.length} tarefa(s) a fazer`;
+          alertButton.setAttribute("aria-label", `Mostrar tarefas a fazer de ${character.name}`);
+          alertButton.addEventListener("click", () => openRoutineAlert(character, availableRoutineNames));
+          card.querySelector(".card-title").appendChild(alertButton);
         }
         const factsContainer = card.querySelector(".card-facts");
         facts.forEach((fact) => {
@@ -6506,8 +6576,6 @@
       document.body.classList.toggle("routine-tab-active", document.querySelector('.tab-panel.active')?.dataset.panel === "routine");
       app.style.setProperty("--sidebar-width", `${state.sidebarWidth || 292}px`);
       app.classList.toggle("sidebar-collapsed", state.collapsed);
-      toggleSidebar.setAttribute("aria-label", state.collapsed ? "Expandir menu" : "Recolher menu");
-      toggleSidebar.title = state.collapsed ? "Expandir menu" : "Recolher menu";
       renderList();
       renderCards();
       renderTodaySummary();
@@ -6563,7 +6631,7 @@
           }
 
           state = {
-            collapsed: Boolean(incoming.collapsed),
+            collapsed: true,
             sidebarWidth: clampNumber(incoming.sidebarWidth || 292, 236, 460) || 292,
             selectedId: incoming.selectedId || incoming.characters[0]?.id || null,
             selectedCharacterIds: Array.isArray(incoming.selectedCharacterIds) ? incoming.selectedCharacterIds.map(String) : [],
@@ -6621,21 +6689,67 @@
       renderAlwaysOnTopPanel();
     }
 
+    function setSidebarCollapsed(collapsed) {
+      state.collapsed = collapsed;
+      app.classList.toggle("sidebar-collapsed", collapsed);
+      sidebarRevealButton.classList.remove("charging");
+    }
+
+    function cancelSidebarReveal() {
+      window.clearTimeout(sidebarRevealTimer);
+      sidebarRevealTimer = null;
+      sidebarRevealButton.classList.remove("charging");
+    }
+
+    function startSidebarReveal() {
+      if (!state.collapsed || sidebarRevealTimer) return;
+      window.clearTimeout(sidebarHideTimer);
+      sidebarRevealButton.classList.remove("charging");
+      void sidebarRevealButton.offsetWidth;
+      sidebarRevealButton.classList.add("charging");
+      sidebarRevealTimer = window.setTimeout(() => {
+        sidebarRevealTimer = null;
+        setSidebarCollapsed(false);
+        window.requestAnimationFrame(() => {
+          if (!sidebar.matches(":hover")) startSidebarHide();
+        });
+      }, 2000);
+    }
+
+    function cancelSidebarHide() {
+      window.clearTimeout(sidebarHideTimer);
+      sidebarHideTimer = null;
+    }
+
+    function startSidebarHide() {
+      if (state.collapsed) return;
+      cancelSidebarHide();
+      sidebarHideTimer = window.setTimeout(() => {
+        sidebarHideTimer = null;
+        setSidebarCollapsed(true);
+      }, 2000);
+    }
+
     addCharacterButton.addEventListener("click", () => openModal());
     selectAllCharactersButton.addEventListener("click", toggleAllCharactersSelection);
     openSettingsButton.addEventListener("click", openSettingsModal);
     closeSettingsModalButton.addEventListener("click", closeSettingsModal);
+    closeRoutineAlertButton.addEventListener("click", closeRoutineAlert);
+    routineAlertBackdrop.addEventListener("click", (event) => {
+      if (event.target === routineAlertBackdrop) closeRoutineAlert();
+    });
 
     editSelectedButton.addEventListener("click", () => {
       const character = state.characters.find((item) => item.id === state.selectedId);
       if (character) openModal(character);
     });
 
-    toggleSidebar.addEventListener("click", () => {
-      state.collapsed = !state.collapsed;
-      saveState();
-      render();
+    sidebarRevealButton.addEventListener("pointerenter", startSidebarReveal);
+    sidebarRevealButton.addEventListener("pointerleave", () => {
+      if (state.collapsed) cancelSidebarReveal();
     });
+    sidebar.addEventListener("pointerenter", cancelSidebarHide);
+    sidebar.addEventListener("pointerleave", startSidebarHide);
 
     resizeHandle.addEventListener("pointerdown", (event) => {
       if (state.collapsed) return;
@@ -6688,7 +6802,7 @@
     });
     addRoutineTaskButton.addEventListener("click", () => openTaskModal());
     removeRoutineTaskButton.addEventListener("click", chooseRoutineTaskToRemove);
-    calendarSummaryToggle.addEventListener("click", () => {
+    calendarSummaryToggle?.addEventListener("click", () => {
       window.clearTimeout(todaySummaryAutoHideTimer);
       setTodaySummaryCollapsed(!state.todaySummaryCollapsed);
     });
@@ -6919,6 +7033,7 @@
     });
 
     loadState();
+    state.collapsed = true;
     state.routineTasks = mergeRoutineTasks(state.routineTasks);
     state.quests = normalizeQuests(state.quests);
     state.calendarEvents = normalizeCalendarEvents(state.calendarEvents);
