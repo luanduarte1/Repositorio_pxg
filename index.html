@@ -62,7 +62,7 @@
     }
 
     .app.sidebar-collapsed {
-      grid-template-columns: 0 minmax(0, 1fr);
+      grid-template-columns: 64px minmax(0, 1fr);
     }
 
     .sidebar {
@@ -2726,6 +2726,10 @@
 
       main {
         padding: 22px 16px 30px;
+      }
+
+      .app.sidebar-collapsed main {
+        padding-left: 72px;
       }
     }
 
