@@ -2405,6 +2405,44 @@
       width: min(620px, 100%);
     }
 
+    .calendar-color-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .calendar-color-option {
+      position: relative;
+      width: 28px;
+      height: 28px;
+    }
+
+    .calendar-color-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .calendar-color-swatch {
+      width: 28px;
+      height: 28px;
+      display: block;
+      border: 2px solid transparent;
+      border-radius: 7px;
+      background: var(--event-color);
+      cursor: pointer;
+    }
+
+    .calendar-color-option input:checked + .calendar-color-swatch {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px var(--event-color);
+    }
+
+    .calendar-source-fields[hidden] {
+      display: none;
+    }
+
     .task-modal {
       width: min(720px, 100%);
     }
@@ -2952,37 +2990,60 @@
       <div class="modal-header">
         <div>
           <strong id="calendarEventModalTitle">Adicionar evento</strong>
-          <span>Evento manual do calendário</span>
+          <span id="calendarEventModalSubtitle">Evento manual do calendário</span>
         </div>
         <button class="icon-button" id="closeCalendarEventModalButton" type="button" aria-label="Fechar janela" title="Fechar janela">×</button>
       </div>
 
       <form class="modal-form" id="calendarEventForm">
         <label class="field">
-          <span>Nome do evento</span>
-          <input id="calendarEventTitle" type="text" maxlength="80" required>
+          <span>Tipo</span>
+          <select id="calendarEventSource">
+            <option value="manual">Evento manual</option>
+            <option value="routine">Tarefa da Rotina</option>
+          </select>
         </label>
-        <div class="form-grid three">
+        <div class="calendar-source-fields" id="calendarManualFields">
           <label class="field">
-            <span>Dia</span>
-            <input id="calendarEventDate" type="date" required>
+            <span>Nome do evento</span>
+            <input id="calendarEventTitle" type="text" maxlength="80">
+          </label>
+          <div class="form-grid three">
+            <label class="field">
+              <span>Dia</span>
+              <input id="calendarEventDate" type="date">
+            </label>
+            <label class="field">
+              <span>Horário</span>
+              <input id="calendarEventTime" type="time">
+            </label>
+            <label class="field">
+              <span>Repetição</span>
+              <select id="calendarEventRepeat">
+                <option value="none">Não repetir</option>
+                <option value="weekly">Semanalmente</option>
+                <option value="monthly">Mensalmente</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span>Detalhes</span>
+            <textarea id="calendarEventDescription" placeholder="Observações opcionais sobre este evento."></textarea>
+          </label>
+        </div>
+        <div class="calendar-source-fields form-grid" id="calendarRoutineFields" hidden>
+          <label class="field">
+            <span>Tarefa</span>
+            <select id="calendarRoutineTask"></select>
           </label>
           <label class="field">
-            <span>Horário</span>
-            <input id="calendarEventTime" type="time">
-          </label>
-          <label class="field">
-            <span>Repetição</span>
-            <select id="calendarEventRepeat">
-              <option value="none">Não repetir</option>
-              <option value="weekly">Semanalmente</option>
-              <option value="monthly">Mensalmente</option>
-            </select>
+            <span>Personagem</span>
+            <select id="calendarRoutineCharacter"></select>
           </label>
         </div>
         <label class="field">
-          <span>Detalhes</span>
-          <textarea id="calendarEventDescription" placeholder="Observações opcionais sobre este evento."></textarea>
+          <span>Cor</span>
+          <div class="calendar-color-options" id="calendarColorOptions"></div>
         </label>
         <div class="modal-actions">
           <button class="danger-button" id="deleteCalendarEventButton" type="button">Remover evento</button>
@@ -3265,13 +3326,20 @@
     const addCalendarEventButton = document.querySelector("#addCalendarEventButton");
     const calendarEventModalBackdrop = document.querySelector("#calendarEventModalBackdrop");
     const calendarEventModalTitle = document.querySelector("#calendarEventModalTitle");
+    const calendarEventModalSubtitle = document.querySelector("#calendarEventModalSubtitle");
     const closeCalendarEventModalButton = document.querySelector("#closeCalendarEventModalButton");
     const calendarEventForm = document.querySelector("#calendarEventForm");
+    const calendarEventSource = document.querySelector("#calendarEventSource");
+    const calendarManualFields = document.querySelector("#calendarManualFields");
+    const calendarRoutineFields = document.querySelector("#calendarRoutineFields");
     const calendarEventTitle = document.querySelector("#calendarEventTitle");
     const calendarEventDate = document.querySelector("#calendarEventDate");
     const calendarEventTime = document.querySelector("#calendarEventTime");
     const calendarEventRepeat = document.querySelector("#calendarEventRepeat");
     const calendarEventDescription = document.querySelector("#calendarEventDescription");
+    const calendarRoutineTask = document.querySelector("#calendarRoutineTask");
+    const calendarRoutineCharacter = document.querySelector("#calendarRoutineCharacter");
+    const calendarColorOptions = document.querySelector("#calendarColorOptions");
     const deleteCalendarEventButton = document.querySelector("#deleteCalendarEventButton");
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
@@ -3407,6 +3475,10 @@
       weekly: { title: "Semanal", reset: "Reset semanal na segunda às 7:45" },
       monthly: { title: "Mensal", reset: "Reset mensal no dia 1 às 7:45" }
     };
+    const calendarColors = [
+      "#e85d68", "#ef8b4d", "#e8c15c", "#75c46b", "#42b99d",
+      "#4fa6d8", "#6f83e8", "#9a72df", "#d168b2", "#a7b0bc"
+    ];
     const defaultRoutineTasks = [];
     const professionOptions = ["Engenheiro", "Professor", "Estilista", "Aventureiro"];
     const specializationOptions = {
@@ -3472,6 +3544,7 @@
     }
 
     function normalizeCalendarEvent(event = {}) {
+      const source = event.source === "routine" ? "routine" : "manual";
       return {
         id: event.id || `calendar:${Date.now()}:${Math.random().toString(16).slice(2)}`,
         title: String(event.title || "").trim(),
@@ -3479,13 +3552,19 @@
         time: /^\d{2}:\d{2}$/.test(String(event.time || "")) ? event.time : "",
         repeat: ["none", "weekly", "monthly"].includes(event.repeat) ? event.repeat : "none",
         description: String(event.description || "").trim(),
+        source,
+        routineTaskId: source === "routine" ? String(event.routineTaskId || "") : "",
+        characterId: source === "routine" ? String(event.characterId || "") : "",
+        color: calendarColors.includes(event.color) ? event.color : calendarColors[2],
         createdAt: event.createdAt || Date.now()
       };
     }
 
     function normalizeCalendarEvents(events = []) {
       return Array.isArray(events)
-        ? events.map(normalizeCalendarEvent).filter((event) => event.title)
+        ? events.map(normalizeCalendarEvent).filter((event) => event.source === "routine"
+          ? event.routineTaskId && event.characterId
+          : event.title)
         : [];
     }
 
@@ -6446,6 +6525,86 @@
       });
     }
 
+    function renderCalendarColorOptions(selectedColor = calendarColors[2]) {
+      calendarColorOptions.innerHTML = "";
+      calendarColors.forEach((color, index) => {
+        const label = document.createElement("label");
+        label.className = "calendar-color-option";
+        label.title = `Cor ${index + 1}`;
+        label.innerHTML = `<input type="radio" name="calendarColor" value="${color}"><span class="calendar-color-swatch"></span>`;
+        label.style.setProperty("--event-color", color);
+        label.querySelector("input").checked = color === selectedColor;
+        calendarColorOptions.appendChild(label);
+      });
+    }
+
+    function renderCalendarRoutineTaskOptions(selectedTaskId = "") {
+      calendarRoutineTask.innerHTML = "";
+      const tasks = state.routineTasks
+        .filter((task) => task.name)
+        .sort((left, right) => left.name.localeCompare(right.name));
+      tasks.forEach((task) => {
+        calendarRoutineTask.add(new Option(task.name, task.id, false, task.id === selectedTaskId));
+      });
+      if (!tasks.length) calendarRoutineTask.add(new Option("Nenhuma tarefa criada", ""));
+      calendarRoutineTask.value = tasks.some((task) => task.id === selectedTaskId) ? selectedTaskId : tasks[0]?.id || "";
+      renderCalendarRoutineCharacterOptions();
+    }
+
+    function renderCalendarRoutineCharacterOptions(selectedCharacterId = "") {
+      const task = state.routineTasks.find((item) => item.id === calendarRoutineTask.value);
+      calendarRoutineCharacter.innerHTML = "";
+      const characters = task
+        ? getOrderedCharacters().filter((character) => isCharacterEligibleForTask(character, task))
+        : [];
+      characters.forEach((character) => {
+        calendarRoutineCharacter.add(new Option(character.name, character.id, false, character.id === selectedCharacterId));
+      });
+      if (!characters.length) calendarRoutineCharacter.add(new Option("Nenhum personagem elegível", ""));
+      calendarRoutineCharacter.value = characters.some((character) => character.id === selectedCharacterId)
+        ? selectedCharacterId
+        : characters[0]?.id || "";
+    }
+
+    function refreshCalendarEventSourceFields() {
+      const isRoutine = calendarEventSource.value === "routine";
+      calendarManualFields.hidden = isRoutine;
+      calendarRoutineFields.hidden = !isRoutine;
+      calendarEventTitle.required = !isRoutine;
+      calendarEventDate.required = !isRoutine;
+      calendarEventModalSubtitle.textContent = isRoutine
+        ? "Aparece na data em que a tarefa ficará livre"
+        : "Evento manual do calendário";
+    }
+
+    function getRoutineCalendarUnlockAt(event) {
+      const task = state.routineTasks.find((item) => item.id === event.routineTaskId);
+      const character = state.characters.find((item) => item.id === event.characterId);
+      if (!task || !character || !isCharacterEligibleForTask(character, task)) return null;
+      if (task.specialType === "tower7") {
+        const tower = getTowerTaskState(task.id);
+        return tower.checks[character.id]?.dungeon ? Number(tower.resetAt) : null;
+      }
+      return Number(getCompletion(task.id, character.id)?.unlockAt) || null;
+    }
+
+    function getCalendarEventDisplay(event) {
+      if (event.source !== "routine") return event;
+      const unlockAt = getRoutineCalendarUnlockAt(event);
+      if (!unlockAt) return null;
+      const task = state.routineTasks.find((item) => item.id === event.routineTaskId);
+      const character = state.characters.find((item) => item.id === event.characterId);
+      const unlockDate = new Date(unlockAt);
+      return {
+        ...event,
+        title: task?.name || "Tarefa removida",
+        description: character?.name || "Personagem removido",
+        date: getDateKey(unlockDate),
+        time: unlockDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        repeat: "none"
+      };
+    }
+
     function doesCalendarEventOccurOn(event, date) {
       const start = parseDateKey(event.date);
       start.setHours(0, 0, 0, 0);
@@ -6463,7 +6622,8 @@
 
     function getCalendarEventsForDate(date) {
       return normalizeCalendarEvents(state.calendarEvents)
-        .filter((event) => doesCalendarEventOccurOn(event, date))
+        .map(getCalendarEventDisplay)
+        .filter((event) => event && doesCalendarEventOccurOn(event, date))
         .sort((left, right) => {
           if (left.time !== right.time) return (left.time || "99:99").localeCompare(right.time || "99:99");
           return left.title.localeCompare(right.title);
@@ -6518,9 +6678,14 @@
           button.className = "user-calendar-event";
           button.type = "button";
           button.title = `${event.title}${event.description ? ` - ${event.description}` : ""}`;
+          button.style.borderColor = `${event.color}99`;
+          button.style.background = `${event.color}20`;
+          button.style.color = event.color;
           button.innerHTML = `<strong></strong><span></span>`;
           button.querySelector("strong").textContent = event.title;
-          button.querySelector("span").textContent = `${event.time || "Sem horário"} · ${getCalendarEventRepeatLabel(event.repeat)}`;
+          button.querySelector("span").textContent = event.source === "routine"
+            ? `${event.description} · livre às ${event.time}`
+            : `${event.time || "Sem horário"} · ${getCalendarEventRepeatLabel(event.repeat)}`;
           button.addEventListener("click", () => openCalendarEventModal(event, dateKey));
           eventsContainer.appendChild(button);
         });
@@ -6534,14 +6699,19 @@
       const draft = normalizeCalendarEvent(event || { date: dateKey });
       calendarEventModalTitle.textContent = editingCalendarEventId ? "Editar evento" : "Adicionar evento";
       deleteCalendarEventButton.style.display = editingCalendarEventId ? "inline-flex" : "none";
+      calendarEventSource.value = draft.source;
       calendarEventTitle.value = editingCalendarEventId ? draft.title : "";
       calendarEventDate.value = draft.date;
       calendarEventTime.value = draft.time;
       calendarEventRepeat.value = draft.repeat;
       calendarEventDescription.value = draft.description;
+      renderCalendarRoutineTaskOptions(draft.routineTaskId);
+      renderCalendarRoutineCharacterOptions(draft.characterId);
+      renderCalendarColorOptions(draft.color);
+      refreshCalendarEventSourceFields();
       calendarEventModalBackdrop.classList.add("open");
       document.body.style.overflow = "hidden";
-      calendarEventTitle.focus();
+      (draft.source === "routine" ? calendarRoutineTask : calendarEventTitle).focus();
     }
 
     function closeCalendarEventModal() {
@@ -6553,13 +6723,21 @@
 
     function getCalendarEventFromForm() {
       const existing = state.calendarEvents.find((event) => event.id === editingCalendarEventId);
+      const source = calendarEventSource.value === "routine" ? "routine" : "manual";
+      const color = calendarColorOptions.querySelector('input[name="calendarColor"]:checked')?.value || calendarColors[2];
       return normalizeCalendarEvent({
         id: editingCalendarEventId || undefined,
-        title: calendarEventTitle.value,
+        source,
+        title: source === "routine"
+          ? state.routineTasks.find((task) => task.id === calendarRoutineTask.value)?.name || ""
+          : calendarEventTitle.value,
         date: calendarEventDate.value,
         time: calendarEventTime.value,
         repeat: calendarEventRepeat.value,
         description: calendarEventDescription.value,
+        routineTaskId: source === "routine" ? calendarRoutineTask.value : "",
+        characterId: source === "routine" ? calendarRoutineCharacter.value : "",
+        color,
         createdAt: existing?.createdAt || Date.now()
       });
     }
@@ -6851,6 +7029,8 @@
       renderUserCalendar();
     });
     closeCalendarEventModalButton.addEventListener("click", closeCalendarEventModal);
+    calendarEventSource.addEventListener("change", refreshCalendarEventSourceFields);
+    calendarRoutineTask.addEventListener("change", () => renderCalendarRoutineCharacterOptions());
     deleteCalendarEventButton.addEventListener("click", () => {
       const event = state.calendarEvents.find((item) => item.id === editingCalendarEventId);
       if (!event || !confirm(`Remover ${event.title}?`)) return;
@@ -7000,16 +7180,18 @@
     calendarEventForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const calendarEvent = getCalendarEventFromForm();
-      if (!calendarEvent.title) return;
+      if (!calendarEvent.title || (calendarEvent.source === "routine" && (!calendarEvent.routineTaskId || !calendarEvent.characterId))) return;
       if (editingCalendarEventId) {
         state.calendarEvents = state.calendarEvents.map((item) => item.id === editingCalendarEventId ? calendarEvent : item);
       } else {
         state.calendarEvents.push(calendarEvent);
       }
       state.calendarEvents = normalizeCalendarEvents(state.calendarEvents);
+      const displayEvent = getCalendarEventDisplay(calendarEvent);
+      const calendarDate = displayEvent?.date || calendarEvent.date;
       state.calendarView = {
-        year: parseDateKey(calendarEvent.date).getFullYear(),
-        month: parseDateKey(calendarEvent.date).getMonth()
+        year: parseDateKey(calendarDate).getFullYear(),
+        month: parseDateKey(calendarDate).getMonth()
       };
       saveState();
       closeCalendarEventModal();
