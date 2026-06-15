@@ -398,7 +398,7 @@
 
     .sidebar-reveal-button.charging .sidebar-reveal-progress {
       transform: scaleX(1);
-      transition: transform 2s linear;
+      transition: transform .5s linear;
     }
 
     .sidebar-reveal-arrow {
@@ -2842,7 +2842,7 @@
 
       <nav class="character-list" id="characterList" aria-label="Lista de personagens"></nav>
     </aside>
-    <button class="sidebar-reveal-button" id="sidebarRevealButton" type="button" aria-label="Manter o cursor por 2 segundos para abrir o menu" title="Manter o cursor por 2 segundos para abrir o menu">
+    <button class="sidebar-reveal-button" id="sidebarRevealButton" type="button" aria-label="Manter o cursor por meio segundo para abrir o menu" title="Manter o cursor por meio segundo para abrir o menu">
       <span class="sidebar-reveal-progress" aria-hidden="true"></span>
       <span class="sidebar-reveal-arrow" aria-hidden="true">&#8250;</span>
     </button>
@@ -6895,7 +6895,7 @@
         window.requestAnimationFrame(() => {
           if (!sidebar.matches(":hover")) startSidebarHide();
         });
-      }, 2000);
+      }, 500);
     }
 
     function cancelSidebarHide() {
@@ -6909,7 +6909,7 @@
       sidebarHideTimer = window.setTimeout(() => {
         sidebarHideTimer = null;
         setSidebarCollapsed(true);
-      }, 2000);
+      }, 500);
     }
 
     addCharacterButton.addEventListener("click", () => openModal());
